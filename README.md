@@ -42,3 +42,13 @@ npm run preview   # preview the production build
 Static site hai — `npm run build` ke baad `dist/` folder kisi bhi host par upload karein, ya repo ko **Netlify / Vercel / Cloudflare Pages** se connect karein (build command: `npm run build`, output: `dist`).
 
 Deploy ke baad `src/config/site.ts` mein `url` apne asal domain par set karein aur Google Search Console mein `/sitemap-index.xml` submit karein.
+
+## Admin panel & backend (Supabase)
+
+- **Admin panel:** `/admin/` — login (Supabase Auth), properties, photos, leads, construction projects, reviews, site settings.
+- **Roles:** `super_admin` (sab kuch + settings + admins) · `editor` (properties, leads, projects, reviews).
+- **Database setup:** `database/schema.sql` ko Supabase → SQL Editor mein ek dafa chalayein.
+- **Auto-publish:** Vercel deploy hook admin panel → Settings mein lagayein. Content save hote hi website 1–2 minute mein rebuild hoti hai.
+- Website **static** rehti hai — data build ke waqt Supabase se aata hai (`src/lib/remote.ts`). Database khaali ho to sample listings dikhti hain.
+- Supabase free plan pause na ho, is liye `.github/workflows/supabase-keepalive.yml` har 3 din ping karta hai.
+- ⚠️ Supabase **secret key** kabhi code mein na daalein — sirf publishable key (`src/config/site.ts`).

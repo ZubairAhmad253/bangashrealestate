@@ -57,7 +57,7 @@ const filled = name in FILL;
 const body = filled ? FILL[name] : STROKE[name] ?? '';
 const attrs = filled
   ? { fill: 'currentColor' }
-  : { fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+  : ({ fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' } as const);
 ---
 
 <svg

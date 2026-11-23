@@ -9,7 +9,7 @@ import logoGold from '../assets/brand/logo-gold.jpg';
 export interface SEOProps {
   title: string;
   description?: string;
-  image?: ImageMetadata;
+  image?: ImageMetadata | string;
   noindex?: boolean;
   type?: 'website' | 'article';
   /** Extra page-specific JSON-LD objects */
@@ -23,7 +23,11 @@ const canonical = new URL(Astro.url.pathname, site).href;
 // Google ~60-65 characters dikhata hai — lamba title ho to brand name nahi lagate
 const withBrand = `${title} | ${SITE.titleName}`;
 const fullTitle = title.includes(SITE.titleName) || withBrand.length > 65 ? title : withBrand;
-const og = await getImage({ src: image, width: 1200, height: 630, format: 'jpg', fit: 'cover' });
+const og = await getImage(
+  typeof image === 'string'
+    ? { src: image, inferSize: true, width: 1200, height: 630, format: 'jpg', fit: 'cover' }
+    : { src: image, width: 1200, height: 630, format: 'jpg', fit: 'cover' },
+);
 const ogUrl = new URL(og.src, site).href;
 const logoImg = await getImage({ src: logoGold, width: 512, height: 512, format: 'png' });
 const logoUrl = new URL(logoImg.src, site).href;

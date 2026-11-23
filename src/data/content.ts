@@ -11,7 +11,13 @@ export const WHY_US = [
 
 /* Google reviews — yahan asal clients ke reviews daalein (name, place, text).
    Jab tak list khali hai, website par Google rating (4.9★) wala card dikhta hai. */
-export const TESTIMONIALS: { name: string; place: string; text: string }[] = [];
+import { remote } from '../lib/remote';
+export const TESTIMONIALS: { name: string; place: string; text: string; rating: number }[] = remote.testimonials.map((t) => ({
+  name: t.name,
+  place: t.place,
+  text: t.text,
+  rating: t.rating,
+}));
 
 export const HOME_FAQS = [
   {

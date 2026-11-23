@@ -213,14 +213,38 @@ if (contactForm) {
       `${d.get('message') || ''}`,
     ].join('\n');
   };
-  // "Send Enquiry" — form asal mein submit hota hai (email + auto-reply), bas button "Sending…" dikhata hai
-  contactForm.addEventListener('submit', () => {
+  // Lead admin panel ke "Leads" inbox mein save (Supabase). Fail ho jaye to bhi form chalta rahe.
+  const saveLead = (source: 'website' | 'whatsapp') => {
+    const { sbUrl, sbKey } = contactForm.dataset;
+    const d = new FormData(contactForm);
+    if (!sbUrl || !sbKey || d.get('_honey')) return Promise.resolve();
+    const val = (k: string) => String(d.get(k) ?? '').trim().slice(0, 3000) || null;
+    return fetch(`${sbUrl}/rest/v1/leads`, {
+      method: 'POST',
+      keepalive: true,
+      headers: { apikey: sbKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        name: val('name'), phone: val('phone'), email: val('email'), interest: val('interest'),
+        area: val('area'), budget: val('budget'), message: val('message'), source,
+      }),
+      signal: AbortSignal.timeout(5000),
+    }).then(() => undefined, () => undefined);
+  };
+
+  // "Send Enquiry" — pehle lead save, phir form email + auto-reply ke liye submit
+  let sending = false;
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (sending) return;
+    sending = true;
     const btn = $<HTMLButtonElement>('[data-submit]', contactForm);
     if (btn) {
       btn.disabled = true;
       const label = btn.querySelector('span');
       if (label) label.textContent = 'Sending…';
     }
+    await saveLead('website');
+    HTMLFormElement.prototype.submit.call(contactForm);
   });
   // "Send via WhatsApp" — email zaroori nahi, sirf naam + phone
   $('[data-send-whatsapp]', contactForm)?.addEventListener('click', () => {
@@ -229,6 +253,7 @@ if (contactForm) {
     const wa = contactForm.dataset.whatsapp!;
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(build())}`, '_blank', 'noopener');
     showToast(WA_TOAST);
+    void saveLead('whatsapp');
   });
 }
 

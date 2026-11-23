@@ -33,6 +33,13 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
                       </span>
                     </a>
                   ))}
+                  <a href="/projects/">
+                    <span class="dropdown__icon"><Icon name="layers" /></span>
+                    <span>
+                      <strong>Our Projects</strong>
+                      <span>Homes &amp; buildings we have constructed</span>
+                    </span>
+                  </a>
                 </div>
               </li>
             ) : (
@@ -71,6 +78,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     <p class="drawer__group">Explore</p>
     <a href="/real-estate-rawalpindi/" class="drawer__link" aria-current={isActive('/real-estate-rawalpindi/') ? 'page' : undefined}><Icon name="pin" /> Real Estate in Rawalpindi</a>
     <a href="/real-estate-islamabad/" class="drawer__link" aria-current={isActive('/real-estate-islamabad/') ? 'page' : undefined}><Icon name="building" /> Real Estate in Islamabad</a>
+    <a href="/projects/" class="drawer__link" aria-current={isActive('/projects/') ? 'page' : undefined}><Icon name="hardhat" /> Our Projects</a>
     <a href="/guides/" class="drawer__link" aria-current={isActive('/guides/') ? 'page' : undefined}><Icon name="file" /> Property Guides</a>
     <a href="/tools/marla-calculator/" class="drawer__link" aria-current={isActive('/tools/') ? 'page' : undefined}><Icon name="area" /> Marla Calculator</a>
     <p class="drawer__group">Company</p>

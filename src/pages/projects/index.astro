@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Img from '../../components/Img.astro';
+import Icon from '../../components/Icon.astro';
+import CTA from '../../components/CTA.astro';
+import { PROJECTS, categoryLabel, statusLabel } from '../../data/projects';
+import { MESSAGES, whatsappLink } from '../../config/site';
+---
+
+<BaseLayout
+  title="Our Construction Projects — House Builders in Rawalpindi & Islamabad"
+  description="See houses and apartment buildings constructed by Bangash Real Estate & Builders in Rawalpindi & Islamabad — grey structure to complete turnkey construction."
+>
+  <PageHero
+    eyebrow="Bangash Builders"
+    title="Our Construction Projects"
+    lead="Homes and buildings we have designed and built across Rawalpindi & Islamabad — from grey structure to complete turnkey handover."
+    crumbs={[{ label: 'Services', href: '/services/' }, { label: 'Projects' }]}
+  >
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px" data-reveal="up">
+      <a href={whatsappLink(MESSAGES.construction)} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="whatsapp" /> Get a construction quote</a>
+      <a href="/services/construction/" class="btn btn-outline">How we build <Icon name="arrow-right" /></a>
+    </div>
+  </PageHero>
+
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      {PROJECTS.length > 0 ? (
+        <div class="grid grid-3">
+          {PROJECTS.map((p, i) => (
+            <a href={`/projects/${p.slug}/`} class="property-card" data-reveal="up" style={`--d:${(i % 3) * 0.08}s`}>
+              <div class="property-card__media">
+                <Img src={p.images[0]} alt={`${p.title} — ${categoryLabel[p.category]} by Bangash Builders${p.location ? ` in ${p.location}` : ''}`} widths={[400, 640, 900]} sizes="(max-width: 700px) 92vw, 380px" loading={i < 3 ? 'eager' : 'lazy'} />
+                <div class="property-card__badges">
+                  <span class:list={['badge', p.status === 'completed' ? 'badge--sale' : 'badge--rent']}>{statusLabel[p.status]}</span>
+                  <span class="badge">{categoryLabel[p.category]}</span>
+                </div>
+                {p.images.length > 1 && <p class="property-card__price" style="font-size:.95rem"><Icon name="layers" size={16} /> {p.images.length} photos</p>}
+              </div>
+              <div class="property-card__body">
+                <h2 class="property-card__title">{p.title}</h2>
+                {p.location && <p class="property-card__loc"><Icon name="pin" />{p.location}</p>}
+                <div class="specs">
+                  {p.size && <span class="spec"><Icon name="area" />{p.size}</span>}
+                  {p.year && <span class="spec"><Icon name="clock" />{p.year}</span>}
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="empty-state is-visible">
+          <h2 style="font-size:var(--fs-xl);color:var(--text)">Project gallery coming soon</h2>
+          <p style="margin:10px 0 20px">We are adding photos of our recent construction projects. Meanwhile, ask us for photos and site visits on WhatsApp.</p>
+          <a href={whatsappLink(MESSAGES.construction)} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Ask about construction</a>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <CTA title="Have a plot? Let's build on it." text="Share your plot size and location — we'll send a free estimate for grey structure or complete construction." message={MESSAGES.construction} />
+</BaseLayout>

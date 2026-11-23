@@ -298,7 +298,7 @@ const headline: { text: string; gradient?: boolean }[] = [
         {TESTIMONIALS.map((t) => (
           <figure class="testimonial">
             <Icon name="quote" class="testimonial__quote" />
-            <div class="stars">{[1, 2, 3, 4, 5].map(() => <Icon name="star" />)}</div>
+            <div class="stars">{Array.from({ length: t.rating }, () => <Icon name="star" />)}</div>
             <blockquote><p>{t.text}</p></blockquote>
             <figcaption class="testimonial__who">
               <span class="avatar" aria-hidden="true">{t.name.charAt(0)}</span>

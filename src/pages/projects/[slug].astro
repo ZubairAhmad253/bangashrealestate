@@ -1,0 +1,92 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Img from '../../components/Img.astro';
+import Icon from '../../components/Icon.astro';
+import CTA from '../../components/CTA.astro';
+import { PROJECTS, categoryLabel, statusLabel, type Project } from '../../data/projects';
+import { SITE, MESSAGES, whatsappLink } from '../../config/site';
+
+export function getStaticPaths() {
+  return PROJECTS.map((project) => ({ params: { slug: project.slug }, props: { project } }));
+}
+
+const { project: p } = Astro.props as { project: Project };
+const others = PROJECTS.filter((x) => x.slug !== p.slug).slice(0, 3);
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  name: p.title,
+  description: p.description || `${categoryLabel[p.category]} by ${SITE.name}`,
+  image: p.images,
+  creator: { '@id': `${SITE.url}/#business` },
+  ...(p.location ? { locationCreated: { '@type': 'Place', name: p.location } } : {}),
+};
+---
+
+<BaseLayout
+  title={`${p.title}${p.location ? ` — ${p.location}` : ''} | Construction Project`}
+  description={(p.description || `${categoryLabel[p.category]} built by Bangash Real Estate & Builders${p.location ? ` in ${p.location}` : ''}.`).slice(0, 158)}
+  image={p.images[0]}
+  schema={[schema]}
+>
+  <section class="page-hero" style="padding-bottom:40px">
+    <div class="hero__grid-bg" aria-hidden="true"></div>
+    <div class="container page-hero__inner">
+      <Breadcrumbs items={[{ label: 'Projects', href: '/projects/' }, { label: p.title }]} />
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:22px">
+        <span class:list={['badge', p.status === 'completed' ? 'badge--sale' : 'badge--rent']}>{statusLabel[p.status]}</span>
+        <span class="badge" style="border:1px solid var(--border)">{categoryLabel[p.category]}</span>
+      </div>
+      <h1 data-reveal="up">{p.title}</h1>
+      <p class="property-card__loc" style="margin-top:12px;font-size:1rem">
+        {p.location && <><Icon name="pin" />{p.location}</>}
+        {p.size && <> · {p.size}</>}
+        {p.year && <> · {p.year}</>}
+      </p>
+    </div>
+  </section>
+
+  <section class="container">
+    <div class="project-gallery">
+      {p.images.map((img, i) => (
+        <a href={img} class="project-gallery__item" target="_blank" rel="noopener" data-reveal="zoom" style={`--d:${(i % 3) * 0.06}s`}>
+          <Img src={img} alt={`${p.title} — photo ${i + 1}`} widths={[480, 800, 1200]} sizes="(max-width: 700px) 92vw, 600px" loading={i < 2 ? 'eager' : 'lazy'} />
+        </a>
+      ))}
+    </div>
+    {p.description && (
+      <div class="detail-card prose" style="margin-top:28px">
+        <h2 style="margin-top:0">About this project</h2>
+        {p.description.split(/\n{2,}/).map((para) => <p>{para}</p>)}
+      </div>
+    )}
+    <div class="article-cta">
+      <div>
+        <strong>Want a home like this?</strong>
+        <p class="muted">Share your plot location and size — free estimate on WhatsApp.</p>
+      </div>
+      <a href={whatsappLink(MESSAGES.construction)} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Get a quote</a>
+    </div>
+  </section>
+
+  {others.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <h2 style="font-size:var(--fs-2xl);margin-bottom:20px">More <span class="gradient-text">projects</span></h2>
+        <div class="grid grid-3">
+          {others.map((o) => (
+            <a href={`/projects/${o.slug}/`} class="area-tile">
+              <Img src={o.images[0]} alt={o.title} widths={[400, 700]} sizes="(max-width: 700px) 92vw, 380px" />
+              <span class="area-tile__city">{categoryLabel[o.category]}</span>
+              <h3>{o.title}</h3>
+              <span class="area-tile__meta"><span>{o.location}</span><span class="area-tile__go"><Icon name="arrow-up-right" /></span></span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <CTA message={MESSAGES.construction} />
+</BaseLayout>

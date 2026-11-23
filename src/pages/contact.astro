@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
-import { SITE, MESSAGES, whatsappLink, emailLink } from '../config/site';
+import { SITE, SUPABASE, MESSAGES, whatsappLink, emailLink } from '../config/site';
 // Note: contact form FormSubmit par jata hai (pehli dafa email activate karna hai) — dekhein SITE.formEndpoint
 import { AREAS } from '../data/areas';
 
@@ -58,6 +58,8 @@ const schema = {
         method="POST"
         data-contact-form
         data-whatsapp={SITE.whatsapp}
+        data-sb-url={SUPABASE.url}
+        data-sb-key={SUPABASE.publishableKey}
         data-reveal="left"
       >
         <h2 style="font-size:var(--fs-xl)">Send an enquiry</h2>

@@ -71,6 +71,16 @@ export const SITE = {
 } as const;
 
 /* ==========================================================================
+   SUPABASE (backend) — dono values public hain, browser mein safe.
+   ⚠️ Secret key (sb_secret_...) yahan KABHI na daalein.
+   ========================================================================== */
+export const SUPABASE = {
+  url: 'https://tgqqhzunbkyifcesfndd.supabase.co',
+  publishableKey: 'sb_publishable_Xa7aSCfk7V3jKSEFDwfeiQ_uv0au2ub',
+  bucket: 'media',
+};
+
+/* ==========================================================================
    WHATSAPP & EMAIL — CUSTOM MESSAGES
    Visitor jab button dabata hai to ye message pehle se likha hua aata hai.
    ========================================================================== */

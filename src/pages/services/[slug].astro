@@ -10,6 +10,8 @@ import { SERVICES, type Service } from '../../data/services';
 import { PROPERTIES } from '../../data/properties';
 import { AREAS } from '../../data/areas';
 import { SITE, MESSAGES, whatsappLink } from '../../config/site';
+import Img from '../../components/Img.astro';
+import { PROJECTS, categoryLabel } from '../../data/projects';
 
 export function getStaticPaths() {
   return SERVICES.map((service) => ({ params: { slug: service.slug }, props: { service } }));
@@ -70,6 +72,27 @@ const schema = {
       </ol>
     </div>
   </section>
+
+  {s.slug === 'construction' && PROJECTS.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head section-head--row">
+          <div><h2 data-reveal="up">Our recent <span class="gradient-text">projects</span></h2></div>
+          <a href="/projects/" class="btn btn-outline" data-reveal="left">All projects <Icon name="arrow-right" /></a>
+        </div>
+        <div class="grid grid-3">
+          {PROJECTS.slice(0, 3).map((p, i) => (
+            <a href={`/projects/${p.slug}/`} class="area-tile" data-reveal="up" style={`--d:${i * 0.08}s`}>
+              <Img src={p.images[0]} alt={`${p.title} — ${categoryLabel[p.category]}`} widths={[400, 700]} sizes="(max-width: 700px) 92vw, 380px" />
+              <span class="area-tile__city">{categoryLabel[p.category]}</span>
+              <h3>{p.title}</h3>
+              <span class="area-tile__meta"><span>{p.location}</span><span class="area-tile__go"><Icon name="arrow-up-right" /></span></span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
 
   {listings.length > 0 && (
     <section class="section">

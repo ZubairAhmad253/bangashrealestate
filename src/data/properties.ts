@@ -1,11 +1,11 @@
 /* ==========================================================================
    PROPERTY LISTINGS
    --------------------------------------------------------------------------
-   ⚠️ Ye SAMPLE listings hain — apni asal properties, prices aur photos se
-   replace karein. Nayi property add karne ke liye bas ek object copy karke
-   values badal dein. Photos `src/assets/images/` mein rakhein aur upar
-   import karein. Har property ka apna SEO-friendly page khud ban jata hai.
+   Asal properties ADMIN PANEL (/admin) se add hoti hain (Supabase).
+   Neeche wali SAMPLE listings sirf tab dikhti hain jab database mein abhi
+   ek bhi property na ho. Har property ka apna SEO page khud ban jata hai.
    ========================================================================== */
+import { remote, type PropertyRow } from '../lib/remote';
 import type { ImageMetadata } from 'astro';
 import house1 from '../assets/images/house-1.jpg';
 import house3 from '../assets/images/house-3.jpg';
@@ -40,15 +40,16 @@ export interface Property {
   size: string;
   beds?: number;
   baths?: number;
-  image: ImageMetadata;
-  gallery?: ImageMetadata[];
+  /** Local photo (import) ya Supabase photo URL */
+  image: ImageMetadata | string;
+  gallery?: (ImageMetadata | string)[];
   featured?: boolean;
   hot?: boolean;
   description: string;
   features: string[];
 }
 
-export const PROPERTIES: Property[] = [
+export const SAMPLE_PROPERTIES: Property[] = [
   {
     slug: '10-marla-brand-new-house-airport-housing-society',
     title: '10 Marla Brand New Double Storey House',
@@ -264,6 +265,31 @@ export const PROPERTIES: Property[] = [
   },
 ];
 
+/* ---------------- Supabase → Property ---------------- */
+const PLACEHOLDER: Record<PropertyType, ImageMetadata> = { plot: plot1, house: house1, flat: flat1 };
+const fromRow = (r: PropertyRow): Property => ({
+  slug: r.slug,
+  title: r.title,
+  purpose: r.purpose,
+  type: r.type,
+  price: Number(r.price),
+  area: r.area,
+  location: r.location,
+  size: r.size,
+  beds: r.beds ?? undefined,
+  baths: r.baths ?? undefined,
+  image: r.images?.[0] ?? PLACEHOLDER[r.type],
+  gallery: (r.images ?? []).slice(1),
+  featured: r.featured,
+  hot: r.hot,
+  description: r.description,
+  features: r.features ?? [],
+});
+
+/** Database mein properties hon to wahi, warna samples */
+export const USING_SAMPLES = remote.properties.length === 0;
+export const PROPERTIES: Property[] = USING_SAMPLES ? SAMPLE_PROPERTIES : remote.properties.map(fromRow);
+
 /* ---------------- Helpers ---------------- */
 
 /** PKR ko Crore / Lakh mein dikhata hai: 42,500,000 → "4.25 Crore" */
@@ -278,5 +304,8 @@ export const typeLabel: Record<PropertyType, string> = { plot: 'Plot', house: 'H
 export const purposeLabel: Record<Purpose, string> = { sale: 'For Sale', rent: 'For Rent' };
 
 export const getProperty = (slug: string) => PROPERTIES.find((p) => p.slug === slug);
-export const featuredProperties = () => PROPERTIES.filter((p) => p.featured);
+export const featuredProperties = () => {
+  const f = PROPERTIES.filter((p) => p.featured);
+  return f.length >= 3 ? f : [...f, ...PROPERTIES.filter((p) => !p.featured)];
+};
 export const propertiesInArea = (area: string) => PROPERTIES.filter((p) => p.area === area);

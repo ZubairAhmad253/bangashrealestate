@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import Img from '../../components/Img.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import PropertyCard from '../../components/PropertyCard.astro';
@@ -70,7 +70,7 @@ const schema = {
     <div class="gallery" data-reveal="zoom">
       {images.map((img, i) => (
         <div class="gallery__item">
-          <Image src={img} alt={`${p.title} — photo ${i + 1}`} widths={i === 0 ? [640, 960, 1400] : [400, 700]} sizes={i === 0 ? '(max-width: 768px) 92vw, 820px' : '(max-width: 768px) 92vw, 400px'} loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
+          <Img src={img} alt={`${p.title} — photo ${i + 1}`} widths={i === 0 ? [640, 960, 1400] : [400, 700]} sizes={i === 0 ? '(max-width: 768px) 92vw, 820px' : '(max-width: 768px) 92vw, 400px'} loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
         </div>
       ))}
     </div>

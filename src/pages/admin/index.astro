@@ -1,0 +1,29 @@
+---
+/* Admin panel — website se alag, Google index nahi karta */
+import '@fontsource-variable/plus-jakarta-sans';
+import '@fontsource-variable/outfit';
+import '../../styles/theme.css';
+import '../../admin/admin.css';
+import { getImage } from 'astro:assets';
+import App from '../../admin/App';
+import logoMark from '../../assets/brand/logo-mark.png';
+
+const favicon = await getImage({ src: logoMark, width: 64, height: 64, format: 'png' });
+---
+
+<!doctype html>
+<html lang="en" data-theme="gold">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0d0d0d" />
+    <link rel="icon" href={favicon.src} type="image/png" />
+    <title>Admin Panel — Bangash Real Estate</title>
+  </head>
+  <body class="a-body">
+    <App client:only="preact">
+      <div class="a-center" slot="fallback"><span class="a-spinner"></span></div>
+    </App>
+  </body>
+</html>

@@ -760,3 +760,10 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 @keyframes pop { from { transform: scale(0.3); opacity: 0; } }
 .thanks__actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 28px; }
 .form__actions .btn { flex: 1 1 200px; }
+
+/* Project gallery (construction projects detail) */
+.project-gallery { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.project-gallery__item { display: block; overflow: hidden; border-radius: var(--radius-lg); aspect-ratio: 4 / 3; background: var(--surface-2); }
+.project-gallery__item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease-out); }
+.project-gallery__item:hover img { transform: scale(1.05); }
+.project-gallery__item:first-child { grid-column: 1 / -1; aspect-ratio: 16 / 8; }

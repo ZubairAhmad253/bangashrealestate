@@ -1,0 +1,17 @@
+# Supabase free plan 7 din bina activity ke project "pause" kar deta hai.
+# Ye har 3 din ek chhoti si request bhej kar project ko active rakhta hai.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          curl -sf "https://tgqqhzunbkyifcesfndd.supabase.co/rest/v1/settings?select=id&limit=1" \
+            -H "apikey: sb_publishable_Xa7aSCfk7V3jKSEFDwfeiQ_uv0au2ub" -o /dev/null -w "HTTP %{http_code}\n"
