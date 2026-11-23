@@ -1,0 +1,20 @@
+{
+  "name": "bangash-real-estate",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bangash Real Estate — plots, houses & flats for sale and rent plus construction services in Rawalpindi & Islamabad.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.6",
+    "@fontsource-variable/outfit": "^5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "astro": "^7.4.13",
+    "sharp": "^0.35.5"
+  }
+}

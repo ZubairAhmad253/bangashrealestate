@@ -1,0 +1,41 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import CTA from '../../components/CTA.astro';
+import { SERVICES } from '../../data/services';
+---
+
+<BaseLayout
+  title="Real Estate & Construction Services in Rawalpindi & Islamabad"
+  description="Bangash Real Estate services: plots for sale, houses and flats for sale & rent, and complete house & apartment construction in Rawalpindi and Islamabad."
+>
+  <PageHero
+    eyebrow="Our services"
+    title="Buy, Sell, Rent & Build — All in One Place"
+    lead="Four services, one trusted team. Whether you need a plot, a house, a flat, or a builder for your project, we've got you covered across Rawalpindi & Islamabad."
+    crumbs={[{ label: 'Services' }]}
+  />
+
+  <section class="section" style="padding-top:0">
+    <div class="container grid grid-2">
+      {SERVICES.map((s, i) => (
+        <a href={`/services/${s.slug}/`} class="property-card" data-reveal="up" style={`--d:${(i % 2) * 0.1}s`}>
+          <div class="property-card__media" style="aspect-ratio:16/9">
+            <Image src={s.image} alt={s.h1} widths={[500, 800, 1100]} sizes="(max-width: 900px) 92vw, 600px" />
+          </div>
+          <div class="property-card__body" style="padding:24px 28px 28px">
+            <span class="service-card__icon" style="margin-top:-56px;position:relative;z-index:1;background:var(--gradient-brand);color:#fff;box-shadow:var(--shadow-brand)"><Icon name={s.icon} /></span>
+            <h2 style="font-size:var(--fs-xl)">{s.name}</h2>
+            <p class="muted">{s.short}</p>
+            <div class="service-card__tags">{s.tags.map((t) => <span class="tag">{t}</span>)}</div>
+            <span class="link-arrow" style="margin-top:8px">Explore {s.menuLabel.toLowerCase()} <Icon name="arrow-right" /></span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <CTA />
+</BaseLayout>

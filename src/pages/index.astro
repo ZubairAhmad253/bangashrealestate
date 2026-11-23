@@ -1,0 +1,307 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import PropertyCard from '../components/PropertyCard.astro';
+import FAQ from '../components/FAQ.astro';
+import CTA from '../components/CTA.astro';
+import { SITE, whatsappLink } from '../config/site';
+import { SERVICES } from '../data/services';
+import { AREAS } from '../data/areas';
+import { featuredProperties, propertiesInArea } from '../data/properties';
+import { WHY_US, TESTIMONIALS, HOME_FAQS } from '../data/content';
+
+import heroHouse from '../assets/images/hero-house.jpg';
+import heroInterior from '../assets/images/interior-1.jpg';
+import construction1 from '../assets/images/construction-1.jpg';
+import construction3 from '../assets/images/construction-3.jpg';
+
+const featured = featuredProperties().slice(0, 6);
+const homeAreas = [...AREAS].sort((a, b) => a.priority - b.priority).slice(0, 5);
+const [construction, ...sellServices] = SERVICES;
+
+// Hero headline — har word alag animate hota hai
+const headline: { text: string; gradient?: boolean }[] = [
+  { text: 'Find' }, { text: 'Your' }, { text: 'Dream', gradient: true }, { text: 'Property', gradient: true },
+  { text: 'in' }, { text: 'Rawalpindi' }, { text: '&' }, { text: 'Islamabad' },
+];
+---
+
+<BaseLayout
+  title="Bangash Real Estate — Plots, Houses & Flats for Sale & Rent in Rawalpindi & Islamabad"
+  description="Bangash Real Estate: buy, sell or rent plots, houses & flats in Airport Housing Society, Ghauri Town, Bahria Town, DHA & across Rawalpindi/Islamabad. We also build houses & apartments."
+>
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="hero__grid-bg" aria-hidden="true"></div>
+    <span class="blob blob--1" aria-hidden="true"></span>
+    <span class="blob blob--2" aria-hidden="true"></span>
+    <span class="blob blob--3" aria-hidden="true"></span>
+
+    <div class="container hero__inner">
+      <div>
+        <p class="eyebrow" data-reveal="down">
+          <span class="eyebrow__dot"><Icon name="sparkles" /></span>
+          Trusted in Rawalpindi &amp; Islamabad
+        </p>
+        <h1>
+          {headline.map((w, i) => (
+            <><span class:list={['word', { 'gradient-text': w.gradient }]} style={`--i:${i}`}>{w.text}</span>{' '}</>
+          ))}
+        </h1>
+        <p class="hero__lead" data-reveal="up" style="--d:.5s">
+          Buy, sell or rent <strong>plots, houses &amp; flats</strong> in Airport Housing Society, Ghauri Town, Bahria Town, DHA and beyond — or let our builders construct your next home.
+        </p>
+
+        <form class="search-panel" action="/properties/" method="get" data-search data-reveal="up" style="--d:.65s" role="search" aria-label="Search properties">
+          <div class="search-tabs" role="tablist" aria-label="What do you want to do?">
+            <button type="button" class="search-tab" role="tab" aria-selected="true" data-tab="sale">Buy</button>
+            <button type="button" class="search-tab" role="tab" aria-selected="false" data-tab="rent">Rent</button>
+            <button type="button" class="search-tab" role="tab" aria-selected="false" data-tab="build">Build</button>
+          </div>
+          <input type="hidden" name="purpose" value="sale" />
+          <div class="search-fields">
+            <div class="field">
+              <label for="hero-type">Property type</label>
+              <select id="hero-type" name="type">
+                <option value="">All types</option>
+                <option value="plot">Plots</option>
+                <option value="house">Houses</option>
+                <option value="flat">Flats</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="hero-area">Location</label>
+              <select id="hero-area" name="area">
+                <option value="">All areas</option>
+                {AREAS.map((a) => <option value={a.slug}>{a.name}</option>)}
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><Icon name="search" /> Search</button>
+          </div>
+        </form>
+
+        <ul class="hero__trust" role="list" data-reveal="up" style="--d:.8s">
+          <li><Icon name="shield" /> Verified listings</li>
+          <li><Icon name="file" /> Complete paperwork</li>
+          <li><Icon name="hardhat" /> Builders on demand</li>
+        </ul>
+      </div>
+
+      <div class="hero__visual" data-reveal="zoom" style="--d:.3s">
+        <span class="hero__ring" aria-hidden="true"></span>
+        <div class="hero__img-main" data-parallax="-14">
+          <Image src={heroHouse} alt="Modern luxury house for sale in Rawalpindi by Bangash Real Estate" widths={[480, 720, 960, 1200]} sizes="(max-width: 1024px) 92vw, 560px" loading="eager" fetchpriority="high" />
+        </div>
+        <div class="hero__img-sub" data-parallax="18">
+          <Image src={heroInterior} alt="Elegant living room interior of a house in Islamabad" widths={[240, 400]} sizes="240px" loading="eager" />
+        </div>
+        <div class="float-card float-card--a">
+          <span class="float-card__icon"><Icon name="home" /></span>
+          <div><strong>New Listing</strong><span>10 Marla · Airport Society</span></div>
+        </div>
+        <div class="float-card float-card--c">
+          <div><div class="stars">{[1, 2, 3, 4, 5].map(() => <Icon name="star" />)}</div><span>Loved by {SITE.stats[2].value}+ families</span></div>
+        </div>
+        <div class="float-card float-card--b">
+          <span class="float-card__icon"><Icon name="hardhat" /></span>
+          <div><strong>We Build Too</strong><span>Houses &amp; apartments</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= AREAS MARQUEE ================= -->
+  <div class="marquee" aria-label="Areas we cover">
+    <div class="marquee__track">
+      {[...AREAS, ...AREAS].map((a, i) => (
+        <a href={`/areas/${a.slug}/`} class="marquee__item" aria-hidden={i >= AREAS.length ? 'true' : undefined} tabindex={i >= AREAS.length ? -1 : undefined}>
+          <Icon name="pin" />{a.name}
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <!-- ================= SERVICES ================= -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="layers" /></span>What we do</p>
+        <h2 data-reveal="up" style="--d:.08s">Everything property — <span class="gradient-text">under one roof</span></h2>
+        <p data-reveal="up" style="--d:.16s">From buying your first plot to building the house on it, Bangash Real Estate handles every step with honesty and local expertise.</p>
+      </div>
+
+      <div class="bento">
+        <a href={`/services/${construction.slug}/`} class="service-card service-card--feature" data-reveal="zoom">
+          <div class="service-card__bg">
+            <Image src={construction.image} alt="House construction in progress by Bangash Builders in Rawalpindi" widths={[600, 900, 1200]} sizes="(max-width: 900px) 92vw, 800px" />
+          </div>
+          <span class="service-card__icon"><Icon name={construction.icon} /></span>
+          <div class="service-card__tags">{construction.tags.map((t) => <span class="tag">{t}</span>)}</div>
+          <h3>Have a plot? We'll build your house or flats on it.</h3>
+          <p>{construction.short}</p>
+          <span class="link-arrow">Explore construction <Icon name="arrow-right" /></span>
+        </a>
+        {sellServices.map((s, i) => (
+          <a href={`/services/${s.slug}/`} class="service-card" data-reveal="up" style={`--d:${(i + 1) * 0.1}s`}>
+            <span class="service-card__icon"><Icon name={s.icon} /></span>
+            <h3>{s.name}</h3>
+            <p>{s.short}</p>
+            <span class="link-arrow">Learn more <Icon name="arrow-right" /></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURED PROPERTIES ================= -->
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--row">
+        <div>
+          <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="star" /></span>Featured listings</p>
+          <h2 data-reveal="up" style="--d:.08s">Handpicked properties <span class="gradient-text">for you</span></h2>
+        </div>
+        <a href="/properties/" class="btn btn-outline" data-reveal="left">View all properties <Icon name="arrow-right" /></a>
+      </div>
+      <div class="grid grid-3">
+        {featured.map((p, i) => <PropertyCard property={p} delay={(i % 3) * 0.1} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STATS ================= -->
+  <section class="section" style="padding-block: clamp(48px, 6vw, 80px)">
+    <div class="container">
+      <div class="stats-band" data-reveal="zoom">
+        <div class="stats">
+          {SITE.stats.map((s) => (
+            <div>
+              <p class="stat__num" data-count={s.value} data-suffix={s.suffix}>{s.value.toLocaleString()}{s.suffix}</p>
+              <p class="stat__label">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= AREAS ================= -->
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <div class="section-head section-head--row">
+        <div>
+          <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="pin" /></span>Explore by location</p>
+          <h2 data-reveal="up" style="--d:.08s">Popular areas in <span class="gradient-text">Rawalpindi &amp; Islamabad</span></h2>
+          <p data-reveal="up" style="--d:.16s">Based in Rawalpindi, we know these neighbourhoods street by street.</p>
+        </div>
+        <a href="/areas/" class="btn btn-outline" data-reveal="left">All areas <Icon name="arrow-right" /></a>
+      </div>
+      <div class="area-grid area-grid--home">
+        {homeAreas.map((a, i) => (
+          <a href={`/areas/${a.slug}/`} class="area-tile" data-reveal="up" style={`--d:${(i % 4) * 0.08}s`}>
+            <Image src={a.image} alt={`Property in ${a.name}, ${a.city}`} widths={[400, 700, 1000]} sizes={i === 0 ? '(max-width: 1024px) 92vw, 620px' : '(max-width: 1024px) 46vw, 300px'} />
+            <span class="area-tile__city">{a.city}</span>
+            <h3>{a.name}</h3>
+            <span class="area-tile__meta">
+              <span>{propertiesInArea(a.slug).length || 'New'} listings</span>
+              <span class="area-tile__go"><Icon name="arrow-up-right" /></span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONSTRUCTION ================= -->
+  <section class="section section--tint">
+    <div class="container split">
+      <div class="img-stack" data-reveal="right">
+        <div class="img-stack__main" data-tilt="4">
+          <Image src={construction3} alt="Construction team building a house in Rawalpindi" widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" />
+        </div>
+        <div class="img-stack__sub">
+          <Image src={construction1} alt="Architect reviewing house plans for a construction project" widths={[300, 500]} sizes="280px" />
+        </div>
+        <div class="img-stack__badge">
+          <strong>{SITE.stats[3].value}+</strong>
+          <span>Homes &amp; projects built</span>
+        </div>
+      </div>
+      <div>
+        <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="hardhat" /></span>Bangash Builders</p>
+        <h2 style="font-size:var(--fs-3xl);margin-top:16px;--d:.08s" data-reveal="up">You bring the plot. <span class="gradient-text">We build the home.</span></h2>
+        <p class="lead" style="margin-top:14px" data-reveal="up">
+          Houses, portions or a complete apartment building — our construction team takes your project from design to handover with transparent costing and quality materials.
+        </p>
+        <ol class="steps" role="list">
+          {construction.steps.map((s, i) => (
+            <li class="step" data-reveal="up" style={`--d:${i * 0.08}s`}>
+              <span class="step__num" aria-hidden="true"></span>
+              <div><h3>{s.title}</h3><p>{s.text}</p></div>
+            </li>
+          ))}
+        </ol>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px" data-reveal="up">
+          <a href="/services/construction/" class="btn btn-primary">Construction details <Icon name="arrow-right" /></a>
+          <a href={whatsappLink('Assalam o Alaikum! I want a quote for construction on my plot.')} class="btn btn-outline" target="_blank" rel="noopener"><Icon name="whatsapp" /> Get a quote</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WHY US ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="award" /></span>Why Bangash</p>
+        <h2 data-reveal="up" style="--d:.08s">Real estate done <span class="gradient-text">the honest way</span></h2>
+      </div>
+      <div class="grid grid-3">
+        {WHY_US.map((w, i) => (
+          <div class="feature" data-reveal="up" style={`--d:${(i % 3) * 0.08}s`}>
+            <span class="feature__icon"><Icon name={w.icon} /></span>
+            <h3>{w.title}</h3>
+            <p>{w.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TESTIMONIALS ================= -->
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="users" /></span>Client stories</p>
+        <h2 data-reveal="up" style="--d:.08s">Families who <span class="gradient-text">trust us</span></h2>
+      </div>
+      <div class="testimonials" data-reveal="left">
+        {TESTIMONIALS.map((t) => (
+          <figure class="testimonial">
+            <Icon name="quote" class="testimonial__quote" />
+            <div class="stars">{[1, 2, 3, 4, 5].map(() => <Icon name="star" />)}</div>
+            <blockquote><p>{t.text}</p></blockquote>
+            <figcaption class="testimonial__who">
+              <span class="avatar" aria-hidden="true">{t.name.charAt(0)}</span>
+              <span><strong>{t.name}</strong><span>{t.place}</span></span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="sparkles" /></span>FAQ</p>
+        <h2 data-reveal="up" style="--d:.08s">Questions? <span class="gradient-text">We have answers.</span></h2>
+      </div>
+      <FAQ faqs={HOME_FAQS} />
+    </div>
+  </section>
+
+  <CTA />
+</BaseLayout>

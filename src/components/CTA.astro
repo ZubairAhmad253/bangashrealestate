@@ -1,0 +1,24 @@
+---
+import Icon from './Icon.astro';
+import { SITE, whatsappLink } from '../config/site';
+interface Props { title?: string; text?: string }
+const {
+  title = 'Ready to buy, sell, rent or build?',
+  text = 'Tell us what you are looking for — our team will share the best options in Rawalpindi & Islamabad within hours.',
+} = Astro.props;
+---
+
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="cta" data-reveal="zoom">
+      <span class="cta__orb cta__orb--1" aria-hidden="true"></span>
+      <span class="cta__orb cta__orb--2" aria-hidden="true"></span>
+      <h2>{title}</h2>
+      <p>{text}</p>
+      <div class="cta__actions">
+        <a href={whatsappLink()} class="btn btn-white" target="_blank" rel="noopener"><Icon name="whatsapp" /> Chat on WhatsApp</a>
+        <a href={`tel:${SITE.phoneLink}`} class="btn btn-glass"><Icon name="phone" /> Call {SITE.phone}</a>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,71 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { SITE, whatsappLink } from '../config/site';
+import { SERVICES } from '../data/services';
+import { AREAS } from '../data/areas';
+
+const socials = Object.entries(SITE.socials).filter(([, url]) => url);
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="site-footer__glow" aria-hidden="true"></div>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <Logo id="logo-footer" />
+        <p style="margin-top:18px;max-width:340px">
+          Trusted real estate agents and builders in Rawalpindi &amp; Islamabad. Buy, sell or rent plots, houses and flats — or let us build your next home.
+        </p>
+        {
+          socials.length > 0 && (
+            <div class="socials">
+              {socials.map(([name, url]) => (
+                <a href={url} target="_blank" rel="noopener" aria-label={name}>
+                  <Icon name={name} />
+                </a>
+              ))}
+            </div>
+          )
+        }
+      </div>
+
+      <div>
+        <h3>Services</h3>
+        <ul class="footer-links">
+          {SERVICES.map((s) => <li><a href={`/services/${s.slug}/`}>{s.name}</a></li>)}
+          <li><a href="/properties/">All Properties</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Popular Areas</h3>
+        <ul class="footer-links">
+          {AREAS.slice(0, 6).map((a) => <li><a href={`/areas/${a.slug}/`}>{a.name}</a></li>)}
+        </ul>
+      </div>
+
+      <div>
+        <h3>Get in Touch</h3>
+        <ul class="footer-links footer-contact">
+          <li><Icon name="pin" /><span>{SITE.address.street}, {SITE.address.city}</span></li>
+          <li><Icon name="phone" /><a href={`tel:${SITE.phoneLink}`}>{SITE.phone}</a></li>
+          <li><Icon name="whatsapp" /><a href={whatsappLink()} target="_blank" rel="noopener">WhatsApp Chat</a></li>
+          <li><Icon name="mail" /><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
+          <li><Icon name="clock" /><span>{SITE.hours}</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© {year} {SITE.name}. All rights reserved.</p>
+      <p><a href="/about/">About</a> · <a href="/contact/">Contact</a> · <a href="/sitemap-index.xml">Sitemap</a></p>
+    </div>
+  </div>
+</footer>
+
+<a href={whatsappLink()} class="wa-float" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp">
+  <Icon name="whatsapp" />
+  <span class="wa-float__label">Chat on WhatsApp</span>
+</a>

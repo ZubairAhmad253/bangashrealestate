@@ -1,0 +1,27 @@
+---
+import { SITE } from '../config/site';
+interface Props { id?: string }
+const { id = 'logo' } = Astro.props;
+const gid = `${id}-grad`;
+---
+
+<a href="/" class="logo" aria-label={`${SITE.name} — Home`}>
+  <svg class="logo__mark" viewBox="0 0 48 48" aria-hidden="true">
+    <defs>
+      <linearGradient id={gid} x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+        <stop offset="0" style="stop-color: var(--brand-primary-strong)" />
+        <stop offset=".5" style="stop-color: var(--brand-primary)" />
+        <stop offset="1" style="stop-color: var(--brand-secondary)" />
+      </linearGradient>
+    </defs>
+    <rect width="48" height="48" rx="14" fill={`url(#${gid})`} />
+    <path d="M10 23.5 24 12l14 11.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M15 21.5V36h18V21.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity=".9" />
+    <path d="M21 36v-7.5a3 3 0 0 1 6 0V36" fill="#fff" />
+    <circle cx="33.5" cy="14" r="2.4" fill="#fff" opacity=".85" />
+  </svg>
+  <span class="logo__text">
+    <span class="logo__name">{SITE.shortName}</span>
+    <span class="logo__sub">Real Estate</span>
+  </span>
+</a>

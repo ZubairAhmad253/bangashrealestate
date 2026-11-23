@@ -1,0 +1,23 @@
+---
+import { SITE } from '../config/site';
+interface Props { items: { label: string; href?: string }[] }
+const { items } = Astro.props;
+const all = [{ label: 'Home', href: '/' }, ...items];
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: all.map((item, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: item.label,
+    ...(item.href ? { item: new URL(item.href, SITE.url).href } : {}),
+  })),
+};
+---
+
+<nav class="breadcrumbs" aria-label="Breadcrumb" data-reveal="down">
+  <ol>
+    {all.map((item, i) => (i === all.length - 1 || !item.href ? <li aria-current="page">{item.label}</li> : <li><a href={item.href}>{item.label}</a></li>))}
+  </ol>
+</nav>
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />

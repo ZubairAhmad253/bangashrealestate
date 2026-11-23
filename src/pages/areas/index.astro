@@ -1,0 +1,37 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import CTA from '../../components/CTA.astro';
+import { AREAS } from '../../data/areas';
+import { propertiesInArea } from '../../data/properties';
+---
+
+<BaseLayout
+  title="Areas We Cover — Property in Rawalpindi & Islamabad Societies"
+  description="Property dealers for Airport Housing Society, Ghauri Town, Bahria Town, DHA, Gulzar-e-Quaid, Chaklala Scheme 3, PWD, Korang Town, Media Town & Soan Garden."
+>
+  <PageHero
+    eyebrow="Locations"
+    title="Areas We Cover in Rawalpindi & Islamabad"
+    lead="Our office is in Rawalpindi and our team works daily in these societies — so you get real local knowledge, fair prices and genuine listings."
+    crumbs={[{ label: 'Areas' }]}
+  />
+  <section class="section" style="padding-top:0">
+    <div class="container area-grid">
+      {AREAS.map((a, i) => (
+        <a href={`/areas/${a.slug}/`} class="area-tile" data-reveal="up" style={`--d:${(i % 4) * 0.08}s`}>
+          <Image src={a.image} alt={`Houses and plots in ${a.name}, ${a.city}`} widths={[400, 700]} sizes="(max-width: 700px) 92vw, 320px" />
+          <span class="area-tile__city">{a.city}</span>
+          <h2 style="font-size:1.35rem;margin-top:4px">{a.name}</h2>
+          <span class="area-tile__meta">
+            <span>{propertiesInArea(a.slug).length || 'New'} listings</span>
+            <span class="area-tile__go"><Icon name="arrow-up-right" /></span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </section>
+  <CTA title="Looking in an area not listed here?" text="We work across Rawalpindi & Islamabad. Message us your preferred location and budget." />
+</BaseLayout>

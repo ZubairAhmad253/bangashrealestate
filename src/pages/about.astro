@@ -1,0 +1,87 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import CTA from '../components/CTA.astro';
+import { SITE } from '../config/site';
+import { WHY_US } from '../data/content';
+import house5 from '../assets/images/house-5.jpg';
+import construction1 from '../assets/images/construction-1.jpg';
+---
+
+<BaseLayout
+  title="About Bangash Real Estate — Property Dealers & Builders in Rawalpindi"
+  description="Bangash Real Estate is a Rawalpindi-based property dealer and builder serving Rawalpindi & Islamabad. Learn about our team, values and services."
+>
+  <PageHero
+    eyebrow="About us"
+    title="Your Trusted Property Partner in Rawalpindi & Islamabad"
+    lead="Bangash Real Estate helps families and investors buy, sell, rent and build property with honesty, local knowledge and complete support from start to finish."
+    crumbs={[{ label: 'About' }]}
+  />
+
+  <section class="section" style="padding-top:0">
+    <div class="container split">
+      <div class="img-stack" data-reveal="right">
+        <div class="img-stack__main" data-tilt="4">
+          <Image src={house5} alt="Luxury house sold by Bangash Real Estate" widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" loading="eager" />
+        </div>
+        <div class="img-stack__sub">
+          <Image src={construction1} alt="Bangash Builders planning a construction project" widths={[300, 500]} sizes="280px" />
+        </div>
+        <div class="img-stack__badge"><strong>{SITE.stats[0].value}+</strong><span>Years of trust</span></div>
+      </div>
+      <div class="prose">
+        <h2 style="margin-top:0" data-reveal="up">Who we are</h2>
+        <p data-reveal="up">
+          <strong>{SITE.name}</strong> is a Rawalpindi-based real estate agency and construction company. Our office is close to Airport Housing Society and we work every day across societies such as Ghauri Town, Gulzar-e-Quaid, Chaklala Scheme 3, Bahria Town, DHA and the Islamabad Expressway belt.
+        </p>
+        <p data-reveal="up">
+          We help clients <strong>buy and sell plots</strong>, <strong>buy, sell and rent houses and portions</strong>, and <strong>buy, sell and rent flats</strong>. And when a client wants to build, our builder team constructs houses and apartment buildings on contract — so you can find a plot and build your home with one trusted partner.
+        </p>
+        <h3 data-reveal="up">Our promise</h3>
+        <ul class="check-list" role="list" style="padding:0">
+          <li data-reveal="up">Honest advice — even when it means saying “don’t buy this one”.</li>
+          <li data-reveal="up">Every document verified before you pay a single rupee.</li>
+          <li data-reveal="up">Clear commission, no hidden charges.</li>
+          <li data-reveal="up">Quick replies on WhatsApp — 6 days a week.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <div class="stats-band" data-reveal="zoom">
+        <div class="stats">
+          {SITE.stats.map((s) => (
+            <div>
+              <p class="stat__num" data-count={s.value} data-suffix={s.suffix}>{s.value.toLocaleString()}{s.suffix}</p>
+              <p class="stat__label">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <h2 data-reveal="up">Why clients <span class="gradient-text">choose us</span></h2>
+      </div>
+      <div class="grid grid-3">
+        {WHY_US.map((w, i) => (
+          <div class="feature" data-reveal="up" style={`--d:${(i % 3) * 0.08}s`}>
+            <span class="feature__icon"><Icon name={w.icon} /></span>
+            <h3>{w.title}</h3>
+            <p>{w.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CTA />
+</BaseLayout>

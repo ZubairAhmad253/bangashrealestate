@@ -1,0 +1,121 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import PropertyCard from '../../components/PropertyCard.astro';
+import Icon from '../../components/Icon.astro';
+import FAQ from '../../components/FAQ.astro';
+import CTA from '../../components/CTA.astro';
+import { SERVICES, type Service } from '../../data/services';
+import { PROPERTIES } from '../../data/properties';
+import { AREAS } from '../../data/areas';
+import { SITE, whatsappLink } from '../../config/site';
+
+export function getStaticPaths() {
+  return SERVICES.map((service) => ({ params: { slug: service.slug }, props: { service } }));
+}
+
+const { service: s } = Astro.props as { service: Service };
+const listings = s.propertyType ? PROPERTIES.filter((p) => p.type === s.propertyType).slice(0, 6) : [];
+const others = SERVICES.filter((x) => x.slug !== s.slug);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: s.h1,
+  description: s.seoDescription,
+  serviceType: s.name,
+  provider: { '@id': `${SITE.url}/#business` },
+  areaServed: [{ '@type': 'City', name: 'Rawalpindi' }, { '@type': 'City', name: 'Islamabad' }],
+};
+---
+
+<BaseLayout title={s.seoTitle} description={s.seoDescription} image={s.image} schema={[schema]}>
+  <PageHero eyebrow={s.name} title={s.h1} lead={s.intro} crumbs={[{ label: 'Services', href: '/services/' }, { label: s.name }]}>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px" data-reveal="up">
+      <a href={whatsappLink(`Assalam o Alaikum! I need help with: ${s.name}.`)} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="whatsapp" /> {s.slug === 'construction' ? 'Get a free quote' : 'Talk to an agent'}</a>
+      {s.propertyType && <a href={`/properties/?type=${s.propertyType}`} class="btn btn-outline">Browse {s.menuLabel.toLowerCase()} <Icon name="arrow-right" /></a>}
+    </div>
+  </PageHero>
+
+  <section class="section" style="padding-top:0">
+    <div class="container split">
+      <div class="img-stack" data-reveal="right">
+        <div class="img-stack__main" data-tilt="4">
+          <Image src={s.image} alt={s.h1} widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" loading="eager" />
+        </div>
+      </div>
+      <div>
+        <h2 style="font-size:var(--fs-2xl)" data-reveal="up">What we <span class="gradient-text">offer</span></h2>
+        <ul class="check-list check-list--2" style="margin-top:24px" role="list">
+          {s.offerings.map((o, i) => <li data-reveal="up" style={`--d:${i * 0.05}s`}>{o}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tint">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="layers" /></span>How it works</p>
+        <h2 data-reveal="up" style="--d:.08s">Simple, <span class="gradient-text">transparent</span> process</h2>
+      </div>
+      <ol class="steps grid grid-4" role="list" style="margin-top:0">
+        {s.steps.map((st, i) => (
+          <li class="step" data-reveal="up" style={`--d:${i * 0.1}s;grid-template-columns:1fr`}>
+            <span class="step__num" aria-hidden="true"></span>
+            <div><h3>{st.title}</h3><p>{st.text}</p></div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  {listings.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head section-head--row">
+          <div><h2 data-reveal="up">Latest <span class="gradient-text">{s.menuLabel.toLowerCase()}</span></h2></div>
+          <a href={`/properties/?type=${s.propertyType}`} class="btn btn-outline" data-reveal="left">View all <Icon name="arrow-right" /></a>
+        </div>
+        <div class="grid grid-3">{listings.map((p, i) => <PropertyCard property={p} delay={(i % 3) * 0.08} />)}</div>
+      </div>
+    </section>
+  )}
+
+  <section class="section" style={listings.length ? 'padding-top:0' : ''}>
+    <div class="container">
+      <div class="section-head section-head--center">
+        <h2 data-reveal="up">{s.menuLabel} in <span class="gradient-text">popular areas</span></h2>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center" data-reveal="up">
+        {AREAS.map((a) => <a href={`/areas/${a.slug}/`} class="tag" style="padding:10px 16px;font-size:.88rem"><Icon name="pin" size={14} class="inline-icon" /> {a.name}</a>)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--center"><h2 data-reveal="up">Frequently asked <span class="gradient-text">questions</span></h2></div>
+      <FAQ faqs={s.faqs} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head"><h2 data-reveal="up">Other <span class="gradient-text">services</span></h2></div>
+      <div class="grid grid-3">
+        {others.map((o, i) => (
+          <a href={`/services/${o.slug}/`} class="service-card" data-reveal="up" style={`--d:${i * 0.08}s`}>
+            <span class="service-card__icon"><Icon name={o.icon} /></span>
+            <h3>{o.name}</h3>
+            <p>{o.short}</p>
+            <span class="link-arrow">Learn more <Icon name="arrow-right" /></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <CTA />
+</BaseLayout>

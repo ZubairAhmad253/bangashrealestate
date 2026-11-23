@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import PropertyCard from '../../components/PropertyCard.astro';
+import Icon from '../../components/Icon.astro';
+import CTA from '../../components/CTA.astro';
+import { PROPERTIES } from '../../data/properties';
+import { AREAS } from '../../data/areas';
+import { SITE, whatsappLink } from '../../config/site';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Properties for sale and rent in Rawalpindi & Islamabad',
+  itemListElement: PROPERTIES.map((p, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    url: new URL(`/properties/${p.slug}/`, SITE.url).href,
+    name: p.title,
+  })),
+};
+---
+
+<BaseLayout
+  title="Properties for Sale & Rent in Rawalpindi & Islamabad"
+  description="Browse plots, houses and flats for sale and rent in Rawalpindi & Islamabad — Airport Housing Society, Ghauri Town, Bahria Town, DHA and more. Filter by type, purpose and area."
+  schema={[schema]}
+>
+  <PageHero
+    eyebrow="All listings"
+    title="Properties for Sale & Rent in Rawalpindi & Islamabad"
+    lead="Plots, houses and flats — filter by what you need. Can't find it? Message us on WhatsApp; many of our best deals never get listed online."
+    crumbs={[{ label: 'Properties' }]}
+  />
+
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <form class="filters" data-filters aria-label="Filter properties" data-reveal="up">
+        <div class="field">
+          <label for="f-purpose">Purpose</label>
+          <select id="f-purpose" name="purpose">
+            <option value="">Buy or rent</option>
+            <option value="sale">For Sale</option>
+            <option value="rent">For Rent</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-type">Type</label>
+          <select id="f-type" name="type">
+            <option value="">All types</option>
+            <option value="plot">Plots</option>
+            <option value="house">Houses</option>
+            <option value="flat">Flats</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-area">Area</label>
+          <select id="f-area" name="area">
+            <option value="">All areas</option>
+            {AREAS.map((a) => <option value={a.slug}>{a.name}</option>)}
+          </select>
+        </div>
+        <button type="reset" class="btn btn-outline">Reset</button>
+      </form>
+
+      <p class="results-bar"><span>Showing <strong data-count-results>{PROPERTIES.length}</strong> properties</span></p>
+
+      <div class="grid grid-3" data-property-list>
+        {PROPERTIES.map((p, i) => <PropertyCard property={p} delay={(i % 3) * 0.08} eager={i < 3} />)}
+      </div>
+
+      <div class="empty-state" data-empty>
+        <h2 style="font-size:var(--fs-xl);color:var(--text)">No matching listing right now</h2>
+        <p style="margin:10px 0 20px">We get new properties every week — tell us what you need and we'll find it for you.</p>
+        <a href={whatsappLink('Assalam o Alaikum! I am looking for a property that is not listed on your website.')} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Tell us on WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+  <CTA title="Want to sell or rent out your property?" text="List it with Bangash Real Estate — we bring genuine buyers and tenants from across Rawalpindi & Islamabad." />
+</BaseLayout>

@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import { SITE, whatsappLink } from '../config/site';
+import { AREAS } from '../data/areas';
+
+const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(SITE.mapQuery)}&z=14&output=embed`;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: `Contact ${SITE.name}`,
+  url: new URL('/contact/', SITE.url).href,
+  about: { '@id': `${SITE.url}/#business` },
+};
+---
+
+<BaseLayout
+  title="Contact Bangash Real Estate — Rawalpindi & Islamabad"
+  description={`Contact Bangash Real Estate on WhatsApp, phone or email for plots, houses & flats in Rawalpindi & Islamabad. Office: ${SITE.address.street}, ${SITE.address.city}.`}
+  schema={[schema]}
+>
+  <PageHero
+    eyebrow="Contact"
+    title="Let's Find Your Next Property"
+    lead="Send a message on WhatsApp for the fastest reply, or fill the form and we'll get back to you within hours."
+    crumbs={[{ label: 'Contact' }]}
+  />
+
+  <section class="section" style="padding-top:0">
+    <div class="container contact-grid">
+      <div style="display:grid;gap:14px;align-content:start">
+        <a href={whatsappLink()} class="contact-item" target="_blank" rel="noopener" data-reveal="right">
+          <span class="contact-item__icon contact-item__icon--wa"><Icon name="whatsapp" /></span>
+          <div><span>WhatsApp</span><strong>Chat with us instantly</strong></div>
+        </a>
+        <a href={`tel:${SITE.phoneLink}`} class="contact-item" data-reveal="right" style="--d:.06s">
+          <span class="contact-item__icon"><Icon name="phone" /></span>
+          <div><span>Call</span><strong>{SITE.phone}</strong></div>
+        </a>
+        <a href={`mailto:${SITE.email}`} class="contact-item" data-reveal="right" style="--d:.12s">
+          <span class="contact-item__icon"><Icon name="mail" /></span>
+          <div><span>Email</span><strong>{SITE.email}</strong></div>
+        </a>
+        <div class="contact-item" data-reveal="right" style="--d:.18s">
+          <span class="contact-item__icon"><Icon name="pin" /></span>
+          <div><span>Office</span><strong>{SITE.address.street}, {SITE.address.city}</strong></div>
+        </div>
+        <div class="contact-item" data-reveal="right" style="--d:.24s">
+          <span class="contact-item__icon"><Icon name="clock" /></span>
+          <div><span>Hours</span><strong>{SITE.hours}</strong></div>
+        </div>
+      </div>
+
+      <form class="form" data-contact-form data-whatsapp={SITE.whatsapp} data-email={SITE.email} data-reveal="left">
+        <h2 style="font-size:var(--fs-xl)">Send an enquiry</h2>
+        <div class="form-row">
+          <div class="field"><label for="c-name">Your name</label><input id="c-name" name="name" required autocomplete="name" placeholder="e.g. Ali Khan" /></div>
+          <div class="field"><label for="c-phone">Phone / WhatsApp</label><input id="c-phone" name="phone" type="tel" required autocomplete="tel" placeholder="03xx xxxxxxx" /></div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="c-interest">I'm interested in</label>
+            <select id="c-interest" name="interest">
+              <option>Buying a plot</option>
+              <option>Buying a house</option>
+              <option>Renting a house / portion</option>
+              <option>Buying a flat</option>
+              <option>Renting a flat</option>
+              <option>Selling / renting out my property</option>
+              <option>Construction of house / flats</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="c-area">Preferred area</label>
+            <select id="c-area" name="area">
+              <option value="">Any area</option>
+              {AREAS.map((a) => <option>{a.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <div class="field"><label for="c-msg">Message</label><textarea id="c-msg" name="message" placeholder="Budget, size, number of rooms…"></textarea></div>
+        <div class="form__actions">
+          <button type="submit" class="btn btn-whatsapp"><Icon name="whatsapp" /> Send via WhatsApp</button>
+          <button type="button" class="btn btn-outline" data-send-email><Icon name="mail" /> Send via Email</button>
+        </div>
+        <p class="form__note">Your details are only used to reply to your enquiry.</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="container" data-reveal="up">
+      <iframe class="map-embed" src={mapSrc} title={`${SITE.name} office location map`} loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </section>
+</BaseLayout>

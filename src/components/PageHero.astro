@@ -1,0 +1,24 @@
+---
+import Breadcrumbs from './Breadcrumbs.astro';
+import Icon from './Icon.astro';
+interface Props {
+  title: string;
+  lead?: string;
+  eyebrow?: string;
+  crumbs: { label: string; href?: string }[];
+}
+const { title, lead, eyebrow, crumbs } = Astro.props;
+---
+
+<section class="page-hero">
+  <div class="hero__grid-bg" aria-hidden="true"></div>
+  <span class="blob blob--1" aria-hidden="true"></span>
+  <span class="blob blob--2" aria-hidden="true"></span>
+  <div class="container page-hero__inner">
+    <Breadcrumbs items={crumbs} />
+    {eyebrow && <p class="eyebrow" style="margin-top:22px" data-reveal="up"><span class="eyebrow__dot"><Icon name="sparkles" /></span>{eyebrow}</p>}
+    <h1 data-reveal="up" style="--d:.08s">{title}</h1>
+    {lead && <p class="lead" data-reveal="up" style="--d:.16s">{lead}</p>}
+    <slot />
+  </div>
+</section>

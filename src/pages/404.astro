@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+---
+
+<BaseLayout title="Page Not Found" description="The page you are looking for could not be found." noindex>
+  <section class="page-hero" style="min-height:80vh;display:grid;place-items:center;text-align:center">
+    <div class="hero__grid-bg" aria-hidden="true"></div>
+    <span class="blob blob--1" aria-hidden="true"></span>
+    <span class="blob blob--2" aria-hidden="true"></span>
+    <div class="container page-hero__inner">
+      <p class="gradient-text" style="font-family:var(--font-heading);font-size:clamp(6rem,18vw,12rem);font-weight:800;line-height:1" data-reveal="zoom">404</p>
+      <h1 style="margin-inline:auto" data-reveal="up">This property isn't on the map</h1>
+      <p class="lead" style="margin:14px auto 0" data-reveal="up">The page may have moved or the listing has been sold.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px" data-reveal="up">
+        <a href="/" class="btn btn-primary"><Icon name="home" /> Back home</a>
+        <a href="/properties/" class="btn btn-outline">Browse properties <Icon name="arrow-right" /></a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

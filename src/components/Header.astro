@@ -1,0 +1,80 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { NAV, SITE, whatsappLink } from '../config/site';
+import { SERVICES } from '../data/services';
+
+const path = Astro.url.pathname;
+const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+---
+
+<div class="scroll-progress" aria-hidden="true"></div>
+<header class="site-header" data-header>
+  <div class="container header-inner">
+    <Logo id="logo-header" />
+
+    <nav class="nav" aria-label="Main navigation">
+      <ul class="nav__list">
+        {
+          NAV.map((item) =>
+            'children' in item && item.children ? (
+              <li class="nav__item">
+                <a href={item.href} class="nav__link" aria-current={isActive(item.href) ? 'page' : undefined}>
+                  {item.label}
+                  <Icon name="chevron-down" />
+                </a>
+                <div class="dropdown">
+                  {SERVICES.map((s) => (
+                    <a href={`/services/${s.slug}/`}>
+                      <span class="dropdown__icon"><Icon name={s.icon} /></span>
+                      <span>
+                        <strong>{s.name}</strong>
+                        <span>{s.short.split('—')[0].slice(0, 70)}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </li>
+            ) : (
+              <li>
+                <a href={item.href} class="nav__link" aria-current={isActive(item.href) ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ),
+          )
+        }
+      </ul>
+    </nav>
+
+    <a href={whatsappLink()} class="btn btn-primary btn-sm header-cta" target="_blank" rel="noopener">
+      <Icon name="whatsapp" /> WhatsApp Us
+    </a>
+
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="drawer" data-menu-open>
+      <Icon name="menu" />
+    </button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" data-drawer aria-hidden="true">
+  <div class="drawer__backdrop" data-menu-close></div>
+  <div class="drawer__panel" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="drawer__top">
+      <Logo id="logo-drawer" />
+      <button class="menu-toggle" type="button" aria-label="Close menu" data-menu-close><Icon name="x" /></button>
+    </div>
+    <a href="/" class="drawer__link" aria-current={path === '/' ? 'page' : undefined}><Icon name="home" /> Home</a>
+    <a href="/properties/" class="drawer__link" aria-current={isActive('/properties/') ? 'page' : undefined}><Icon name="search" /> All Properties</a>
+    <p class="drawer__group">Services</p>
+    {SERVICES.map((s) => <a href={`/services/${s.slug}/`} class="drawer__link" aria-current={isActive(`/services/${s.slug}/`) ? 'page' : undefined}><Icon name={s.icon} /> {s.name}</a>)}
+    <p class="drawer__group">Company</p>
+    <a href="/areas/" class="drawer__link" aria-current={isActive('/areas/') ? 'page' : undefined}><Icon name="pin" /> Areas We Cover</a>
+    <a href="/about/" class="drawer__link" aria-current={isActive('/about/') ? 'page' : undefined}><Icon name="users" /> About Us</a>
+    <a href="/contact/" class="drawer__link" aria-current={isActive('/contact/') ? 'page' : undefined}><Icon name="mail" /> Contact</a>
+    <div class="drawer__cta">
+      <a href={whatsappLink()} class="btn btn-whatsapp btn-block" target="_blank" rel="noopener"><Icon name="whatsapp" /> WhatsApp</a>
+      <a href={`tel:${SITE.phoneLink}`} class="btn btn-outline btn-block"><Icon name="phone" /> {SITE.phone}</a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,100 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import PropertyCard from '../../components/PropertyCard.astro';
+import Icon from '../../components/Icon.astro';
+import FAQ from '../../components/FAQ.astro';
+import CTA from '../../components/CTA.astro';
+import { AREAS, type Area } from '../../data/areas';
+import { propertiesInArea } from '../../data/properties';
+import { SERVICES } from '../../data/services';
+import { whatsappLink } from '../../config/site';
+
+export function getStaticPaths() {
+  return AREAS.map((area) => ({ params: { slug: area.slug }, props: { area } }));
+}
+
+const { area: a } = Astro.props as { area: Area };
+const listings = propertiesInArea(a.slug);
+const cityLabel = a.city === 'Rawalpindi / Islamabad' ? 'Rawalpindi & Islamabad' : a.city;
+const faqs = [
+  { q: `Do you have houses for sale in ${a.name}?`, a: `Yes. We regularly have houses, portions and plots in ${a.name}. Many deals are not listed online, so message us on WhatsApp with your budget and size for the latest options.` },
+  { q: `Can I rent a house or flat in ${a.name} through you?`, a: `Yes. We deal in rentals in ${a.name} for families and professionals, including tenant verification and rental agreements.` },
+  { q: `Can you build a house on my plot in ${a.name}?`, a: `Absolutely. Our construction team builds houses and flats in ${a.name} — grey structure or complete turnkey — with transparent costing.` },
+];
+---
+
+<BaseLayout
+  title={`Property in ${a.name} ${cityLabel} — Plots, Houses & Flats`}
+  description={`Buy, sell or rent plots, houses and flats in ${a.name}, ${cityLabel}. ${a.short} Contact Bangash Real Estate for verified listings.`}
+  image={a.image}
+>
+  <PageHero
+    eyebrow={cityLabel}
+    title={`Property in ${a.name}, ${cityLabel}`}
+    lead={a.short}
+    crumbs={[{ label: 'Areas', href: '/areas/' }, { label: a.name }]}
+  >
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px" data-reveal="up">
+      <a href={whatsappLink(`Assalam o Alaikum! I'm looking for property in ${a.name}.`)} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="whatsapp" /> Ask about {a.name}</a>
+      <a href={`/properties/?area=${a.slug}`} class="btn btn-outline">See listings <Icon name="arrow-right" /></a>
+    </div>
+  </PageHero>
+
+  <section class="section" style="padding-top:0">
+    <div class="container split">
+      <div class="img-stack" data-reveal="right">
+        <div class="img-stack__main" data-tilt="4">
+          <Image src={a.image} alt={`Homes in ${a.name}, ${cityLabel}`} widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" loading="eager" />
+        </div>
+      </div>
+      <div class="prose">
+        <h2 style="margin-top:0" data-reveal="up">About {a.name}</h2>
+        <p data-reveal="up">{a.intro}</p>
+        <h3 data-reveal="up">Why buy or rent here</h3>
+        <ul class="check-list" role="list" style="padding:0">{a.highlights.map((h, i) => <li data-reveal="up" style={`--d:${i * 0.06}s`}>{h}</li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head">
+        <h2 data-reveal="up">Listings in <span class="gradient-text">{a.name}</span></h2>
+      </div>
+      {listings.length > 0 ? (
+        <div class="grid grid-3">{listings.map((p, i) => <PropertyCard property={p} delay={(i % 3) * 0.08} />)}</div>
+      ) : (
+        <div class="empty-state is-visible">
+          <p style="margin-bottom:18px">New listings in {a.name} are added regularly. Message us for current availability.</p>
+          <a href={whatsappLink(`Assalam o Alaikum! Do you have any property available in ${a.name}?`)} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Check availability</a>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head section-head--center"><h2 data-reveal="up">Our services in <span class="gradient-text">{a.name}</span></h2></div>
+      <div class="grid grid-4">
+        {SERVICES.map((s, i) => (
+          <a href={`/services/${s.slug}/`} class="service-card" data-reveal="up" style={`--d:${i * 0.08}s`}>
+            <span class="service-card__icon"><Icon name={s.icon} /></span>
+            <h3>{s.name}</h3>
+            <span class="link-arrow">Learn more <Icon name="arrow-right" /></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--center"><h2 data-reveal="up">{a.name} <span class="gradient-text">FAQs</span></h2></div>
+      <FAQ faqs={faqs} />
+    </div>
+  </section>
+
+  <CTA />
+</BaseLayout>
