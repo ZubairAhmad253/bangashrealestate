@@ -1,8 +1,8 @@
-# Bangash Real Estate
+# Bangash Real Estate & Builders
 
-Official website of **Bangash Real Estate** — plots, houses & flats for sale and rent, plus house & apartment construction in Rawalpindi & Islamabad (Airport Housing Society, Ghauri Town, Bahria Town, DHA and more).
+Official website of **Bangash Real Estate & Builders** — houses, flats and plots for sale and rent, plus house and apartment construction in Rawalpindi & Islamabad (Airport Housing Society, Ghauri Town, Bahria Town, DHA and more).
 
-Built with [Astro](https://astro.build) — static HTML, near-zero JavaScript, optimized images and full SEO (sitemap, schema.org, Open Graph, canonical URLs).
+Built with [Astro](https://astro.build) — static HTML, near-zero JavaScript, optimized images and full SEO (sitemap, schema.org, Open Graph, canonical URLs). Content is managed through an admin panel backed by [Supabase](https://supabase.com).
 
 ## Run locally
 
@@ -11,44 +11,43 @@ npm install
 npm run dev       # http://localhost:4321
 npm run build     # production build → dist/
 npm run preview   # preview the production build
+npx astro check   # type check
 ```
 
-## Kya kahan edit karein (Where to edit)
+## Where to edit
 
-| Cheez | File |
+| What | Where |
 |---|---|
-| Phone, WhatsApp, email, address, map, social links, stats, domain | `src/config/site.ts` |
-| **WhatsApp & email ke custom messages** | `src/config/site.ts` → `MESSAGES` |
-| Google reviews (testimonials) | `src/data/content.ts` → `TESTIMONIALS` |
-| Logo (gold) | `src/assets/brand/logo-gold.jpg` · header logo: `src/components/Logo.astro` |
-| **Colors / gradients / fonts** (poora color scheme) | `src/styles/theme.css` |
-| Layout & component styles, animations | `src/styles/global.css` |
-| Property listings (add / remove / prices) | `src/data/properties.ts` |
-| Areas / societies pages | `src/data/areas.ts` |
-| Services (plots, houses, flats, construction) | `src/data/services.ts` |
-| FAQs, testimonials, "Why choose us" | `src/data/content.ts` |
-| Photos | `src/assets/images/` |
+| Listings, photos, projects, reviews, leads | **Admin panel** → `/admin/` |
+| Phone, WhatsApp, email, hours, Google rating, home stats | Admin panel → Settings (or `src/config/site.ts`) |
+| Address, map, social links, domain | `src/config/site.ts` |
+| WhatsApp & email pre-filled messages, auto-reply text | `src/config/site.ts` → `MESSAGES` |
+| **Colors, gradients, fonts** (whole color scheme) | `src/styles/theme.css` |
+| Layout, component styles, animations | `src/styles/global.css` |
+| Area / society pages | `src/data/areas.ts` |
+| Service pages (plots, houses, flats, construction) | `src/data/services.ts` |
+| City landing pages | `src/data/cities.ts` |
+| FAQs and "Why choose us" | `src/data/content.ts` |
+| Property guides (blog) | `src/content/guides/*.md` |
+| Logo | `src/assets/brand/` · header logo: `src/components/Logo.astro` |
 
-### Nayi property add karna
-1. Photo `src/assets/images/` mein daalein.
-2. `src/data/properties.ts` mein upar `import` karein.
-3. `PROPERTIES` list mein ek naya object add karein — page, sitemap aur SEO khud ban jayenge.
-
-### Color scheme change karna
-`src/styles/theme.css` mein sirf `--brand-primary`, `--brand-primary-strong`, `--brand-secondary`, `--brand-accent` aur `--brand-accent-light` badlein. Saare tints, gradients aur shadows khud update ho jayenge. Abhi ka theme signboard ke navy/blue aur logo ke gold se bana hai.
-
-## Deploy
-
-Static site hai — `npm run build` ke baad `dist/` folder kisi bhi host par upload karein, ya repo ko **Netlify / Vercel / Cloudflare Pages** se connect karein (build command: `npm run build`, output: `dist`).
-
-Deploy ke baad `src/config/site.ts` mein `url` apne asal domain par set karein aur Google Search Console mein `/sitemap-index.xml` submit karein.
+### Changing the color scheme
+In `src/styles/theme.css`, edit only the **BRAND COLORS** values. All tints, gradients and shadows update automatically. Two themes are included: **gold** (default, matches the logo) and **blue** (matches the shop sign) — switch with `THEME` in `src/layouts/BaseLayout.astro`.
 
 ## Admin panel & backend (Supabase)
 
-- **Admin panel:** `/admin/` — login (Supabase Auth), properties, photos, leads, construction projects, reviews, site settings.
-- **Roles:** `super_admin` (sab kuch + settings + admins) · `editor` (properties, leads, projects, reviews).
-- **Database setup:** `database/schema.sql` ko Supabase → SQL Editor mein ek dafa chalayein.
-- **Auto-publish:** Vercel deploy hook admin panel → Settings mein lagayein. Content save hote hi website 1–2 minute mein rebuild hoti hai.
-- Website **static** rehti hai — data build ke waqt Supabase se aata hai (`src/lib/remote.ts`). Database khaali ho to sample listings dikhti hain.
-- Supabase free plan pause na ho, is liye `.github/workflows/supabase-keepalive.yml` har 3 din ping karta hai.
-- ⚠️ Supabase **secret key** kabhi code mein na daalein — sirf publishable key (`src/config/site.ts`).
+- **Admin panel:** `/admin/` — sign in with Supabase Auth; manage properties (with photo upload), leads, construction projects, reviews and site settings.
+- **Roles:** `super_admin` (everything, including settings and admins) · `editor` (properties, leads, projects, reviews).
+- **Database setup:** run `database/schema.sql` once in Supabase → SQL Editor.
+- **Auto-publish:** add the Vercel deploy hook in the admin panel → Settings. Every content change rebuilds the website in 1–2 minutes.
+- The website stays **static** — data is loaded from Supabase at build time (`src/lib/remote.ts`). While the database has no listings, sample listings are shown. If Supabase is unreachable during a Vercel build, the build fails and the previous version stays live.
+- `.github/workflows/supabase-keepalive.yml` pings Supabase every 3 days so the free project does not pause.
+- ⚠️ Never put the Supabase **secret key** in the code — only the publishable key (`src/config/site.ts`).
+
+## Contact form
+
+The contact form saves each enquiry to the admin **Leads** inbox and sends it by email through FormSubmit, which also sends the visitor an automatic reply. The first submission sends an activation email to the business address that must be confirmed once.
+
+## Deploy
+
+The site is deployed on **Vercel** from the `main` branch (build command `npm run build`, output `dist`). After connecting a custom domain, update `url` in `src/config/site.ts` and submit `/sitemap-index.xml` in Google Search Console.

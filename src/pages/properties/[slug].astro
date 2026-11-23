@@ -21,7 +21,7 @@ const images = [p.image, ...(p.gallery ?? [])].slice(0, 3);
 const related = PROPERTIES.filter((x) => x.slug !== p.slug && (x.area === p.area || x.type === p.type)).slice(0, 3);
 const pageUrl = new URL(`/properties/${p.slug}/`, SITE.url).href;
 const waMsg = MESSAGES.property({ title: p.title, location: `${p.location}, ${city}`, price: priceText, url: pageUrl });
-const mailHref = emailLink(`Enquiry: ${p.title} — ${p.location}`, `Assalam o Alaikum Bangash Real Estate & Builders,\n\nI am interested in this property:\n\n${p.title}\n${p.location}, ${city}\n${priceText}\n${pageUrl}\n\nName: \nPhone / WhatsApp: \nPreferred visit time: \n\nJazakAllah,`);
+const mailHref = emailLink(`Enquiry: ${p.title} — ${p.location}`, `Dear Bangash Real Estate & Builders team,\n\nI am interested in this property:\n\n${p.title}\n${p.location}, ${city}\n${priceText}\n${pageUrl}\n\nName: \nPhone / WhatsApp: \nPreferred visit time: \n\nThank you,`);
 
 const schema = {
   '@context': 'https://schema.org',

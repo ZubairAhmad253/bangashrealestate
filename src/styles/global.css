@@ -1,6 +1,6 @@
 /* ==========================================================================
    BANGASH REAL ESTATE — GLOBAL STYLES
-   Colors yahan hard-code NAHI hain — sab theme.css ke variables se aate hain.
+   No colors are hard-coded here — they all come from theme.css variables.
    ========================================================================== */
 
 @import "./theme.css";
@@ -591,8 +591,8 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 }
 
 /* ---------- Reveal-on-scroll animations ----------
-   Sirf tab chhupte hain jab JavaScript chal rahi ho (.js class),
-   taake Google aur bina-JS users ko content hamesha nazar aaye. */
+   Elements are only hidden while JavaScript runs (.js class),
+   so Google and no-JS visitors always see all content. */
 .js [data-reveal] { opacity: 0; transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out), filter 0.9s var(--ease-out); transition-delay: var(--d, 0s); }
 .js [data-reveal="up"] { transform: translateY(40px); }
 .js [data-reveal="down"] { transform: translateY(-30px); }
@@ -653,9 +653,9 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .logo__name { letter-spacing: 0.02em; }
 .logo__name { color: var(--brand-primary-strong); font-weight: 800; }
 .logo__sub { letter-spacing: 0.1em; font-size: 0.6rem; }
-/* Card ke WhatsApp button ke liye specs row mein jagah */
+/* Leave room in the specs row for the card WhatsApp button */
 .property-card .specs { padding-right: 46px; }
-/* Property detail — mobile: price/contact pehle, photos swipe carousel */
+/* Property detail — mobile: price/contact first, swipeable photo carousel */
 @media (max-width: 1023px) {
   .detail-layout > aside { order: -1; }
 }
@@ -666,14 +666,14 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 }
 
 /* ==========================================================================
-   GOLD THEME DETAILS — logo jaisa black + gold
+   GOLD THEME DETAILS — black + gold like the logo
    ========================================================================== */
 .logo__mark--img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 6px 16px -6px rgb(0 0 0 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.08); }
 .logo__name { background: var(--gradient-text); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: 0.04em; }
 .logo__sub { color: var(--text-muted); }
 .site-footer .logo__name { background: var(--gradient-gold); -webkit-background-clip: text; background-clip: text; }
 
-/* Dark badges ke andar icons gold */
+/* Gold icons inside dark badges */
 .float-card .float-card__icon,
 .contact-item .contact-item__icon:not(.contact-item__icon--wa),
 .service-card:hover .service-card__icon,
@@ -737,7 +737,7 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .seo-links .feature__icon { margin: 0; width: 44px; height: 44px; }
 .seo-links svg.icon-arrow-right { width: 18px; height: 18px; color: var(--brand-primary); }
 
-/* Chhote laptops (1024–1199px): nav ko jagah dene ke liye header CTA chhupayein — floating WhatsApp button maujood hai */
+/* Small laptops (1024–1199px): hide the header CTA to make room for the nav — the floating WhatsApp button is still there */
 @media (min-width: 1024px) and (max-width: 1199px) {
   .header-cta { display: none; }
   .nav__link { padding: 10px 11px; }

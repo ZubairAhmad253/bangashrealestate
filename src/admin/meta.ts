@@ -1,4 +1,4 @@
-/* Website ki areas list aur URL — admin dropdowns ke liye */
+/* Website areas list and URL — used by admin dropdowns */
 import { AREAS } from '../data/areas';
 import { SITE } from '../config/site';
 

@@ -12,7 +12,7 @@ const STATUS: Record<PropertyRow['status'], { label: string; cls: string }> = {
 };
 const TYPE_LABEL = { house: 'House', flat: 'Flat', plot: 'Plot' } as const;
 
-const SAVED_MSG = 'Saved ✓ Website par 1–2 minute mein update ho jayega.';
+const SAVED_MSG = 'Saved ✓ The website will update in 1–2 minutes.';
 
 /* ==================== LIST ==================== */
 export function PropertiesList({ ctx: _ctx }: { ctx: Ctx }) {
@@ -33,12 +33,12 @@ export function PropertiesList({ ctx: _ctx }: { ctx: Ctx }) {
     if (error) { toast.err(error); void load(); } else toast.ok(msg);
   };
   const remove = async (p: PropertyRow) => {
-    if (!(await confirmDialog(`"${p.title}" delete karein?`, 'Property aur us ki saari photos hamesha ke liye hat jayengi. Agar sirf bik gayi hai to "Sold" karna behtar hai.'))) return;
+    if (!(await confirmDialog(`Delete "${p.title}"?`, 'The property and all its photos will be removed permanently. If it has only been sold, setting the status to "Sold" is better.'))) return;
     const { error } = await sb.from('properties').delete().eq('id', p.id);
     if (error) return toast.err(error);
     await removeImages(p.images).catch(() => {});
     setRows((r) => r?.filter((x) => x.id !== p.id) ?? r);
-    toast.ok('Property delete ho gayi.');
+    toast.ok('Property deleted.');
   };
 
   const shown = useMemo(() => {
@@ -53,14 +53,14 @@ export function PropertiesList({ ctx: _ctx }: { ctx: Ctx }) {
 
   return (
     <div class="a-page">
-      <PageHead title="Properties" sub="Houses, flats aur plots — sale ya rent">
+      <PageHead title="Properties" icon="home" sub="Houses, flats and plots for sale or rent">
         <a href="#/properties/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add property</a>
       </PageHead>
 
       <div class="a-toolbar">
         <div class="a-search">
           <Icon name="search" />
-          <input type="search" placeholder="Search — title, area, sector…" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
+          <input type="search" placeholder="Search by title, area or sector…" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
         </div>
         <Segmented value={filter} onChange={setFilter} options={[
           { value: 'all', label: 'All' },
@@ -72,10 +72,10 @@ export function PropertiesList({ ctx: _ctx }: { ctx: Ctx }) {
 
       {rows === null ? <Loading /> : shown.length === 0 ? (
         rows.length === 0 ? (
-          <Empty icon="home" title="Abhi koi property nahi" text="Pehli property add karein — website par sample listings ki jagah aapki asal properties aa jayengi.">
-            <a href="#/properties/new" class="a-btn a-btn--gold"><Icon name="plus" /> Pehli property add karein</a>
+          <Empty icon="home" title="No properties yet" text="Add your first property — your real listings will replace the sample listings on the website.">
+            <a href="#/properties/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add your first property</a>
           </Empty>
-        ) : <Empty icon="search" title="Kuch nahi mila" text="Search ya filter badal kar dekhein." />
+        ) : <Empty icon="search" title="Nothing found" text="Try a different search or filter." />
       ) : (
         <div class="a-items">
           {shown.map((p) => (
@@ -89,7 +89,7 @@ export function PropertiesList({ ctx: _ctx }: { ctx: Ctx }) {
                 <p class="a-item__price">PKR {formatPrice(p.price)}{p.purpose === 'rent' && <small> /month</small>}</p>
                 <p class="a-muted a-small"><Icon name="pin" size={14} /> {p.location}{p.area ? `, ${areaName(p.area)}` : ''} · {TYPE_LABEL[p.type]} · {p.purpose === 'sale' ? 'For Sale' : 'For Rent'}</p>
                 <div class="a-item__actions">
-                  <button class={`a-tag${p.featured ? ' is-on' : ''}`} onClick={() => update(p, { featured: !p.featured })} title="Home page par dikhayein"><Icon name="star" size={14} /> Featured</button>
+                  <button class={`a-tag${p.featured ? ' is-on' : ''}`} onClick={() => update(p, { featured: !p.featured })} title="Show on the home page"><Icon name="star" size={14} /> Featured</button>
                   <button class={`a-tag a-tag--hot${p.hot ? ' is-on' : ''}`} onClick={() => update(p, { hot: !p.hot })}><Icon name="fire" size={14} /> Hot</button>
                   <select class="a-select-sm" value={p.status} onChange={(e) => update(p, { status: e.currentTarget.value as PropertyRow['status'] })} aria-label="Status">
                     <option value="available">● Live</option>
@@ -159,7 +159,7 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
   useEffect(() => {
     if (isNew) return;
     sb.from('properties').select('*').eq('id', id).single().then(({ data, error }) => {
-      if (error || !data) { toast.err(error ?? 'Property nahi mili'); go('properties'); return; }
+      if (error || !data) { toast.err(error ?? 'Property not found'); go('properties'); return; }
       const p = data as PropertyRow;
       const pr = splitPrice(Number(p.price));
       const sz = splitSize(p.size);
@@ -190,13 +190,13 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (f.title.trim().length < 3) e.title = 'Title likhein (masalan "10 Marla Brand New House").';
-    if (!price) e.priceAmount = 'Price likhein.';
-    if (!f.location.trim()) e.location = 'Sector / phase / block likhein.';
-    if (!size) e.sizeAmount = 'Size likhein (masalan 10).';
-    if (!f.images.length) e.images = 'Kam az kam 1 photo add karein.';
+    if (f.title.trim().length < 3) e.title = 'Please enter a title (e.g. "10 Marla Brand New House").';
+    if (!price) e.priceAmount = 'Please enter the price.';
+    if (!f.location.trim()) e.location = 'Please enter the sector, phase or block.';
+    if (!size) e.sizeAmount = 'Please enter the size (e.g. 10).';
+    if (!f.images.length) e.images = 'Please add at least one photo.';
     setErrors(e);
-    if (Object.keys(e).length) { toast.err('Kuch zaroori cheezein reh gayi hain — laal (red) fields dekhein.'); return false; }
+    if (Object.keys(e).length) { toast.err('Some required details are missing — please check the fields marked in red.'); return false; }
     return true;
   };
 
@@ -213,7 +213,7 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
       : await sb.from('properties').update(data).eq('id', id);
     setSaving(false);
     if (res.error) return toast.err(res.error);
-    // Hatayi gayi purani photos storage se bhi delete
+    // Also delete removed photos from storage
     if (row) await removeImages(row.images.filter((u) => !f.images.includes(u))).catch(() => {});
     dirty.current = false;
     toast.ok(SAVED_MSG);
@@ -221,7 +221,7 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
   };
 
   const cancel = async () => {
-    if (dirty.current && !(await confirmDialog('Changes save nahi hue', 'Bina save kiye wapas jana hai?', 'Haan, wapas jayein'))) return;
+    if (dirty.current && !(await confirmDialog('Discard changes?', 'Your changes have not been saved.', 'Discard'))) return;
     const unused = uploaded.current.filter((u) => !(row?.images ?? []).includes(u));
     if (unused.length) await removeImages(unused).catch(() => {});
     dirty.current = false;
@@ -230,8 +230,8 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
 
   return (
     <div class="a-page a-page--form">
-      <PageHead title={isNew ? 'Nayi property' : 'Property edit karein'} sub={isNew ? 'Neeche ki details bharein aur Save dabayein' : f.title}>
-        {!isNew && row?.status === 'available' && <a href={`${SITE_URL}/properties/${row.slug}/`} target="_blank" rel="noopener" class="a-btn a-btn--ghost"><Icon name="external" /> Website par dekhein</a>}
+      <PageHead title={isNew ? 'New property' : 'Edit property'} icon="home" sub={isNew ? 'Fill in the details below and press Save' : f.title}>
+        {!isNew && row?.status === 'available' && <a href={`${SITE_URL}/properties/${row.slug}/`} target="_blank" rel="noopener" class="a-btn a-btn--ghost"><Icon name="external" /> View on website</a>}
       </PageHead>
 
       <section class="a-card">
@@ -243,10 +243,10 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
       <section class="a-card">
         <h2 class="a-card__title"><span>2</span> Basic details</h2>
         <div class="a-form-grid">
-          <Field label="Property title" hint='Masalan: "10 Marla Brand New Double Storey House"' error={errors.title} full>
+          <Field label="Property title" hint='e.g. "10 Marla Brand New Double Storey House"' error={errors.title} full>
             <input value={f.title} maxLength={140} onInput={(e) => set('title', e.currentTarget.value)} placeholder="10 Marla Brand New House" />
           </Field>
-          <Field label="Sale ya Rent?">
+          <Field label="For sale or rent?">
             <Segmented value={f.purpose} onChange={(v) => set('purpose', v)} options={[{ value: 'sale', label: 'For Sale' }, { value: 'rent', label: 'For Rent' }]} />
           </Field>
           <Field label="Type">
@@ -270,7 +270,7 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
             </div>
           </Field>
           <div class="a-preview">
-            <span class="a-muted a-small">Website par aise dikhega</span>
+            <span class="a-muted a-small">Shown on the website as</span>
             <strong>PKR {formatPrice(price)}{f.purpose === 'rent' ? ' /month' : ''}</strong>
           </div>
         </div>
@@ -282,10 +282,10 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
           <Field label="Area / Society">
             <select value={f.area} onChange={(e) => set('area', e.currentTarget.value)}>
               {AREA_OPTIONS.map((a) => <option value={a.slug}>{a.name}</option>)}
-              <option value="other">Other (koi aur area)</option>
+              <option value="other">Other area</option>
             </select>
           </Field>
-          <Field label="Sector / Phase / Block" hint='Masalan: "Sector 4" ya "Phase 5, Street 12"' error={errors.location}>
+          <Field label="Sector / Phase / Block" hint='e.g. "Sector 4" or "Phase 5, Street 12"' error={errors.location}>
             <input value={f.location} maxLength={160} onInput={(e) => set('location', e.currentTarget.value)} placeholder="Sector 4, Airport Housing Society" />
           </Field>
           <Field label="Size" error={errors.sizeAmount}>
@@ -310,7 +310,7 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
 
       <section class="a-card">
         <h2 class="a-card__title"><span>5</span> Description &amp; features</h2>
-        <Field label="Description" hint="2–4 lines: property ki khoobiyan, location ke faide waghera." full>
+        <Field label="Description" hint="2–4 lines about the property and its location." full>
           <textarea rows={5} maxLength={5000} value={f.description} onInput={(e) => set('description', e.currentTarget.value)} placeholder="Brand-new double storey house on a wide street, close to park, mosque and market…" />
         </Field>
         <Field label="Features" full>
@@ -319,7 +319,7 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
       </section>
 
       <section class="a-card">
-        <h2 class="a-card__title"><span>6</span> Website par dikhana</h2>
+        <h2 class="a-card__title"><span>6</span> Visibility</h2>
         <Field label="Status">
           <Segmented value={f.status} onChange={(v) => set('status', v)} options={[
             { value: 'available', label: 'Live' },
@@ -329,8 +329,8 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
           ]} />
         </Field>
         <div class="a-toggles">
-          <Toggle checked={f.featured} onChange={(v) => set('featured', v)} label="Featured" hint="Home page ke 'Handpicked properties' mein dikhayein" />
-          <Toggle checked={f.hot} onChange={(v) => set('hot', v)} label="Hot deal" hint="Listing par 'HOT' badge lagayein" />
+          <Toggle checked={f.featured} onChange={(v) => set('featured', v)} label="Featured" hint="Show in 'Handpicked properties' on the home page" />
+          <Toggle checked={f.hot} onChange={(v) => set('hot', v)} label="Hot deal" hint="Add a 'HOT' badge to the listing" />
         </div>
       </section>
 

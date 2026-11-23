@@ -37,7 +37,7 @@ export function Settings({ ctx }: { ctx: Ctx }) {
   const setStat = (i: number, patch: Partial<Stat>) => setS({ ...s, stats: stats.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
 
   const save = async () => {
-    if (hook && !/^https:\/\/api\.vercel\.com\//.test(hook.trim())) return toast.err('Deploy hook "https://api.vercel.com/…" se shuru hona chahiye.');
+    if (hook && !/^https:\/\/api\.vercel\.com\//.test(hook.trim())) return toast.err('The deploy hook must start with "https://api.vercel.com/".');
     setSaving(true);
     const r1 = await sb.from('settings').update({
       phone: s.phone?.trim() || null, whatsapp: s.whatsapp?.trim() || null, email: s.email?.trim() || null, hours: s.hours?.trim() || null,
@@ -47,56 +47,56 @@ export function Settings({ ctx }: { ctx: Ctx }) {
     const r2 = await sb.from('private_settings').update({ deploy_hook_url: hook.trim() || null }).eq('id', 1);
     setSaving(false);
     if (r1.error || r2.error) return toast.err(r1.error ?? r2.error);
-    toast.ok('Settings saved ✓ Website 1–2 minute mein update hogi.');
+    toast.ok('Settings saved ✓ The website will update in 1–2 minutes.');
   };
 
   const publish = async () => {
     setPublishing(true);
     try {
       const ok = await requestRebuild();
-      if (ok) toast.ok('Website update shuru ho gayi — 1–2 minute mein live.');
-      else toast.err('Pehle neeche "Vercel deploy hook" lagayein aur Save karein.');
+      if (ok) toast.ok('Website update started — live in 1–2 minutes.');
+      else toast.err('Please add the Vercel deploy hook below and save first.');
     } catch (e) { toast.err(e); }
     setPublishing(false);
   };
 
   const addAdmin = async () => {
     const uid = newAdmin.user_id.trim();
-    if (!/^[0-9a-f-]{36}$/i.test(uid) || !/\S+@\S+/.test(newAdmin.email)) return toast.err('Sahi email aur User UID (Supabase → Authentication → Users) daalein.');
+    if (!/^[0-9a-f-]{36}$/i.test(uid) || !/\S+@\S+/.test(newAdmin.email)) return toast.err('Enter a valid email and User UID (Supabase → Authentication → Users).');
     const { error } = await sb.from('admins').insert({ user_id: uid, email: newAdmin.email.trim(), role: newAdmin.role });
     if (error) return toast.err(error);
     setNewAdmin({ email: '', user_id: '', role: 'editor' });
-    toast.ok('Admin add ho gaya.');
+    toast.ok('Admin added.');
     void loadAdmins();
   };
   const setRole = async (a: Admin, role: Admin['role']) => {
     const { error } = await sb.from('admins').update({ role }).eq('user_id', a.user_id);
     if (error) return toast.err(error);
-    toast.ok('Role update ho gaya.');
+    toast.ok('Role updated.');
     void loadAdmins();
   };
   const removeAdmin = async (a: Admin) => {
-    if (!(await confirmDialog(`${a.email} ka admin access hatayein?`, 'Ye banda admin panel mein login nahi kar sakega.', 'Haan, hatayein'))) return;
+    if (!(await confirmDialog(`Remove admin access for ${a.email}?`, 'This person will no longer be able to sign in to the admin panel.', 'Remove access'))) return;
     const { error } = await sb.from('admins').delete().eq('user_id', a.user_id);
     if (error) return toast.err(error);
-    toast.ok('Access hata diya.');
+    toast.ok('Access removed.');
     void loadAdmins();
   };
 
   return (
     <div class="a-page a-page--form">
-      <PageHead title="Settings" sub="Sirf Super Admin — contact details, stats, publishing aur admins">
+      <PageHead title="Settings" icon="settings" sub="Super admin only — contact details, stats, publishing and admins">
         <button class="a-btn a-btn--ghost" onClick={publish} disabled={publishing}><Icon name="refresh" /> {publishing ? 'Starting…' : 'Publish website now'}</button>
       </PageHead>
 
       <section class="a-card">
-        <h2 class="a-card__title"><span><Icon name="phone" size={16} /></span> Contact details (poori website par)</h2>
+        <h2 class="a-card__title"><span><Icon name="phone" size={16} /></span> Contact details (used across the website)</h2>
         <div class="a-form-grid">
-          <Field label="Phone (jaisa dikhe)" hint="Masalan 0332-0445759"><input value={s.phone ?? ''} onInput={(e) => setS({ ...s, phone: e.currentTarget.value })} /></Field>
-          <Field label="WhatsApp number" hint="Masalan 03320445759 (khud 92 mein badal jata hai)"><input value={s.whatsapp ?? ''} onInput={(e) => setS({ ...s, whatsapp: e.currentTarget.value })} /></Field>
+          <Field label="Phone (as displayed)" hint="e.g. 0332-0445759"><input value={s.phone ?? ''} onInput={(e) => setS({ ...s, phone: e.currentTarget.value })} /></Field>
+          <Field label="WhatsApp number" hint="e.g. 03320445759 (converted to +92 automatically)"><input value={s.whatsapp ?? ''} onInput={(e) => setS({ ...s, whatsapp: e.currentTarget.value })} /></Field>
           <Field label="Email"><input type="email" value={s.email ?? ''} onInput={(e) => setS({ ...s, email: e.currentTarget.value })} /></Field>
           <Field label="Office timings"><input value={s.hours ?? ''} onInput={(e) => setS({ ...s, hours: e.currentTarget.value })} /></Field>
-          <Field label="Google rating" hint="Google Maps par jo rating hai (1–5)"><input type="number" step="0.1" min="1" max="5" value={s.google_rating ?? ''} onInput={(e) => setS({ ...s, google_rating: Number(e.currentTarget.value) })} /></Field>
+          <Field label="Google rating" hint="Your rating on Google Maps (1–5)"><input type="number" step="0.1" min="1" max="5" value={s.google_rating ?? ''} onInput={(e) => setS({ ...s, google_rating: Number(e.currentTarget.value) })} /></Field>
         </div>
       </section>
 
@@ -111,15 +111,15 @@ export function Settings({ ctx }: { ctx: Ctx }) {
             </div>
           ))}
         </div>
-        <p class="a-field__hint">Number · nishan (jaise +) · label — masalan "12 + Years of Experience"</p>
+        <p class="a-field__hint">Number · suffix (e.g. +) · label — e.g. "12 + Years of Experience"</p>
       </section>
 
       <section class="a-card">
         <h2 class="a-card__title"><span><Icon name="globe" size={16} /></span> Auto-publish (Vercel deploy hook)</h2>
-        <Field label="Vercel deploy hook URL" hint="Vercel → Project → Settings → Git → Deploy Hooks se banayein (branch: main). Iske baad har save par website khud update hogi." full>
+        <Field label="Vercel deploy hook URL" hint="Create it in Vercel → Project → Settings → Git → Deploy Hooks (branch: main). After that, every save updates the website automatically." full>
           <input value={hook} onInput={(e) => setHook(e.currentTarget.value)} placeholder="https://api.vercel.com/v1/integrations/deploy/…" />
         </Field>
-        {!hook && <p class="a-alert a-alert--warn">Deploy hook abhi nahi laga — admin se kiye gaye changes website par tab tak nahi aayenge.</p>}
+        {!hook && <p class="a-alert a-alert--warn">No deploy hook yet — changes made here will not appear on the website until it is added.</p>}
       </section>
 
       <div class="a-savebar">
@@ -133,20 +133,20 @@ export function Settings({ ctx }: { ctx: Ctx }) {
             <li class="a-list__item">
               <div>
                 <strong>{a.email}</strong>
-                <small class="a-muted">{a.user_id === ctx.me.user_id ? 'Aap' : a.role === 'super_admin' ? 'Super Admin — sab kuch' : 'Editor — properties, leads, projects, reviews'}</small>
+                <small class="a-muted">{a.user_id === ctx.me.user_id ? 'You · Super Admin' : a.role === 'super_admin' ? 'Super Admin — full access' : 'Editor — properties, leads, projects, reviews'}</small>
               </div>
               {a.user_id !== ctx.me.user_id && (
                 <div class="a-row">
                   <Segmented value={a.role} onChange={(r) => setRole(a, r)} options={[{ value: 'editor', label: 'Editor' }, { value: 'super_admin', label: 'Super' }]} />
-                  <button class="a-icon-btn a-btn--danger-text" onClick={() => removeAdmin(a)} aria-label="Hatayein"><Icon name="trash" /></button>
+                  <button class="a-icon-btn a-btn--danger-text" onClick={() => removeAdmin(a)} aria-label="Remove admin"><Icon name="trash" /></button>
                 </div>
               )}
             </li>
           ))}
         </ul>
         <details class="a-details">
-          <summary>+ Naya admin add karein</summary>
-          <p class="a-muted a-small">Pehle Supabase → Authentication → Users → "Add user" se account banayein, phir uska email aur UID yahan daalein.</p>
+          <summary>+ Add a new admin</summary>
+          <p class="a-muted a-small">First create the account in Supabase → Authentication → Users → "Add user", then enter its email and UID here.</p>
           <div class="a-form-grid">
             <Field label="Email"><input type="email" value={newAdmin.email} onInput={(e) => setNewAdmin({ ...newAdmin, email: e.currentTarget.value })} /></Field>
             <Field label="User UID"><input value={newAdmin.user_id} onInput={(e) => setNewAdmin({ ...newAdmin, user_id: e.currentTarget.value })} placeholder="43c6b883-…" /></Field>

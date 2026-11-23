@@ -1,6 +1,6 @@
 ---
-/* Local (ImageMetadata) aur Supabase (URL string) dono photos ke liye ek component.
-   Remote photos bhi build par optimize (WebP, sahi size) ho jati hain. */
+/* One component for both local photos (ImageMetadata) and Supabase photos (URL string).
+   Remote photos are optimized at build time too (WebP, correct sizes). */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 

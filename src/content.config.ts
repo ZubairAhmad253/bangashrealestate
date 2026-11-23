@@ -2,8 +2,8 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
-/* Property Guides (blog) — naya article add karne ke liye src/content/guides/ mein
-   ek .md file banayein (upar wala frontmatter copy karein). */
+/* Property Guides (blog) — to add an article, create a .md file in src/content/guides/
+   (copy the frontmatter from an existing guide). */
 const guides = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/guides' }),
   schema: ({ image }) =>

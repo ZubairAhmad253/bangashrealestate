@@ -5,7 +5,7 @@ import { go, type Ctx } from '../App';
 import { SITE_URL } from '../meta';
 
 const CATEGORY: Record<ProjectRow['category'], string> = { house: 'House', flats: 'Flats / Apartments', renovation: 'Renovation', commercial: 'Commercial' };
-const SAVED_MSG = 'Saved ✓ Website par 1–2 minute mein update ho jayega.';
+const SAVED_MSG = 'Saved ✓ The website will update in 1–2 minutes.';
 
 export function ProjectsList({ ctx: _ctx }: { ctx: Ctx }) {
   const [rows, setRows] = useState<ProjectRow[] | null>(null);
@@ -22,22 +22,22 @@ export function ProjectsList({ ctx: _ctx }: { ctx: Ctx }) {
     if (error) { toast.err(error); void load(); } else toast.ok(SAVED_MSG);
   };
   const remove = async (p: ProjectRow) => {
-    if (!(await confirmDialog(`"${p.title}" delete karein?`, 'Project aur us ki saari photos hamesha ke liye hat jayengi.'))) return;
+    if (!(await confirmDialog(`Delete "${p.title}"?`, 'The project and all its photos will be removed permanently.'))) return;
     const { error } = await sb.from('projects').delete().eq('id', p.id);
     if (error) return toast.err(error);
     await removeImages(p.images).catch(() => {});
     setRows((r) => r?.filter((x) => x.id !== p.id) ?? r);
-    toast.ok('Project delete ho gaya.');
+    toast.ok('Project deleted.');
   };
 
   return (
     <div class="a-page">
-      <PageHead title="Construction Projects" sub="Banaye hue ghar aur buildings — website ke 'Our Projects' page par dikhte hain">
+      <PageHead title="Construction Projects" icon="hammer" sub="Homes and buildings you have built — shown on the website's 'Our Projects' page">
         <a href="#/projects/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add project</a>
       </PageHead>
       {rows === null ? <Loading /> : rows.length === 0 ? (
-        <Empty icon="hammer" title="Abhi koi project nahi" text="Apne banaye hue gharon ki photos add karein — naye clients ka bharosa barhta hai.">
-          <a href="#/projects/new" class="a-btn a-btn--gold"><Icon name="plus" /> Pehla project add karein</a>
+        <Empty icon="hammer" title="No projects yet" text="Add photos of homes you have built — it builds trust with new clients.">
+          <a href="#/projects/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add your first project</a>
         </Empty>
       ) : (
         <div class="a-items">
@@ -88,7 +88,7 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
   useEffect(() => {
     if (isNew) return;
     sb.from('projects').select('*').eq('id', id).single().then(({ data, error }) => {
-      if (error || !data) { toast.err(error ?? 'Project nahi mila'); go('projects'); return; }
+      if (error || !data) { toast.err(error ?? 'Project not found'); go('projects'); return; }
       const p = data as ProjectRow;
       setRow(p);
       setF({ title: p.title, category: p.category, status: p.status, location: p.location, size: p.size, year: p.year ? String(p.year) : '', description: p.description, images: p.images, featured: p.featured, published: p.published });
@@ -104,12 +104,12 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
 
   const save = async () => {
     const e: Record<string, string> = {};
-    if (f.title.trim().length < 3) e.title = 'Project ka naam likhein.';
-    if (!f.images.length) e.images = 'Kam az kam 1 photo add karein.';
+    if (f.title.trim().length < 3) e.title = 'Please enter the project name.';
+    if (!f.images.length) e.images = 'Please add at least one photo.';
     const year = f.year ? parseInt(f.year, 10) : null;
-    if (year !== null && (year < 1990 || year > 2100)) e.year = 'Sahi saal likhein (masalan 2025).';
+    if (year !== null && (year < 1990 || year > 2100)) e.year = 'Please enter a valid year (e.g. 2025).';
     setErrors(e);
-    if (Object.keys(e).length) return toast.err('Laal (red) fields dekhein.');
+    if (Object.keys(e).length) return toast.err('Please check the fields marked in red.');
     setSaving(true);
     const data = { title: f.title.trim(), category: f.category, status: f.status, location: f.location.trim(), size: f.size.trim(), year, description: f.description.trim(), images: f.images, featured: f.featured, published: f.published };
     const res = isNew
@@ -123,7 +123,7 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
     go('projects');
   };
   const cancel = async () => {
-    if (dirty.current && !(await confirmDialog('Changes save nahi hue', 'Bina save kiye wapas jana hai?', 'Haan, wapas jayein'))) return;
+    if (dirty.current && !(await confirmDialog('Discard changes?', 'Your changes have not been saved.', 'Discard'))) return;
     const unused = uploaded.current.filter((u) => !(row?.images ?? []).includes(u));
     if (unused.length) await removeImages(unused).catch(() => {});
     go('projects');
@@ -131,7 +131,7 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
 
   return (
     <div class="a-page a-page--form">
-      <PageHead title={isNew ? 'Naya project' : 'Project edit karein'} sub="Construction gallery" />
+      <PageHead title={isNew ? 'New project' : 'Edit project'} icon="hammer" sub="Construction gallery" />
       <section class="a-card">
         <h2 class="a-card__title"><span>1</span> Photos</h2>
         <PhotoUploader images={f.images} onChange={(v) => set('images', v)} folder={folder.current} onUploaded={(u) => uploaded.current.push(u)} />
@@ -140,31 +140,31 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
       <section class="a-card">
         <h2 class="a-card__title"><span>2</span> Details</h2>
         <div class="a-form-grid">
-          <Field label="Project name" hint='Masalan: "10 Marla House — Sector 4"' error={errors.title} full>
+          <Field label="Project name" hint='e.g. "10 Marla House — Sector 4"' error={errors.title} full>
             <input value={f.title} maxLength={140} onInput={(e) => set('title', e.currentTarget.value)} placeholder="10 Marla Modern House" />
           </Field>
-          <Field label="Kis qism ka kaam?">
+          <Field label="Type of work">
             <Segmented value={f.category} onChange={(v) => set('category', v)} options={[{ value: 'house', label: 'House' }, { value: 'flats', label: 'Flats' }, { value: 'renovation', label: 'Renovation' }, { value: 'commercial', label: 'Commercial' }]} />
           </Field>
           <Field label="Status">
             <Segmented value={f.status} onChange={(v) => set('status', v)} options={[{ value: 'completed', label: 'Completed' }, { value: 'in_progress', label: 'In progress' }]} />
           </Field>
-          <Field label="Location" hint="Masalan: Airport Housing Society, Rawalpindi">
+          <Field label="Location" hint="e.g. Airport Housing Society, Rawalpindi">
             <input value={f.location} maxLength={140} onInput={(e) => set('location', e.currentTarget.value)} />
           </Field>
-          <Field label="Size" hint="Masalan: 10 Marla, double storey">
+          <Field label="Size" hint="e.g. 10 Marla, double storey">
             <input value={f.size} maxLength={80} onInput={(e) => set('size', e.currentTarget.value)} />
           </Field>
-          <Field label="Saal (year)" error={errors.year}>
+          <Field label="Year" error={errors.year}>
             <input type="number" inputMode="numeric" value={f.year} onInput={(e) => set('year', e.currentTarget.value)} />
           </Field>
-          <Field label="Description (optional)" hint="Kya kaam kiya: grey structure, finishing, design waghera." full>
+          <Field label="Description (optional)" hint="What was done: grey structure, finishing, design, etc." full>
             <textarea rows={4} maxLength={5000} value={f.description} onInput={(e) => set('description', e.currentTarget.value)} />
           </Field>
         </div>
         <div class="a-toggles">
-          <Toggle checked={f.published} onChange={(v) => set('published', v)} label="Website par dikhayein" />
-          <Toggle checked={f.featured} onChange={(v) => set('featured', v)} label="Featured" hint="List mein sab se upar" />
+          <Toggle checked={f.published} onChange={(v) => set('published', v)} label="Show on website" />
+          <Toggle checked={f.featured} onChange={(v) => set('featured', v)} label="Featured" hint="Show first in the list" />
         </div>
       </section>
       <div class="a-savebar">

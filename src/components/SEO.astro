@@ -20,7 +20,7 @@ const { title, description = SITE.description, image = defaultOg, noindex = fals
 
 const site = Astro.site ?? new URL(SITE.url);
 const canonical = new URL(Astro.url.pathname, site).href;
-// Google ~60-65 characters dikhata hai — lamba title ho to brand name nahi lagate
+// Google shows ~60–65 characters — skip the brand suffix when the title is long
 const withBrand = `${title} | ${SITE.titleName}`;
 const fullTitle = title.includes(SITE.titleName) || withBrand.length > 65 ? title : withBrand;
 const og = await getImage(
@@ -32,7 +32,7 @@ const ogUrl = new URL(og.src, site).href;
 const logoImg = await getImage({ src: logoGold, width: 512, height: 512, format: 'png' });
 const logoUrl = new URL(logoImg.src, site).href;
 
-// Business schema — Google ko batata hai ke ye real estate agency kahan aur kin areas mein kaam karti hai
+// Business schema — tells Google where this agency is and which areas it serves
 const business = {
   '@context': 'https://schema.org',
   '@type': ['RealEstateAgent', 'GeneralContractor'],

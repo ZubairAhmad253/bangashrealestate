@@ -12,40 +12,40 @@ export function Account({ ctx }: { ctx: Ctx }) {
   const saveName = async () => {
     const { error } = await sb.rpc('set_my_name', { new_name: name });
     if (error) return toast.err(error);
-    toast.ok('Naam save ho gaya — page refresh par dikhega.');
+    toast.ok('Name saved — refresh the page to see it everywhere.');
   };
   const changePw = async (e: Event) => {
     e.preventDefault();
-    if (pw.length < 8) return toast.err('Password kam az kam 8 characters ka ho.');
-    if (pw !== pw2) return toast.err('Dono passwords ek jaise nahi hain.');
+    if (pw.length < 8) return toast.err('Password must be at least 8 characters.');
+    if (pw !== pw2) return toast.err('The two passwords do not match.');
     setBusy(true);
     const { error } = await sb.auth.updateUser({ password: pw });
     setBusy(false);
     if (error) return toast.err(error);
     setPw('');
     setPw2('');
-    toast.ok('Password badal gaya ✓');
+    toast.ok('Password changed ✓');
   };
 
   return (
     <div class="a-page a-page--form">
-      <PageHead title="My Account" sub={`${ctx.me.email} · ${ctx.me.role === 'super_admin' ? 'Super Admin' : 'Editor'}`} />
+      <PageHead title="My Account" icon="user" sub={`${ctx.me.email} · ${ctx.me.role === 'super_admin' ? 'Super Admin' : 'Editor'}`} />
       <section class="a-card">
-        <h2 class="a-card__title"><span><Icon name="user" size={16} /></span> Aap ka naam</h2>
+        <h2 class="a-card__title"><span><Icon name="user" size={16} /></span> Your name</h2>
         <div class="a-row a-row--wrap">
-          <input class="a-input" value={name} maxLength={60} onInput={(e) => setName(e.currentTarget.value)} placeholder="Masalan: Umer Saeed" />
+          <input class="a-input" value={name} maxLength={60} onInput={(e) => setName(e.currentTarget.value)} placeholder="e.g. Umer Saeed" />
           <button class="a-btn a-btn--primary" onClick={saveName}>Save</button>
         </div>
       </section>
       <section class="a-card">
-        <h2 class="a-card__title"><span><Icon name="settings" size={16} /></span> Password badlein</h2>
+        <h2 class="a-card__title"><span><Icon name="settings" size={16} /></span> Change password</h2>
         <form class="a-form-grid" onSubmit={changePw}>
-          <Field label="Naya password"><input type="password" autoComplete="new-password" value={pw} onInput={(e) => setPw(e.currentTarget.value)} /></Field>
-          <Field label="Dobara likhein"><input type="password" autoComplete="new-password" value={pw2} onInput={(e) => setPw2(e.currentTarget.value)} /></Field>
-          <div><button class="a-btn a-btn--primary" disabled={busy}>{busy ? 'Saving…' : 'Password badlein'}</button></div>
+          <Field label="New password"><input type="password" autoComplete="new-password" value={pw} onInput={(e) => setPw(e.currentTarget.value)} /></Field>
+          <Field label="Confirm new password"><input type="password" autoComplete="new-password" value={pw2} onInput={(e) => setPw2(e.currentTarget.value)} /></Field>
+          <div><button class="a-btn a-btn--primary" disabled={busy}>{busy ? 'Saving…' : 'Change password'}</button></div>
         </form>
       </section>
-      <button class="a-btn a-btn--ghost a-btn--danger-text" onClick={() => sb.auth.signOut()}><Icon name="logout" /> Logout</button>
+      <button class="a-btn a-btn--ghost a-btn--danger-text" onClick={() => sb.auth.signOut()}><Icon name="logout" /> Sign out</button>
     </div>
   );
 }

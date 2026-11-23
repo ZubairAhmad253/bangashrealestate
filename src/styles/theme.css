@@ -1,25 +1,25 @@
 /* ==========================================================================
    BANGASH REAL ESTATE & BUILDERS — THEME FILE
    --------------------------------------------------------------------------
-   Poori website ka color scheme, fonts, gradients aur shadows yahin se
-   control hote hain. Color change karna ho to sirf "BRAND COLORS" ki
-   values badlein — baqi sab khud update ho jayega.
+   The whole website's colors, fonts, gradients and shadows are controlled
+   from here. To change colors, edit only the "BRAND COLORS" values —
+   everything else updates automatically.
 
-   Do themes ready hain:
-     1) GOLD (default)  — logo jaisa black + gold, light ivory background
-     2) BLUE            — signboard jaisa navy + blue + gold
-   Blue try karna ho to src/layouts/BaseLayout.astro mein
-   <html ... data-theme="gold"> ko data-theme="blue" kar dein.
+   Two themes are ready:
+     1) GOLD (default)  — black + gold like the logo, light ivory background
+     2) BLUE            — navy + blue + gold like the shop sign
+   To try blue, in src/layouts/BaseLayout.astro change
+   const THEME = 'gold' to 'blue'.
    ========================================================================== */
 
 :root,
 [data-theme="gold"] {
-  /* ---------- BRAND COLORS (sirf ye badlein) ---------- */
-  --brand-primary: #94691a;        /* Deep gold — links, icons (light bg par parhne layak) */
-  --brand-primary-strong: #0d0d0d; /* Logo ka black — buttons, dark sections */
+  /* ---------- BRAND COLORS (edit only these) ---------- */
+  --brand-primary: #94691a;        /* Deep gold — links, icons (readable on light backgrounds) */
+  --brand-primary-strong: #0d0d0d; /* Logo black — buttons, dark sections */
   --brand-secondary: #d4a63c;      /* Bright gold */
   --brand-accent: #c8962e;         /* Gold — badges, stars */
-  --brand-accent-light: #f4d47e;   /* Light gold (chamak) */
+  --brand-accent-light: #f4d47e;   /* Light gold (highlights) */
   --whatsapp: #25d366;
 
   /* ---------- SURFACES & TEXT ---------- */
@@ -61,7 +61,7 @@
 }
 
 :root {
-  /* ---------- GRADIENTS (brand colors se khud bante hain) ---------- */
+  /* ---------- GRADIENTS (built from the brand colors) ---------- */
   --gradient-brand: linear-gradient(120deg, var(--brand-primary-strong) 0%, color-mix(in srgb, var(--brand-primary-strong) 82%, var(--brand-primary)) 60%, color-mix(in srgb, var(--brand-primary-strong) 62%, var(--brand-primary)) 100%);
   --gradient-text: linear-gradient(100deg, var(--brand-primary) 0%, var(--brand-secondary) 50%, var(--brand-primary) 100%);
   --gradient-gold: linear-gradient(135deg, var(--brand-accent-light) 0%, var(--brand-accent) 50%, color-mix(in srgb, var(--brand-accent) 70%, #000) 100%);

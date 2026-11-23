@@ -1,4 +1,4 @@
-/* Construction projects (gallery) — admin panel (/admin → Projects) se aate hain. */
+/* Construction projects (gallery) — managed in the admin panel (/admin → Projects). */
 import { remote, type ProjectRow } from '../lib/remote';
 
 export type Project = ProjectRow;

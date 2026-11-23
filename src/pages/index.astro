@@ -20,8 +20,8 @@ const featured = featuredProperties().slice(0, 6);
 const homeAreas = [...AREAS].sort((a, b) => a.priority - b.priority).slice(0, 5);
 const [construction, ...sellServices] = SERVICES;
 
-// Hero headline — har word alag animate hota hai
-// SEO: H1 mein main keywords — "Real Estate", "Rawalpindi", "Islamabad"
+// Hero headline — each word animates in separately
+// SEO: main keywords in the H1 — "Real Estate", "Rawalpindi", "Islamabad"
 const headline: { text: string; gradient?: boolean }[] = [
   { text: 'Trusted' }, { text: 'Real', gradient: true }, { text: 'Estate', gradient: true },
   { text: 'in' }, { text: 'Rawalpindi' }, { text: '&' }, { text: 'Islamabad' },

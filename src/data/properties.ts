@@ -1,9 +1,9 @@
 /* ==========================================================================
    PROPERTY LISTINGS
    --------------------------------------------------------------------------
-   Asal properties ADMIN PANEL (/admin) se add hoti hain (Supabase).
-   Neeche wali SAMPLE listings sirf tab dikhti hain jab database mein abhi
-   ek bhi property na ho. Har property ka apna SEO page khud ban jata hai.
+   Real properties are added in the ADMIN PANEL (/admin, stored in Supabase).
+   The SAMPLE listings below are only shown while the database has no
+   properties yet. Every property gets its own SEO page automatically.
    ========================================================================== */
 import { remote, type PropertyRow } from '../lib/remote';
 import type { ImageMetadata } from 'astro';
@@ -286,13 +286,13 @@ const fromRow = (r: PropertyRow): Property => ({
   features: r.features ?? [],
 });
 
-/** Database mein properties hon to wahi, warna samples */
+/** Database properties if there are any, otherwise the samples */
 export const USING_SAMPLES = remote.properties.length === 0;
 export const PROPERTIES: Property[] = USING_SAMPLES ? SAMPLE_PROPERTIES : remote.properties.map(fromRow);
 
 /* ---------------- Helpers ---------------- */
 
-/** PKR ko Crore / Lakh mein dikhata hai: 42,500,000 → "4.25 Crore" */
+/** Formats PKR as Crore / Lakh: 42,500,000 → "4.25 Crore" */
 export function formatPrice(price: number): string {
   if (price >= 10_000_000) return `${trim(price / 10_000_000)} Crore`;
   if (price >= 100_000) return `${trim(price / 100_000)} Lakh`;

@@ -1,7 +1,7 @@
 -- =====================================================================
 --  BANGASH REAL ESTATE & BUILDERS — DATABASE SETUP
---  Supabase → SQL Editor → New query → poori file paste karein → Run.
---  Dobara chalana safe hai (kuch delete nahi hota).
+--  Supabase → SQL Editor → New query → paste this whole file → Run.
+--  Safe to run again (nothing is deleted).
 -- =====================================================================
 
 create extension if not exists pg_net with schema extensions;
@@ -17,7 +17,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- Admins & roles  (super_admin = sab kuch, editor = content + leads)
+-- Admins & roles  (super_admin = everything, editor = content + leads)
 -- ---------------------------------------------------------------------
 create table if not exists public.admins (
   user_id    uuid primary key references auth.users (id) on delete cascade,
@@ -168,7 +168,7 @@ drop policy if exists "admins: super manages" on public.admins;
 create policy "admins: super manages" on public.admins for all to authenticated
   using (public.is_super_admin()) with check (public.is_super_admin());
 
--- properties (public dekh sakta hai, hidden sirf admin)
+-- properties (public can read; hidden ones only admins)
 drop policy if exists "properties: public read" on public.properties;
 create policy "properties: public read" on public.properties for select to anon, authenticated
   using (status <> 'hidden' or public.is_admin());
@@ -192,7 +192,7 @@ drop policy if exists "testimonials: admins write" on public.testimonials;
 create policy "testimonials: admins write" on public.testimonials for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
--- leads (website sirf nayi lead bhej sakti hai; parhna sirf admins)
+-- leads (the website can only submit new leads; only admins can read them)
 drop policy if exists "leads: website insert" on public.leads;
 create policy "leads: website insert" on public.leads for insert to anon, authenticated
   with check (status = 'new' and notes = '');
@@ -204,20 +204,20 @@ create policy "leads: admins update" on public.leads for update to authenticated
 drop policy if exists "leads: admins delete" on public.leads;
 create policy "leads: admins delete" on public.leads for delete to authenticated using (public.is_admin());
 
--- settings (sab parh sakte hain, sirf super admin badal sakta hai)
+-- settings (everyone can read; only the super admin can change them)
 drop policy if exists "settings: public read" on public.settings;
 create policy "settings: public read" on public.settings for select to anon, authenticated using (true);
 drop policy if exists "settings: super update" on public.settings;
 create policy "settings: super update" on public.settings for update to authenticated
   using (public.is_super_admin()) with check (public.is_super_admin());
 
--- private settings (sirf super admin)
+-- private settings (super admin only)
 drop policy if exists "private: super only" on public.private_settings;
 create policy "private: super only" on public.private_settings for all to authenticated
   using (public.is_super_admin()) with check (public.is_super_admin());
 
 -- ---------------------------------------------------------------------
--- Photos storage (public bucket "media"; upload/delete sirf admins)
+-- Photos storage (public bucket "media"; only admins can upload/delete)
 -- ---------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('media', 'media', true, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
@@ -238,8 +238,8 @@ create policy "media: admins delete" on storage.objects for delete to authentica
   using (bucket_id = 'media' and public.is_admin());
 
 -- ---------------------------------------------------------------------
--- Auto-publish: content badalte hi Vercel rebuild (deploy hook admin
--- panel → Settings mein lagta hai). Leads se rebuild nahi hota.
+-- Auto-publish: content changes trigger a Vercel rebuild (the deploy hook
+-- is set in the admin panel → Settings). Leads do not trigger a rebuild.
 -- ---------------------------------------------------------------------
 create or replace function public.trigger_site_rebuild() returns trigger
 language plpgsql security definer set search_path = public, extensions as $$
@@ -266,7 +266,7 @@ drop trigger if exists rebuild_settings on public.settings;
 create trigger rebuild_settings after update on public.settings
   for each statement execute function public.trigger_site_rebuild();
 
--- Admin panel ka "Publish now" button
+-- Admin panel "Publish website now" button
 create or replace function public.request_rebuild() returns boolean
 language plpgsql security definer set search_path = public, extensions as $$
 declare
@@ -285,7 +285,7 @@ end $$;
 revoke all on function public.request_rebuild() from public, anon;
 grant execute on function public.request_rebuild() to authenticated;
 
--- Har admin sirf apna naam badal sake (role nahi)
+-- Each admin can change their own name (not their role)
 create or replace function public.set_my_name(new_name text) returns void
 language sql security definer set search_path = public as $$
   update public.admins set name = nullif(trim(new_name), '') where user_id = auth.uid();
@@ -294,17 +294,17 @@ revoke all on function public.set_my_name(text) from public, anon;
 grant execute on function public.set_my_name(text) to authenticated;
 
 -- ---------------------------------------------------------------------
--- Table access (GRANTs). Naye Supabase projects tables ko khud access
--- nahi dete — yahan sirf zaroori access diya gaya hai. Asal hifazat
--- upar wali Row Level Security policies karti hain.
+-- Table access (GRANTs). New Supabase projects do not grant table access
+-- automatically — only the access that is needed is granted here. The real
+-- protection comes from the Row Level Security policies above.
 -- ---------------------------------------------------------------------
 grant usage on schema public to anon, authenticated;
 
--- Website (bina login): sirf parhna + nayi lead bhejna
+-- Website (not signed in): read only + submit new leads
 grant select on public.properties, public.projects, public.testimonials, public.settings to anon;
 grant insert on public.leads to anon;
 
--- Admin panel (login ke baad) — RLS tay karti hai ke kaun kya kar sakta hai
+-- Admin panel (signed in) — RLS decides who can do what
 grant select, insert, update, delete on public.properties, public.projects, public.testimonials, public.leads to authenticated;
 grant select, update on public.settings to authenticated;
 grant select, insert, update, delete on public.admins, public.private_settings to authenticated;

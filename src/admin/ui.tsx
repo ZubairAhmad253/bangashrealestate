@@ -1,4 +1,4 @@
-/* Admin panel — chhote reusable UI components */
+/* Admin panel — small reusable UI components */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { uploadImage, errorText } from './lib';
@@ -140,12 +140,12 @@ export function Stepper({ value, onChange, min = 0, max = 20 }: { value: number 
   const v = value ?? 0;
   return (
     <div class="a-stepper">
-      <button type="button" onClick={() => onChange(Math.max(min, v - 1))} aria-label="Kam karein">−</button>
+      <button type="button" onClick={() => onChange(Math.max(min, v - 1))} aria-label="Decrease">−</button>
       <input type="number" inputMode="numeric" value={value ?? ''} min={min} max={max} onInput={(e) => {
         const n = parseInt((e.target as HTMLInputElement).value, 10);
         onChange(Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : null);
       }} />
-      <button type="button" onClick={() => onChange(Math.min(max, v + 1))} aria-label="Zyada karein">+</button>
+      <button type="button" onClick={() => onChange(Math.min(max, v + 1))} aria-label="Increase">+</button>
     </div>
   );
 }
@@ -164,12 +164,12 @@ export function Chips({ value, onChange, suggestions = [] }: { value: string[]; 
         {value.map((c) => (
           <span class="a-chip is-on">
             {c}
-            <button type="button" onClick={() => onChange(value.filter((x) => x !== c))} aria-label={`${c} hatayein`}><Icon name="x" size={14} /></button>
+            <button type="button" onClick={() => onChange(value.filter((x) => x !== c))} aria-label={`Remove ${c}`}><Icon name="x" size={14} /></button>
           </span>
         ))}
         <input
           value={text}
-          placeholder={value.length ? 'Aur likhein…' : 'Feature likh kar Enter dabayein'}
+          placeholder={value.length ? 'Add another…' : 'Type a feature and press Enter'}
           onInput={(e) => setText((e.target as HTMLInputElement).value)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(text); } }}
           onBlur={() => text && add(text)}
@@ -177,7 +177,7 @@ export function Chips({ value, onChange, suggestions = [] }: { value: string[]; 
       </div>
       {left.length > 0 && (
         <div class="a-chips__suggest">
-          <span class="a-muted">Jaldi add karein:</span>
+          <span class="a-muted">Quick add:</span>
           {left.map((s) => <button type="button" class="a-chip" onClick={() => add(s)}>+ {s}</button>)}
         </div>
       )}
@@ -211,7 +211,7 @@ export function PhotoUploader({ images, onChange, folder, onUploaded }: { images
       setBusy((b) => (b ? { ...b, done: b.done + 1 } : b));
     }
     setBusy(null);
-    if (ok) toast.ok(`${ok} photo${ok > 1 ? 's' : ''} upload ho gayi`);
+    if (ok) toast.ok(`${ok} photo${ok > 1 ? 's' : ''} uploaded`);
   };
   const move = (i: number, d: number) => {
     const next = [...images];
@@ -233,10 +233,10 @@ export function PhotoUploader({ images, onChange, folder, onUploaded }: { images
             <img src={url} alt="" loading="lazy" />
             {i === 0 && <span class="a-photo__cover">Cover photo</span>}
             <div class="a-photo__bar">
-              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Pehle"><Icon name="left" size={16} /></button>
-              {i !== 0 && <button type="button" class="a-photo__make" onClick={() => move(i, -i)} aria-label="Cover photo banayein" title="Cover photo banayein"><Icon name="star" size={15} /></button>}
-              <button type="button" onClick={() => move(i, 1)} disabled={i === images.length - 1} aria-label="Baad mein"><Icon name="right" size={16} /></button>
-              <button type="button" class="is-danger" onClick={() => onChange(images.filter((x) => x !== url))} aria-label="Photo hatayein"><Icon name="trash" size={16} /></button>
+              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move left"><Icon name="left" size={16} /></button>
+              {i !== 0 && <button type="button" class="a-photo__make" onClick={() => move(i, -i)} aria-label="Make cover photo" title="Make cover photo"><Icon name="star" size={15} /></button>}
+              <button type="button" onClick={() => move(i, 1)} disabled={i === images.length - 1} aria-label="Move right"><Icon name="right" size={16} /></button>
+              <button type="button" class="is-danger" onClick={() => onChange(images.filter((x) => x !== url))} aria-label="Remove photo"><Icon name="trash" size={16} /></button>
             </div>
           </figure>
         ))}
@@ -249,14 +249,14 @@ export function PhotoUploader({ images, onChange, folder, onUploaded }: { images
           ) : (
             <>
               <Icon name="upload" size={28} />
-              <strong>Photos add karein</strong>
-              <span>Tap karein ya yahan drag karein</span>
+              <strong>Add photos</strong>
+              <span>Tap to choose, or drag &amp; drop here</span>
             </>
           )}
         </button>
       </div>
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => { const t = e.target as HTMLInputElement; if (t.files) void addFiles(t.files); t.value = ''; }} />
-      <p class="a-field__hint">Pehli photo "cover" hoti hai (listing par yahi dikhti hai). Photos khud chhoti ho kar upload hoti hain.</p>
+      <p class="a-field__hint">The first photo is the cover shown on the listing. Use ★ to make any photo the cover. Photos are resized automatically.</p>
     </div>
   );
 }
@@ -277,12 +277,15 @@ export function Loading() {
   return <div class="a-loading"><span class="a-spinner" /> Loading…</div>;
 }
 
-export function PageHead({ title, sub, children }: { title: string; sub?: string; children?: ComponentChildren }) {
+export function PageHead({ title, sub, icon, children }: { title: string; sub?: string; icon?: string; children?: ComponentChildren }) {
   return (
     <header class="a-pagehead">
-      <div>
-        <h1>{title}</h1>
-        {sub && <p class="a-muted">{sub}</p>}
+      <div class="a-pagehead__title">
+        {icon && <span class="a-pagehead__icon"><Icon name={icon} size={22} /></span>}
+        <div>
+          <h1>{title}</h1>
+          {sub && <p class="a-muted">{sub}</p>}
+        </div>
       </div>
       {children && <div class="a-row">{children}</div>}
     </header>

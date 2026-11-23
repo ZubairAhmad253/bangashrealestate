@@ -1,4 +1,4 @@
-/* Home page ka text content — FAQs, testimonials, "Why choose us". */
+/* Home page text content — FAQs, testimonials, "Why choose us". */
 
 export const WHY_US = [
   { icon: 'shield', title: 'Verified Properties', text: 'Every listing is checked for ownership and documents before we show it to you.' },
@@ -9,8 +9,8 @@ export const WHY_US = [
   { icon: 'bank', title: 'Bank Loan Available', text: 'Bank financing available on selected properties — we guide you through the whole process.' },
 ];
 
-/* Google reviews — yahan asal clients ke reviews daalein (name, place, text).
-   Jab tak list khali hai, website par Google rating (4.9★) wala card dikhta hai. */
+/* Client reviews — managed in the admin panel (Reviews).
+   While the list is empty, the website shows the Google rating (4.9★) card. */
 import { remote } from '../lib/remote';
 export const TESTIMONIALS: { name: string; place: string; text: string; rating: number }[] = remote.testimonials.map((t) => ({
   name: t.name,

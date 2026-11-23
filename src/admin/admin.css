@@ -1,5 +1,5 @@
 /* ==========================================================================
-   BANGASH ADMIN PANEL — design (website ke theme.css tokens use karta hai)
+   BANGASH ADMIN PANEL — design (uses the website theme.css tokens)
    ========================================================================== */
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; }
@@ -309,3 +309,92 @@
 .a-toast--ok svg { color: #4ade80; }
 .a-toast--err { background: #8a1c13; }
 .a-toast--info svg { color: var(--brand-accent-light); }
+
+/* ==========================================================================
+   DESIGN REFRESH
+   ========================================================================== */
+
+/* Login — split layout on desktop */
+.a-login { grid-template-columns: 1fr; align-content: stretch; padding: 0; gap: 0; }
+.a-login--single { align-content: center; padding: 24px 16px; }
+.a-login__brand { display: none; }
+.a-login__side { display: grid; place-items: center; align-content: center; gap: 18px; padding: 32px 16px; min-height: 100vh; }
+.a-login__card { padding: 34px 28px; }
+.a-login__card h1 { font-size: 28px; }
+.a-login__help { text-align: center; }
+@media (min-width: 960px) {
+  .a-login { grid-template-columns: 1.05fr 1fr; }
+  .a-login__brand {
+    position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 18px;
+    padding: 64px clamp(40px, 6vw, 96px); color: #f4ecd8;
+    background: radial-gradient(700px 400px at 100% 0%, color-mix(in srgb, var(--brand-accent) 28%, transparent), transparent 60%), linear-gradient(160deg, #0c0c0c 0%, #17120a 60%, #241a08 100%);
+  }
+  .a-login__brand::after { content: ""; position: absolute; inset: auto -120px -160px auto; width: 420px; height: 420px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--brand-accent) 35%, transparent); }
+  .a-login__brand img { border-radius: 22px; box-shadow: 0 20px 50px -18px rgb(0 0 0 / 0.8); }
+  .a-login__brand h2 { font-size: clamp(30px, 3vw, 40px); background: var(--gradient-gold); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .a-login__brand p { font-size: 17px; color: #cfc6b1; max-width: 420px; }
+  .a-login__brand ul { list-style: none; padding: 0; display: grid; gap: 12px; margin-top: 10px; }
+  .a-login__brand li { display: flex; align-items: center; gap: 12px; font-weight: 600; }
+  .a-login__brand li svg { width: 34px; height: 34px; padding: 8px; border-radius: 10px; background: rgb(255 255 255 / 0.08); color: var(--brand-accent-light); flex: none; }
+  .a-login__side .a-login__logo { display: none; }
+}
+
+/* Sidebar */
+.a-nav__group { margin: 14px 14px 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #8a8170; }
+.a-nav__group:first-child { margin-top: 0; }
+.a-side .a-nav__link svg:last-child:not(:first-child) { margin-left: auto; opacity: 0.6; }
+.a-side .a-nav__link:not(.is-active):hover svg:first-child { color: var(--brand-accent-light); }
+.a-me__who { flex: 1; min-width: 0; }
+.a-me__who strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.a-me__out { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: #cfc6b1; }
+.a-me__out:hover { background: rgb(255 255 255 / 0.08); color: #fff; }
+
+/* Page header with icon */
+.a-pagehead__title { display: flex; align-items: center; gap: 14px; }
+.a-pagehead__icon { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 14px; background: var(--brand-primary-strong); color: var(--brand-accent-light); box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.6); }
+
+/* Dashboard hero */
+.a-hero {
+  position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px;
+  padding: clamp(22px, 4vw, 34px); border-radius: 24px; color: #f4ecd8;
+  background: radial-gradient(500px 260px at 100% 0%, color-mix(in srgb, var(--brand-accent) 30%, transparent), transparent 65%), linear-gradient(150deg, #0d0d0d 0%, #1b150a 100%);
+  box-shadow: var(--shadow-lg);
+}
+.a-hero h1 { font-size: clamp(24px, 4vw, 34px); margin: 4px 0 6px; color: #fff; }
+.a-hero p { color: #d6ccb4; max-width: 520px; }
+.a-hero__date { font-size: 12.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand-accent-light) !important; }
+.a-hero__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.a-btn--glass { background: rgb(255 255 255 / 0.1); color: #fff; border-color: rgb(255 255 255 / 0.18); }
+.a-btn--glass:hover { background: rgb(255 255 255 / 0.18); }
+
+/* Stats with icons */
+.a-stat { position: relative; display: grid; gap: 2px; transition: transform 0.2s, box-shadow 0.2s; }
+.a-stat:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.a-stat__icon { position: absolute; right: 14px; top: 14px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: var(--surface-2); color: var(--brand-primary); }
+.a-stat--hl .a-stat__icon { background: rgb(255 255 255 / 0.1); color: var(--brand-accent-light); }
+.a-stat > span:not(.a-stat__icon) { padding-right: 44px; }
+
+/* Quick actions */
+.a-quick__card { gap: 4px; min-height: 0; }
+.a-quick__icon { width: 44px; height: 44px; display: grid; place-items: center; margin-bottom: 8px; border-radius: 12px; background: var(--brand-primary-strong); color: var(--brand-accent-light); }
+.a-quick__icon svg { color: inherit !important; }
+
+/* Lead list on dashboard */
+.a-list__item { justify-content: flex-start; }
+.a-list__main { flex: 1; min-width: 0; }
+.a-list__item .a-me__avatar { width: 40px; height: 40px; }
+
+/* Cards & items polish */
+.a-card { border-radius: 22px; }
+.a-item { transition: box-shadow 0.2s, border-color 0.2s; }
+.a-item:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.a-main { background: radial-gradient(800px 300px at 100% 0%, color-mix(in srgb, var(--brand-accent) 6%, transparent), transparent 70%); }
+
+/* Fixes: specificity for icon wrappers inside cards; full-height login */
+.a-stat .a-stat__icon { display: grid; place-items: center; font-size: 0; letter-spacing: 0; padding: 0; }
+.a-stat .a-stat__icon svg { width: 18px; height: 18px; }
+.a-quick__card .a-quick__icon { display: grid; color: var(--brand-accent-light); font-size: 0; }
+@media (min-width: 960px) {
+  .a-login:not(.a-login--single) { place-items: stretch; min-height: 100vh; }
+  .a-login__brand { min-height: 100vh; }
+}

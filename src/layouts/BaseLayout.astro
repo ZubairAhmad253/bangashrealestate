@@ -7,7 +7,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { getImage } from 'astro:assets';
 import { SITE } from '../config/site';
-import '../lib/remote'; // admin settings (phone, WhatsApp…) render se pehle apply hon
+import '../lib/remote'; // apply admin settings (phone, WhatsApp…) before rendering
 import logoMark from '../assets/brand/logo-mark.png';
 
 const favicon = await getImage({ src: logoMark, width: 64, height: 64, format: 'png' });
@@ -16,7 +16,7 @@ const touchIcon = await getImage({ src: logoMark, width: 180, height: 180, forma
 type Props = SEOProps;
 const props = Astro.props;
 
-/* Theme: "gold" (logo jaisa) ya "blue" (signboard jaisa) — colors src/styles/theme.css mein */
+/* Theme: "gold" (matches the logo) or "blue" (matches the shop sign) — colors live in src/styles/theme.css */
 const THEME = 'gold';
 const themeColor = THEME === 'gold' ? '#0d0d0d' : '#141c55';
 ---
@@ -32,7 +32,7 @@ const themeColor = THEME === 'gold' ? '#0d0d0d' : '#141c55';
     <link rel="apple-touch-icon" href={touchIcon.src} />
     <link rel="sitemap" href="/sitemap-index.xml" />
     {SITE.googleVerification && <meta name="google-site-verification" content={SITE.googleVerification} />}
-    <!-- Animations sirf JS ke saath chalti hain; bina JS content hamesha visible -->
+    <!-- Animations only run with JavaScript; without JS all content stays visible -->
     <script is:inline>document.documentElement.classList.add('js');</script>
     <SEO {...props} />
   </head>

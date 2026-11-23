@@ -18,11 +18,11 @@ export interface Area {
   short: string;
   intro: string;
   highlights: string[];
-  /** Pehle wale areas home page par bade dikhte hain */
+  /** Lower numbers are shown first (and larger) on the home page */
   priority: number;
 }
 
-/* Naya area add karna ho to isi format mein ek object aur daal dein. */
+/* To add a new area, add another object in the same format. */
 export const AREAS: Area[] = [
   {
     slug: 'airport-housing-society',

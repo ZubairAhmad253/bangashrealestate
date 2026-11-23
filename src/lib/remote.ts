@@ -1,12 +1,12 @@
 /* ==========================================================================
    BUILD-TIME DATA FROM SUPABASE
    --------------------------------------------------------------------------
-   Website build hote waqt (Vercel par) yahan se properties, projects,
-   reviews aur settings aati hain. Site static hi rehti hai — fast + SEO.
+   While the website builds (on Vercel), properties, projects, reviews and
+   settings are loaded from here. The site stays static — fast + great SEO.
 
-   • Database abhi setup nahi (tables nahi)  → local sample data
-   • Supabase band / network error (Vercel par) → build FAIL → purani live
-     site chalti rehti hai (khaali site kabhi publish nahi hoti)
+   • Database not set up yet (no tables)      → local sample data
+   • Supabase down / network error (on Vercel) → build FAILS → the previous
+     live site keeps running (an empty site is never published)
    ========================================================================== */
 import { SITE, SUPABASE } from '../config/site';
 
@@ -64,7 +64,7 @@ export interface SettingsRow {
 }
 
 export interface RemoteData {
-  /** true = Supabase tables mil gaye aur data aa gaya */
+  /** true = Supabase tables were found and data was loaded */
   connected: boolean;
   properties: PropertyRow[];
   projects: ProjectRow[];
@@ -101,19 +101,19 @@ async function load(): Promise<RemoteData> {
     return { connected: true, properties, projects, testimonials, settings: settings[0] ?? null };
   } catch (err) {
     if (err instanceof NotSetUpError) {
-      console.warn('[supabase] Database abhi setup nahi hua — sample data use ho raha hai.');
+      console.warn('[supabase] Database is not set up yet — using sample data.');
       return EMPTY;
     }
-    // Vercel par: build fail karo taake purani site live rahe
+    // On Vercel: fail the build so the previous site stays live
     if (process.env.VERCEL) throw err;
-    console.warn('[supabase] Data nahi mila (local build) — sample data use ho raha hai:', (err as Error).message);
+    console.warn('[supabase] Could not load data (local build) — using sample data:', (err as Error).message);
     return EMPTY;
   }
 }
 
 export const remote: RemoteData = await load();
 
-/* ---------- Admin panel ki settings → SITE (phone, WhatsApp, stats…) ---------- */
+/* ---------- Admin panel settings → SITE (phone, WhatsApp, stats…) ---------- */
 const s = remote.settings;
 if (s) {
   const site = SITE as unknown as Record<string, unknown>;

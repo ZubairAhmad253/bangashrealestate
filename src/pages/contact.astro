@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
 import { SITE, SUPABASE, MESSAGES, whatsappLink, emailLink } from '../config/site';
-// Note: contact form FormSubmit par jata hai (pehli dafa email activate karna hai) — dekhein SITE.formEndpoint
+// Note: the contact form posts to FormSubmit (the email must be activated once) — see SITE.formEndpoint
 import { AREAS } from '../data/areas';
 
 const schema = {

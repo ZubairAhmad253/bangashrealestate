@@ -25,12 +25,12 @@ export function Leads({ ctx }: { ctx: Ctx }) {
     ctx.refreshCounts();
   };
   const remove = async (l: LeadRow) => {
-    if (!(await confirmDialog(`${l.name} ki enquiry delete karein?`))) return;
+    if (!(await confirmDialog(`Delete the enquiry from ${l.name}?`))) return;
     const { error } = await sb.from('leads').delete().eq('id', l.id);
     if (error) return toast.err(error);
     setRows((r) => r?.filter((x) => x.id !== l.id) ?? r);
     ctx.refreshCounts();
-    toast.ok('Lead delete ho gayi.');
+    toast.ok('Lead deleted.');
   };
 
   const counts = useMemo(() => {
@@ -41,11 +41,11 @@ export function Leads({ ctx }: { ctx: Ctx }) {
   const shown = (rows ?? []).filter((r) => (tab === 'all' ? r.status !== 'spam' : r.status === tab));
 
   const waText = (l: LeadRow) =>
-    encodeURIComponent(`Assalam o Alaikum ${l.name}! Bangash Real Estate & Builders se baat kar rahe hain — aap ne hamari website par ${l.interest ? `"${l.interest}" ke baare mein ` : ''}enquiry ki thi. Aap ki kya madad kar sakte hain?`);
+    encodeURIComponent(`Hello ${l.name}, this is Bangash Real Estate & Builders. Thank you for your enquiry on our website${l.interest ? ` about "${l.interest}"` : ''}. How can we help you?`);
 
   return (
     <div class="a-page">
-      <PageHead title="Leads" sub="Website se aane wali enquiries — jaldi reply karein, deal pakki karein">
+      <PageHead title="Leads" icon="leads" sub="Enquiries from the website — reply quickly to close more deals">
         <button class="a-btn a-btn--ghost" onClick={() => { setRows(null); void load(); ctx.refreshCounts(); }}><Icon name="refresh" /> Refresh</button>
       </PageHead>
 
@@ -60,7 +60,7 @@ export function Leads({ ctx }: { ctx: Ctx }) {
       </div>
 
       {rows === null ? <Loading /> : shown.length === 0 ? (
-        <Empty icon="leads" title={tab === 'new' ? 'Koi nayi enquiry nahi 🎉' : 'Is list mein kuch nahi'} text="Website ke contact form se aane wali har enquiry yahan aati hai." />
+        <Empty icon="leads" title={tab === 'new' ? 'No new enquiries 🎉' : 'Nothing in this list'} text="Every enquiry from the website contact form appears here." />
       ) : (
         <div class="a-leads">
           {shown.map((l) => {
@@ -92,8 +92,8 @@ export function Leads({ ctx }: { ctx: Ctx }) {
                     </dl>
                     {l.message && <blockquote class="a-quote">{l.message}</blockquote>}
                     <label class="a-field">
-                      <span class="a-field__label">Notes (sirf admin ke liye)</span>
-                      <textarea rows={2} defaultValue={l.notes} placeholder="Masalan: Kal 5 baje visit, budget 1.5 crore tak" onBlur={(e) => e.currentTarget.value !== l.notes && update(l, { notes: e.currentTarget.value }, 'Note save ho gaya.')} />
+                      <span class="a-field__label">Notes (admins only)</span>
+                      <textarea rows={2} defaultValue={l.notes} placeholder="e.g. Site visit tomorrow at 5 pm, budget up to 1.5 crore" onBlur={(e) => e.currentTarget.value !== l.notes && update(l, { notes: e.currentTarget.value }, 'Note saved.')} />
                     </label>
                     <div class="a-row a-row--wrap">
                       <span class="a-muted a-small">Status:</span>

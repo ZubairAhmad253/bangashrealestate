@@ -8,7 +8,7 @@ export type IconName = string;
 
 export interface Service {
   slug: 'plots' | 'houses' | 'flats' | 'construction';
-  /** Property type filter jo is service se match karta hai */
+  /** Property type that matches this service */
   propertyType?: 'plot' | 'house' | 'flat';
   name: string;
   menuLabel: string;

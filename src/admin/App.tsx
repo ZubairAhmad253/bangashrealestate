@@ -61,6 +61,21 @@ export default function App() {
 }
 
 /* ---------------- Login ---------------- */
+function BrandPanel() {
+  return (
+    <aside class="a-login__brand">
+      <img src={logoUrl.src} alt="" width={84} height={84} />
+      <h2>Bangash Real Estate &amp; Builders</h2>
+      <p>Your trusted partner in real estate &amp; construction.</p>
+      <ul>
+        <li><Icon name="home" /> Add and update property listings</li>
+        <li><Icon name="leads" /> Reply to website enquiries fast</li>
+        <li><Icon name="globe" /> Changes go live on the website automatically</li>
+      </ul>
+    </aside>
+  );
+}
+
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -79,41 +94,45 @@ function Login() {
 
   return (
     <div class="a-login">
-      <form class="a-login__card" onSubmit={submit}>
-        <img src={logoUrl.src} alt="" class="a-login__logo" width={72} height={72} />
-        <h1>Admin Panel</h1>
-        <p class="a-muted">Bangash Real Estate &amp; Builders</p>
-        <label class="a-field">
-          <span class="a-field__label">Email</span>
-          <input type="email" required autoComplete="username" value={email} onInput={(e) => setEmail(e.currentTarget.value)} placeholder="you@example.com" />
-        </label>
-        <label class="a-field">
-          <span class="a-field__label">Password</span>
-          <div class="a-input-icon">
-            {show ? (
-              <input type="text" required autoComplete="current-password" value={password} onInput={(e) => setPassword(e.currentTarget.value)} />
-            ) : (
-              <input type="password" required autoComplete="current-password" value={password} onInput={(e) => setPassword(e.currentTarget.value)} />
-            )}
-            <button type="button" onClick={() => setShow(!show)} aria-label={show ? 'Password chhupayein' : 'Password dikhayein'}><Icon name="eye" /></button>
-          </div>
-        </label>
-        {error && <p class="a-alert a-alert--err">{error}</p>}
-        <button class="a-btn a-btn--primary a-btn--block a-btn--lg" disabled={busy}>{busy ? 'Logging in…' : 'Login'}</button>
-        <p class="a-muted a-small" style={{ textAlign: 'center', marginTop: '14px' }}>Password bhool gaye? Super admin (Zubair) se rabta karein.</p>
-      </form>
-      <a href="/" class="a-login__back">← Website par wapas</a>
+      <BrandPanel />
+      <div class="a-login__side">
+        <form class="a-login__card" onSubmit={submit}>
+          <img src={logoUrl.src} alt="" class="a-login__logo" width={64} height={64} />
+          <h1>Welcome back</h1>
+          <p class="a-muted">Sign in to the Bangash admin panel</p>
+          <label class="a-field">
+            <span class="a-field__label">Email</span>
+            <input type="email" required autoComplete="username" value={email} onInput={(e) => setEmail(e.currentTarget.value)} placeholder="you@example.com" />
+          </label>
+          <label class="a-field">
+            <span class="a-field__label">Password</span>
+            <div class="a-input-icon">
+              {show ? (
+                <input type="text" required autoComplete="current-password" value={password} onInput={(e) => setPassword(e.currentTarget.value)} />
+              ) : (
+                <input type="password" required autoComplete="current-password" value={password} onInput={(e) => setPassword(e.currentTarget.value)} />
+              )}
+              <button type="button" onClick={() => setShow(!show)} aria-label={show ? 'Hide password' : 'Show password'}><Icon name="eye" /></button>
+            </div>
+          </label>
+          {error && <p class="a-alert a-alert--err">{error}</p>}
+          <button class="a-btn a-btn--gold a-btn--block a-btn--lg" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+          <p class="a-muted a-small a-login__help">Forgot your password? Contact the super admin.</p>
+        </form>
+        <a href="/" class="a-login__back">← Back to website</a>
+      </div>
     </div>
   );
 }
 
 function NoAccess({ email }: { email: string }) {
   return (
-    <div class="a-login">
+    <div class="a-login a-login--single">
       <div class="a-login__card">
-        <h1>Access nahi hai</h1>
-        <p class="a-muted">{email} admin list mein shamil nahi hai. Super admin se rabta karein.</p>
-        <button class="a-btn a-btn--primary a-btn--block" onClick={() => sb.auth.signOut()}>Logout</button>
+        <img src={logoUrl.src} alt="" class="a-login__logo" width={64} height={64} />
+        <h1>No access</h1>
+        <p class="a-muted">{email} is not on the admin list. Please contact the super admin.</p>
+        <button class="a-btn a-btn--primary a-btn--block" onClick={() => sb.auth.signOut()}>Sign out</button>
       </div>
     </div>
   );
@@ -121,13 +140,13 @@ function NoAccess({ email }: { email: string }) {
 
 /* ---------------- Layout + navigation ---------------- */
 const NAV = [
-  { path: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { path: 'properties', label: 'Properties', icon: 'home' },
-  { path: 'leads', label: 'Leads', icon: 'leads' },
-  { path: 'projects', label: 'Projects', icon: 'hammer' },
-  { path: 'reviews', label: 'Reviews', icon: 'star' },
-  { path: 'settings', label: 'Settings', icon: 'settings', super: true },
-  { path: 'account', label: 'My Account', icon: 'user' },
+  { path: 'dashboard', label: 'Dashboard', icon: 'dashboard', group: 'main' },
+  { path: 'properties', label: 'Properties', icon: 'home', group: 'main' },
+  { path: 'leads', label: 'Leads', icon: 'leads', group: 'main' },
+  { path: 'projects', label: 'Projects', icon: 'hammer', group: 'main' },
+  { path: 'reviews', label: 'Reviews', icon: 'star', group: 'main' },
+  { path: 'settings', label: 'Settings', icon: 'settings', group: 'account', super: true },
+  { path: 'account', label: 'My Account', icon: 'user', group: 'account' },
 ];
 
 function Shell({ me }: { me: Admin }) {
@@ -146,8 +165,8 @@ function Shell({ me }: { me: Admin }) {
 
   const [section, id] = route.split('/');
   const ctx: Ctx = { me, newLeads, refreshCounts };
-  const nav = NAV.filter((n) => !n.super || me.role === 'super_admin');
   const isSuper = me.role === 'super_admin';
+  const nav = NAV.filter((n) => !n.super || isSuper);
 
   let page;
   switch (section) {
@@ -167,20 +186,27 @@ function Shell({ me }: { me: Admin }) {
       {n.path === 'leads' && newLeads > 0 && <b class="a-badge">{newLeads}</b>}
     </a>
   );
+  const displayName = me.name || me.email.split('@')[0];
 
   return (
     <div class="a-shell">
       <aside class="a-side">
         <a href="#/dashboard" class="a-brand">
-          <img src={logoUrl.src} alt="" width={40} height={40} />
+          <img src={logoUrl.src} alt="" width={42} height={42} />
           <span><strong>BANGASH</strong><small>Admin Panel</small></span>
         </a>
-        <nav class="a-nav">{nav.map(link)}</nav>
+        <nav class="a-nav">
+          <p class="a-nav__group">Manage</p>
+          {nav.filter((n) => n.group === 'main').map(link)}
+          <p class="a-nav__group">Account</p>
+          {nav.filter((n) => n.group === 'account').map(link)}
+          <a href="/" target="_blank" rel="noopener" class="a-nav__link"><Icon name="globe" size={20} /><span>View website</span><Icon name="external" size={14} /></a>
+        </nav>
         <div class="a-side__foot">
-          <a href="/" target="_blank" rel="noopener" class="a-nav__link"><Icon name="globe" size={20} /><span>View website</span></a>
           <div class="a-me">
-            <span class="a-me__avatar">{(me.name || me.email).charAt(0).toUpperCase()}</span>
-            <span><strong>{me.name || me.email.split('@')[0]}</strong><small>{isSuper ? 'Super Admin' : 'Editor'}</small></span>
+            <span class="a-me__avatar">{displayName.charAt(0).toUpperCase()}</span>
+            <span class="a-me__who"><strong>{displayName}</strong><small>{isSuper ? 'Super Admin' : 'Editor'}</small></span>
+            <button class="a-me__out" onClick={() => sb.auth.signOut()} aria-label="Sign out" title="Sign out"><Icon name="logout" size={18} /></button>
           </div>
         </div>
       </aside>
@@ -203,7 +229,7 @@ function Shell({ me }: { me: Admin }) {
           <div class="a-sheet__box">
             {nav.slice(4).map(link)}
             <a href="/" target="_blank" rel="noopener" class="a-nav__link"><Icon name="globe" size={20} /><span>View website</span></a>
-            <button class="a-nav__link" onClick={() => sb.auth.signOut()}><Icon name="logout" size={20} /><span>Logout</span></button>
+            <button class="a-nav__link" onClick={() => sb.auth.signOut()}><Icon name="logout" size={20} /><span>Sign out</span></button>
           </div>
         </div>
       )}

@@ -1,35 +1,36 @@
 /* ==========================================================================
    BANGASH REAL ESTATE & BUILDERS — SITE SETTINGS
    --------------------------------------------------------------------------
-   Phone, WhatsApp, email, address, social links, stats aur WhatsApp/Email
-   ke custom messages sab yahin se edit karein. Poori website khud update
-   ho jayegi.
+   Edit the phone, WhatsApp, email, address, social links, stats and the
+   custom WhatsApp/email messages here — the whole website updates
+   automatically. (Phone, WhatsApp, email, hours, rating and stats can
+   also be changed in the admin panel → Settings.)
    ========================================================================== */
 
 export const SITE = {
-  /** Google Business Profile wala poora naam (local SEO ke liye same rakhein) */
+  /** Full name exactly as on the Google Business Profile (keep the same for local SEO) */
   name: 'Bangash Real Estate & Builders',
-  /** Page titles ke end mein lagne wala chhota naam */
+  /** Short name added to the end of page titles */
   titleName: 'Bangash Real Estate',
   shortName: 'Bangash',
   legalName: 'Bangash Real Estate & Builders',
   tagline: 'Your trusted partner in real estate & construction',
   motto: 'Your Trust, Our Commitment.',
 
-  /** Live domain — sitemap, canonical URLs aur social previews isi se bante hain. */
+  /** Live domain — used for the sitemap, canonical URLs and social previews. */
   url: 'https://bangashrealestate.vercel.app',
 
   description:
     'Bangash Real Estate & Builders — trusted property dealers and builders in Rawalpindi & Islamabad. Buy, sell or rent houses, flats and plots in Airport Housing Society, Ghauri Town, Bahria Town, DHA and more. Bank loan available on selected properties.',
 
   // ---------------- CONTACT ----------------
-  phone: '0332-0445759',             // Jaisa website par dikhe
-  phoneLink: '+923320445759',        // tel: link ke liye (+92 ke saath)
-  whatsapp: '923320445759',          // Country code ke saath, bina + aur bina 0 ke
+  phone: '0332-0445759',             // As displayed on the website
+  phoneLink: '+923320445759',        // For tel: links (with +92)
+  whatsapp: '923320445759',          // With country code, no + and no leading 0
   email: 'engrumersaeed.6899@gmail.com',
 
-  /** Website form yahan jata hai (FormSubmit — free). Pehli submission par is email par
-      "Activate" ka email aayega — use ek dafa confirm karna zaroori hai. */
+  /** The website contact form posts here (FormSubmit — free). The first submission sends an
+      "Activate" email to this address — it must be confirmed once. */
   formEndpoint: 'https://formsubmit.co/engrumersaeed.6899@gmail.com',
 
   address: {
@@ -41,19 +42,19 @@ export const SITE = {
     country: 'PK',
   },
   geo: { lat: 33.5881869, lng: 73.1232242 },
-  /** Google Maps ka share link (Directions button) */
+  /** Google Maps share link (Directions button) */
   mapsUrl: 'https://maps.app.goo.gl/tt8GLbJy14L8CaaCA',
-  /** Contact page par embedded map */
+  /** Embedded map on the contact page */
   mapEmbed:
     'https://maps.google.com/maps?q=Bangash%20real%20estate%20and%20builders%2C%20Airport%20Housing%20Society%20Sector%204%2C%20Rawalpindi&ll=33.5881869,73.1232242&z=17&output=embed',
-  /** Google Search Console verification code (sirf content="..." wala hissa) */
+  /** Google Search Console verification code (only the content="..." value) */
   googleVerification: '',
-  /** Google reviews */
+  /** Google rating */
   googleRating: 4.9,
   hours: 'Open daily: 9:00 AM – 10:00 PM',
   hoursSchema: 'Mo-Su 09:00-22:00',
 
-  // Khali chhor dein to icon nahi dikhega
+  // Leave empty to hide the icon
   socials: {
     facebook: '',
     instagram: '',
@@ -61,7 +62,7 @@ export const SITE = {
     tiktok: '',
   },
 
-  // ---------------- STATS (TODO: apne asal numbers daalein) ----------------
+  // ---------------- STATS (defaults — can be changed in admin → Settings) ----------------
   stats: [
     { value: 12, suffix: '+', label: 'Years of Experience' },
     { value: 1500, suffix: '+', label: 'Properties Sold & Rented' },
@@ -71,8 +72,8 @@ export const SITE = {
 } as const;
 
 /* ==========================================================================
-   SUPABASE (backend) — dono values public hain, browser mein safe.
-   ⚠️ Secret key (sb_secret_...) yahan KABHI na daalein.
+   SUPABASE (backend) — both values are public and safe in the browser.
+   ⚠️ NEVER put the secret key (sb_secret_...) here.
    ========================================================================== */
 export const SUPABASE = {
   url: 'https://tgqqhzunbkyifcesfndd.supabase.co',
@@ -82,9 +83,9 @@ export const SUPABASE = {
 
 /* ==========================================================================
    WHATSAPP & EMAIL — CUSTOM MESSAGES
-   Visitor jab button dabata hai to ye message pehle se likha hua aata hai.
+   These messages are pre-filled when a visitor taps a WhatsApp / email button.
    ========================================================================== */
-const HELLO = 'Assalam o Alaikum, Bangash Real Estate & Builders! 🏡';
+const HELLO = 'Hello Bangash Real Estate & Builders! 🏡';
 
 export const MESSAGES = {
   /** General WhatsApp button (header, floating button, footer) */
@@ -97,7 +98,7 @@ export const MESSAGES = {
     '💰 Budget: ',
   ].join('\n'),
 
-  /** Kisi khaas property ke liye */
+  /** For a specific property */
   property: (p: { title: string; location: string; price: string; url: string }) =>
     [HELLO, 'I am interested in this property:', '', `🏠 ${p.title}`, `📍 ${p.location}`, `💰 ${p.price}`, `🔗 ${p.url}`, '', 'Please share more details and visit timings.'].join('\n'),
 
@@ -112,18 +113,18 @@ export const MESSAGES = {
     '🏢 House or flats: ',
   ].join('\n'),
 
-  /** Kisi area ke baare mein */
+  /** About an area */
   area: (area: string) => [HELLO, `I am looking for a property in ${area}.`, '', '🏠 Requirement (House / Flat / Plot — Buy / Rent): ', '💰 Budget: '].join('\n'),
 
-  /** Kisi service ke baare mein */
+  /** About a service */
   service: (service: string) => [HELLO, `I need help with: ${service}.`, '', '📍 Preferred location: ', '💰 Budget: '].join('\n'),
 
-  /** Apni property sell / rent out karni ho */
+  /** Visitor wants to sell / rent out their property */
   listProperty: [HELLO, 'I want to sell / rent out my property.', '', '🏠 Property type & size: ', '📍 Location: ', '💰 Expected price / rent: '].join('\n'),
 
-  /** Website form bhejne wale ko jane wali AUTO-REPLY email */
+  /** AUTO-REPLY email sent to whoever submits the website form */
   autoReply: [
-    'Assalam o Alaikum! 🏡',
+    'Hello,',
     '',
     'Thank you for contacting Bangash Real Estate & Builders. We have received your enquiry and our agent will contact you shortly.',
     '',
@@ -133,13 +134,13 @@ export const MESSAGES = {
     'Bangash Real Estate & Builders — Your Trust, Our Commitment.',
   ].join('\n'),
 
-  /** Aapko aane wali lead email ka subject */
+  /** Subject of the lead email you receive */
   leadSubject: 'New property enquiry from website — Bangash Real Estate',
 
-  /** Email ka default subject + body */
+  /** Default email subject + body */
   emailSubject: 'Property Enquiry — Bangash Real Estate & Builders',
   emailBody: [
-    'Assalam o Alaikum Bangash Real Estate & Builders,',
+    'Dear Bangash Real Estate & Builders team,',
     '',
     'I found you on your website and would like some help with a property.',
     '',
@@ -152,7 +153,7 @@ export const MESSAGES = {
     '',
     'Details: ',
     '',
-    'JazakAllah,',
+    'Thank you,',
   ].join('\n'),
 };
 

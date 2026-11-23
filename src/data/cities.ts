@@ -1,4 +1,4 @@
-/* City landing pages — "Real estate in Rawalpindi", "Real estate in Islamabad" searches ke liye. */
+/* City landing pages — "Real estate in Rawalpindi", "Real estate in Islamabad" searches. */
 import type { ImageMetadata } from 'astro';
 import house2 from '../assets/images/house-2.jpg';
 import city from '../assets/images/city.jpg';

@@ -18,7 +18,7 @@ export function getStaticPaths() {
 const { area: a } = Astro.props as { area: Area };
 const listings = propertiesInArea(a.slug);
 const cityLabel = a.city === 'Rawalpindi / Islamabad' ? 'Rawalpindi & Islamabad' : a.city;
-// "DHA Islamabad–Rawalpindi" jaise naam mein city pehle se ho to dobara na lagayein
+// Don't repeat the city when the area name already contains it (e.g. "DHA Islamabad–Rawalpindi")
 const place = /rawalpindi|islamabad/i.test(a.name) ? a.name : `${a.name}, ${cityLabel}`;
 const faqs = [
   { q: `Do you have houses for sale in ${a.name}?`, a: `Yes. We regularly have houses, portions and plots in ${a.name}. Many deals are not listed online, so message us on WhatsApp with your budget and size for the latest options.` },

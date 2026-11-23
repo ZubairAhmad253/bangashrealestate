@@ -43,8 +43,8 @@ if (reduceMotion || !('IntersectionObserver' in window)) {
   );
   revealEls.forEach((el) => io.observe(el));
 
-  // Fallback: tez scroll (fling) ya link se jump mein observer beech ke elements miss kar sakta hai —
-  // jo bhi element screen ke neeche wale kinare se upar aa chuka ho, use dikha dein.
+  // Fallback: on a fast fling or an anchor jump the observer can miss elements —
+  // reveal anything that has already passed the bottom edge of the screen.
   let ticking = false;
   const sweep = () => {
     ticking = false;
@@ -140,7 +140,7 @@ if (searchForm) {
       window.location.href = '/services/construction/';
       return;
     }
-    // Khali fields URL mein na jayein
+    // Leave empty fields out of the URL
     $$<HTMLSelectElement | HTMLInputElement>('select, input', searchForm).forEach((f) => {
       if (!f.value) f.disabled = true;
     });
@@ -195,13 +195,13 @@ if (filters) {
   apply(false);
 }
 
-/* ---------- Contact form → WhatsApp / Email (koi server nahi chahiye) ---------- */
+/* ---------- Contact form → email (with auto-reply) / WhatsApp + leads inbox ---------- */
 const contactForm = $<HTMLFormElement>('[data-contact-form]');
 if (contactForm) {
   const build = () => {
     const d = new FormData(contactForm);
     return [
-      'Assalam o Alaikum, Bangash Real Estate & Builders! 🏡',
+      'Hello Bangash Real Estate & Builders! 🏡',
       'I am contacting you from your website.',
       '',
       `👤 Name: ${d.get('name') || '-'}`,
@@ -213,7 +213,7 @@ if (contactForm) {
       `${d.get('message') || ''}`,
     ].join('\n');
   };
-  // Lead admin panel ke "Leads" inbox mein save (Supabase). Fail ho jaye to bhi form chalta rahe.
+  // Save the lead to the admin "Leads" inbox (Supabase). The form keeps working even if this fails.
   const saveLead = (source: 'website' | 'whatsapp') => {
     const { sbUrl, sbKey } = contactForm.dataset;
     const d = new FormData(contactForm);
@@ -231,7 +231,7 @@ if (contactForm) {
     }).then(() => undefined, () => undefined);
   };
 
-  // "Send Enquiry" — pehle lead save, phir form email + auto-reply ke liye submit
+  // "Send Enquiry" — save the lead first, then submit the form for the email + auto-reply
   let sending = false;
   contactForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -246,7 +246,7 @@ if (contactForm) {
     await saveLead('website');
     HTMLFormElement.prototype.submit.call(contactForm);
   });
-  // "Send via WhatsApp" — email zaroori nahi, sirf naam + phone
+  // "Send via WhatsApp" — no email needed, only name + phone
   $('[data-send-whatsapp]', contactForm)?.addEventListener('click', () => {
     const required = ['#c-name', '#c-phone'].map((sel) => $<HTMLInputElement>(sel, contactForm)!);
     if (!required.every((f) => f.reportValidity())) return;

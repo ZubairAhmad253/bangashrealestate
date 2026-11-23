@@ -1,4 +1,4 @@
-/* Admin panel — Supabase client, types aur helpers */
+/* Admin panel — Supabase client, types and helpers */
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE } from '../config/site';
 
@@ -126,17 +126,17 @@ export function waDigits(phone: string): string {
 
 export function errorText(e: unknown): string {
   const msg = (e as { message?: string })?.message ?? String(e);
-  if (/Invalid login credentials/i.test(msg)) return 'Email ya password ghalat hai.';
-  if (/duplicate key.*slug/i.test(msg)) return 'Is naam ki listing pehle se hai — title thora badal dein.';
-  if (/row-level security|permission denied|not allowed/i.test(msg)) return 'Aap ke paas is kaam ki ijazat nahi hai.';
-  if (/Failed to fetch|NetworkError|network/i.test(msg)) return 'Internet connection check karein aur dobara koshish karein.';
+  if (/Invalid login credentials/i.test(msg)) return 'Incorrect email or password.';
+  if (/duplicate key.*slug/i.test(msg)) return 'A listing with this name already exists — please change the title slightly.';
+  if (/row-level security|permission denied|not allowed/i.test(msg)) return 'You do not have permission to do this.';
+  if (/Failed to fetch|NetworkError|network/i.test(msg)) return 'Please check your internet connection and try again.';
   return msg;
 }
 
 /* ---------------- Photos: compress + upload ---------------- */
 const MAX_SIDE = 1920;
 
-/** Photo ko browser mein chhota (max 1920px, WebP) karta hai — upload tez, storage kam. */
+/** Resizes photos in the browser (max 1920px, WebP) — faster uploads, less storage. */
 export async function compressImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file).catch(() => null);
   if (!bitmap) return file;
