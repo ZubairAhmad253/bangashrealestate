@@ -181,6 +181,25 @@ export function youtubeId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+/** TikTok video id from a full link (tiktok.com/@user/video/ID) or a player/embed link, otherwise null. */
+export function tiktokId(url: string): string | null {
+  const m = url.trim().match(/tiktok\.com\/(?:@[\w.-]+\/video|player\/v1|embed(?:\/v2)?|video)\/(\d{8,25})/i);
+  return m ? m[1] : null;
+}
+export const isTikTok = (url: string) => /(^|\.)tiktok\.com\//i.test(url.replace(/^https?:\/\//, ''));
+export const tiktokPlayerUrl = (id: string) => `https://www.tiktok.com/player/v1/${id}`;
+
+/** Turns any TikTok link (including short vt./vm. share links) into a player URL using TikTok's oEmbed. */
+export async function normalizeTikTok(url: string): Promise<string> {
+  const direct = tiktokId(url);
+  if (direct) return tiktokPlayerUrl(direct);
+  const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url.trim())}`);
+  const data = res.ok ? await res.json().catch(() => null) : null;
+  const id = data?.embed_product_id ?? (typeof data?.html === 'string' ? tiktokId(data.html) : null);
+  if (!id) throw new Error('Could not read this TikTok link — open the video in TikTok, tap Share → Copy link, and paste it again.');
+  return tiktokPlayerUrl(String(id));
+}
+
 export async function uploadVideo(file: File, folder: string): Promise<string> {
   if (!/^video\/(mp4|quicktime|webm)$/.test(file.type)) throw new Error('Please choose an MP4, MOV or WebM video.');
   if (file.size > MAX_VIDEO_MB * 1024 * 1024) {

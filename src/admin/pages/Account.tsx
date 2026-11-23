@@ -3,27 +3,11 @@ import { sb } from '../lib';
 import { Icon, Field, PageHead, toast } from '../ui';
 import type { Ctx } from '../App';
 
-/* Font presets — the CSS for each lives in admin.css (.a-body[data-font="…"]) */
-const FONTS = [
-  { id: 'modern', name: 'Modern', desc: 'Sora + Manrope · clean & premium', head: '"Sora Variable", sans-serif', body: '"Manrope Variable", sans-serif' },
-  { id: 'sleek', name: 'Sleek', desc: 'Urbanist · light & stylish', head: '"Urbanist Variable", sans-serif', body: '"Urbanist Variable", sans-serif' },
-  { id: 'classic', name: 'Classic', desc: 'Poppins · bold & familiar', head: 'Poppins, sans-serif', body: 'Poppins, sans-serif' },
-  { id: 'website', name: 'Website', desc: 'Outfit + Plus Jakarta · same as the website', head: '"Outfit Variable", sans-serif', body: '"Plus Jakarta Sans Variable", sans-serif' },
-] as const;
-const FONT_KEY = 'bangash-admin-font';
-
 export function Account({ ctx }: { ctx: Ctx }) {
   const [name, setName] = useState(ctx.me.name ?? '');
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [busy, setBusy] = useState(false);
-  const [font, setFont] = useState(document.body.dataset.font || 'modern');
-
-  const chooseFont = (id: string) => {
-    document.body.dataset.font = id;
-    try { localStorage.setItem(FONT_KEY, id); } catch { /* private mode — still applies for this visit */ }
-    setFont(id);
-  };
   const saveName = async () => {
     const { error } = await sb.rpc('set_my_name', { new_name: name });
     if (error) return toast.err(error);
@@ -45,20 +29,6 @@ export function Account({ ctx }: { ctx: Ctx }) {
   return (
     <div class="a-page a-page--form">
       <PageHead title="My Account" icon="user" sub={`${ctx.me.email} · ${ctx.me.role === 'super_admin' ? 'Super Admin' : 'Editor'}`} />
-
-      <section class="a-card">
-        <h2 class="a-card__title"><span><Icon name="edit" size={16} /></span> Appearance — font style</h2>
-        <p class="a-muted">Pick the font you like best. It changes instantly and is remembered on this device.</p>
-        <div class="a-fonts" role="radiogroup" aria-label="Font style">
-          {FONTS.map((x) => (
-            <button type="button" role="radio" aria-checked={font === x.id} class={`a-font${font === x.id ? ' is-on' : ''}`} onClick={() => chooseFont(x.id)}>
-              <span class="a-font__sample" style={{ fontFamily: x.head, fontWeight: 700 }}>Aa Bangash</span>
-              <span class="a-font__name" style={{ fontFamily: x.body }}>{x.name}{font === x.id && ' ✓'}</span>
-              <span class="a-font__desc" style={{ fontFamily: x.body }}>{x.desc}</span>
-            </button>
-          ))}
-        </div>
-      </section>
 
       <section class="a-card">
         <h2 class="a-card__title"><span><Icon name="user" size={16} /></span> Your name</h2>

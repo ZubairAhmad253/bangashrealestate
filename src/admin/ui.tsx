@@ -1,7 +1,7 @@
 /* Admin panel — small reusable UI components */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { uploadImage, uploadVideo, youtubeId, errorText, MAX_VIDEO_MB } from './lib';
+import { uploadImage, uploadVideo, youtubeId, tiktokId, isTikTok, normalizeTikTok, errorText, MAX_VIDEO_MB } from './lib';
 
 /* ---------------- Icons ---------------- */
 const PATHS: Record<string, string> = {
@@ -38,9 +38,11 @@ const PATHS: Record<string, string> = {
 };
 const WA = 'M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.47-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.42.25-.7.25-1.29.18-1.41-.08-.13-.28-.2-.57-.35m-5.42 7.4h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88a9.82 9.82 0 0 1 6.99 2.9 9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.88 9.88m8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89a11.82 11.82 0 0 0-3.48-8.41z';
 
+const TIKTOK = 'M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z';
+
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
-  if (name === 'whatsapp') {
-    return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={WA} /></svg>;
+  if (name === 'whatsapp' || name === 'tiktok') {
+    return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={name === 'whatsapp' ? WA : TIKTOK} /></svg>;
   }
   const filled = name === 'star';
   return (
@@ -267,17 +269,29 @@ export function PhotoUploader({ images, onChange, folder, onUploaded }: { images
 export function VideoManager({ videos, onChange, folder, onUploaded }: { videos: string[]; onChange: (v: string[]) => void; folder: string; onUploaded?: (url: string) => void }) {
   const [link, setLink] = useState('');
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const latest = useRef(videos);
   latest.current = videos;
 
-  const addLink = () => {
-    const id = youtubeId(link);
-    if (!id) return toast.err('Please paste a valid YouTube link (youtube.com/watch?v=… or youtu.be/…).');
-    const url = `https://www.youtube.com/watch?v=${id}`;
-    if (!videos.includes(url)) onChange([...videos, url]);
+  // TikTok links (full or short vt./vm. share links). Old YouTube links still work too.
+  const addLink = async () => {
+    const raw = link.trim();
+    if (!raw) return;
+    let url: string | null = null;
+    if (isTikTok(raw)) {
+      setChecking(true);
+      try { url = await normalizeTikTok(raw); } catch (e) { toast.err(e); }
+      setChecking(false);
+    } else if (youtubeId(raw)) {
+      url = `https://www.youtube.com/watch?v=${youtubeId(raw)}`;
+    } else {
+      toast.err('Please paste a TikTok video link (tiktok.com/@…/video/… or a vt.tiktok.com share link).');
+    }
+    if (!url) return;
+    if (!latest.current.includes(url)) onChange([...latest.current, url]);
     setLink('');
-    toast.ok('YouTube video added.');
+    toast.ok('Video added.');
   };
   const addFile = async (file: File) => {
     setBusy(true);
@@ -297,12 +311,12 @@ export function VideoManager({ videos, onChange, folder, onUploaded }: { videos:
     <div class="a-videos">
       <div class="a-videos__add">
         <div class="a-videos__card">
-          <span class="a-videos__icon a-videos__icon--yt"><Icon name="play" size={20} /></span>
-          <strong>Add a YouTube link</strong>
-          <span class="a-muted a-small">Best for longer videos — free, unlimited and good for Google.</span>
+          <span class="a-videos__icon a-videos__icon--tt"><Icon name="tiktok" size={20} /></span>
+          <strong>Add a TikTok link</strong>
+          <span class="a-muted a-small">In TikTok tap Share → Copy link, then paste it here. Free and no size limit.</span>
           <div class="a-row">
-            <input value={link} placeholder="https://youtu.be/…" onInput={(e) => setLink(e.currentTarget.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }} />
-            <button type="button" class="a-btn a-btn--soft" onClick={addLink}>Add</button>
+            <input value={link} placeholder="https://www.tiktok.com/@…/video/…" onInput={(e) => setLink(e.currentTarget.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addLink(); } }} />
+            <button type="button" class="a-btn a-btn--soft" onClick={() => void addLink()} disabled={checking}>{checking ? 'Checking…' : 'Add'}</button>
           </div>
         </div>
         <div class="a-videos__card">
@@ -320,10 +334,13 @@ export function VideoManager({ videos, onChange, folder, onUploaded }: { videos:
         <div class="a-videos__list">
           {videos.map((url, i) => {
             const yt = youtubeId(url);
+            const tt = tiktokId(url);
             return (
-              <figure class="a-video" key={url}>
-                {yt ? <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt="" loading="lazy" /> : <video src={url} preload="metadata" muted playsInline />}
-                <span class="a-video__badge">{yt ? 'YouTube' : 'Uploaded'}</span>
+              <figure class={`a-video${tt ? ' a-video--tt' : ''}`} key={url}>
+                {tt ? <span class="a-video__tt"><Icon name="tiktok" size={34} /></span>
+                  : yt ? <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt="" loading="lazy" />
+                  : <video src={url} preload="metadata" muted playsInline />}
+                <span class="a-video__badge">{tt ? 'TikTok' : yt ? 'YouTube' : 'Uploaded'}</span>
                 <span class="a-video__play"><Icon name="play" size={22} /></span>
                 <div class="a-photo__bar">
                   <span class="a-video__num">Video {i + 1}</span>

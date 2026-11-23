@@ -1,18 +1,35 @@
 ---
-/* Video tour — YouTube links load as a lightweight thumbnail and only fetch the player when
-   clicked (keeps pages fast for SEO); uploaded videos use the native <video> player. */
+/* Video tour
+   • TikTok   → vertical TikTok player, lazy-loaded when scrolled into view
+   • YouTube  → lightweight thumbnail; the player only loads when clicked (keeps pages fast)
+   • Uploaded → native <video> player */
 interface Props { url: string; title: string }
 const { url, title } = Astro.props;
-const yt = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/i)?.[1];
+
+const tiktok = url.match(/tiktok\.com\/(?:@[\w.-]+\/video|player\/v1|embed(?:\/v2)?|video)\/(\d{8,25})/i)?.[1];
+const yt = tiktok ? undefined : url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/i)?.[1];
+const isTikTokLink = /tiktok\.com\//i.test(url);
 ---
 
-{yt ? (
+{tiktok ? (
+  <div class="video-embed video-embed--tiktok">
+    <iframe
+      src={`https://www.tiktok.com/player/v1/${tiktok}?music_info=0&description=0&rel=0`}
+      title={title}
+      loading="lazy"
+      allow="encrypted-media; fullscreen; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+  </div>
+) : yt ? (
   <button type="button" class="video-embed video-embed--yt" data-yt={yt} aria-label={`Play video: ${title}`}>
     <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt={title} loading="lazy" width="480" height="360" />
     <span class="video-embed__play" aria-hidden="true">
       <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l10.98-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14z" /></svg>
     </span>
   </button>
+) : isTikTokLink ? (
+  <a class="video-embed video-embed--link" href={url} target="_blank" rel="noopener">Watch this video on TikTok →</a>
 ) : (
   <video class="video-embed" src={url} controls playsinline preload="metadata" aria-label={title}></video>
 )}

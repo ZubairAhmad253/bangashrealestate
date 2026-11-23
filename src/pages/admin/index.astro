@@ -2,13 +2,6 @@
 /* Admin panel — separate from the website, not indexed by Google */
 import '@fontsource-variable/manrope';
 import '@fontsource-variable/sora';
-import '@fontsource-variable/urbanist';
-import '@fontsource/poppins/400.css';
-import '@fontsource/poppins/500.css';
-import '@fontsource/poppins/600.css';
-import '@fontsource/poppins/700.css';
-import '@fontsource-variable/outfit';
-import '@fontsource-variable/plus-jakarta-sans';
 import '../../admin/admin.css';
 import { getImage } from 'astro:assets';
 import App from '../../admin/App';
@@ -30,10 +23,6 @@ const loginBg = await getImage({ src: loginPhoto, width: 1400, format: 'webp', q
     <title>Admin Panel — Bangash Real Estate</title>
   </head>
   <body class="a-body" style={`--login-bg: url('${loginBg.src}')`}>
-    <!-- Apply the saved font choice before the app renders (no flash of the wrong font) -->
-    <script is:inline>
-      try { document.body.dataset.font = localStorage.getItem('bangash-admin-font') || 'modern'; } catch { document.body.dataset.font = 'modern'; }
-    </script>
     <App client:only="preact">
       <div class="a-center" slot="fallback"><span class="a-spinner"></span></div>
     </App>
