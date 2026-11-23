@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { SITE, whatsappLink } from '../config/site';
+---
+
+<BaseLayout title="Thank You — Enquiry Received" description="Thank you for contacting Bangash Real Estate & Builders. Our agent will contact you shortly." noindex>
+  <section class="page-hero thanks">
+    <div class="hero__grid-bg" aria-hidden="true"></div>
+    <span class="blob blob--1" aria-hidden="true"></span>
+    <span class="blob blob--2" aria-hidden="true"></span>
+    <div class="container page-hero__inner thanks__inner">
+      <div class="thanks__check" aria-hidden="true"><Icon name="check" /></div>
+      <h1 data-reveal="up">Thank you! <span class="gradient-text">Enquiry received.</span></h1>
+      <p class="lead" data-reveal="up">
+        Our agent will contact you shortly. We've also sent a confirmation to your email — please check your inbox (and spam folder).
+      </p>
+      <div class="thanks__actions" data-reveal="up">
+        <a href={whatsappLink()} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Need a faster reply? WhatsApp us</a>
+        <a href={`tel:${SITE.phoneLink}`} class="btn btn-outline"><Icon name="phone" /> Call {SITE.phone}</a>
+      </div>
+      <p style="margin-top:28px" data-reveal="up"><a href="/properties/" class="link-arrow">Meanwhile, browse properties <Icon name="arrow-right" /></a></p>
+    </div>
+  </section>
+</BaseLayout>

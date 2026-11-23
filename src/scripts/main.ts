@@ -213,17 +213,44 @@ if (contactForm) {
       `${d.get('message') || ''}`,
     ].join('\n');
   };
-  contactForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!contactForm.reportValidity()) return;
+  // "Send Enquiry" — form asal mein submit hota hai (email + auto-reply), bas button "Sending…" dikhata hai
+  contactForm.addEventListener('submit', () => {
+    const btn = $<HTMLButtonElement>('[data-submit]', contactForm);
+    if (btn) {
+      btn.disabled = true;
+      const label = btn.querySelector('span');
+      if (label) label.textContent = 'Sending…';
+    }
+  });
+  // "Send via WhatsApp" — email zaroori nahi, sirf naam + phone
+  $('[data-send-whatsapp]', contactForm)?.addEventListener('click', () => {
+    const required = ['#c-name', '#c-phone'].map((sel) => $<HTMLInputElement>(sel, contactForm)!);
+    if (!required.every((f) => f.reportValidity())) return;
     const wa = contactForm.dataset.whatsapp!;
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(build())}`, '_blank', 'noopener');
-  });
-  $('[data-send-email]', contactForm)?.addEventListener('click', () => {
-    if (!contactForm.reportValidity()) return;
-    const email = contactForm.dataset.email!;
-    const subject = `${contactForm.dataset.subject} — ${new FormData(contactForm).get('interest')}`;
-    const body = build().replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\uFE0F?\s?/gu, '') + '\n\nJazakAllah,';
-    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    showToast(WA_TOAST);
   });
 }
+
+/* ---------- Toast: WhatsApp click ke baad confirmation ---------- */
+const WA_TOAST = 'WhatsApp opened — please press Send. Our agent will contact you shortly.';
+function showToast(text: string) {
+  let toast = document.querySelector<HTMLElement>('.toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toast);
+  }
+  toast.textContent = text;
+  toast.classList.remove('is-visible');
+  void toast.offsetWidth;
+  toast.classList.add('is-visible');
+  window.clearTimeout(Number(toast.dataset.timer));
+  toast.dataset.timer = String(window.setTimeout(() => toast!.classList.remove('is-visible'), 6000));
+}
+document.addEventListener('click', (e) => {
+  const link = (e.target as Element).closest?.('a[href^="https://wa.me/"]');
+  if (link) showToast(WA_TOAST);
+});

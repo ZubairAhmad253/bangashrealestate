@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
 import { SITE, MESSAGES, whatsappLink, emailLink } from '../config/site';
+// Note: contact form FormSubmit par jata hai (pehli dafa email activate karna hai) — dekhein SITE.formEndpoint
 import { AREAS } from '../data/areas';
 
 const schema = {
@@ -51,12 +52,29 @@ const schema = {
         </div>
       </div>
 
-      <form class="form" data-contact-form data-whatsapp={SITE.whatsapp} data-email={SITE.email} data-subject={MESSAGES.emailSubject} data-reveal="left">
+      <form
+        class="form"
+        action={SITE.formEndpoint}
+        method="POST"
+        data-contact-form
+        data-whatsapp={SITE.whatsapp}
+        data-reveal="left"
+      >
         <h2 style="font-size:var(--fs-xl)">Send an enquiry</h2>
+        <p class="muted" style="font-size:var(--fs-sm);margin-top:-4px">You'll get an instant confirmation email — our agent will contact you shortly.</p>
+
+        <!-- FormSubmit settings -->
+        <input type="hidden" name="_subject" value={MESSAGES.leadSubject} />
+        <input type="hidden" name="_template" value="table" />
+        <input type="hidden" name="_next" value={new URL('/thank-you/', SITE.url).href} />
+        <input type="hidden" name="_autoresponse" value={MESSAGES.autoReply} />
+        <input type="text" name="_honey" class="sr-only" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
         <div class="form-row">
           <div class="field"><label for="c-name">Your name</label><input id="c-name" name="name" required autocomplete="name" placeholder="e.g. Ali Khan" /></div>
           <div class="field"><label for="c-phone">Phone / WhatsApp</label><input id="c-phone" name="phone" type="tel" required autocomplete="tel" placeholder="03xx xxxxxxx" /></div>
         </div>
+        <div class="field"><label for="c-email">Email (for confirmation)</label><input id="c-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" /></div>
         <div class="form-row">
           <div class="field">
             <label for="c-interest">I'm interested in</label>
@@ -81,10 +99,10 @@ const schema = {
         <div class="field"><label for="c-budget">Budget (optional)</label><input id="c-budget" name="budget" placeholder="e.g. 1.5 Crore or 50,000 / month" /></div>
         <div class="field"><label for="c-msg">Message</label><textarea id="c-msg" name="message" placeholder="Budget, size, number of rooms…"></textarea></div>
         <div class="form__actions">
-          <button type="submit" class="btn btn-whatsapp"><Icon name="whatsapp" /> Send via WhatsApp</button>
-          <button type="button" class="btn btn-outline" data-send-email><Icon name="mail" /> Send via Email</button>
+          <button type="submit" class="btn btn-primary" data-submit><Icon name="mail" /> <span>Send Enquiry</span></button>
+          <button type="button" class="btn btn-whatsapp" data-send-whatsapp><Icon name="whatsapp" /> Send via WhatsApp</button>
         </div>
-        <p class="form__note">Your details are only used to reply to your enquiry.</p>
+        <p class="form__note">Your details are only used to reply to your enquiry. WhatsApp option doesn't need an email.</p>
       </form>
     </div>
   </section>

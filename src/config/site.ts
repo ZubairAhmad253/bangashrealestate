@@ -28,6 +28,10 @@ export const SITE = {
   whatsapp: '923320445759',          // Country code ke saath, bina + aur bina 0 ke
   email: 'engrumersaeed.6899@gmail.com',
 
+  /** Website form yahan jata hai (FormSubmit — free). Pehli submission par is email par
+      "Activate" ka email aayega — use ek dafa confirm karna zaroori hai. */
+  formEndpoint: 'https://formsubmit.co/engrumersaeed.6899@gmail.com',
+
   address: {
     street: 'Gulistan Plaza No. 18, B Block, Street 13-A, Sector 4, Airport Housing Society',
     short: 'Gulistan Plaza, Sector 4, Airport Housing Society',
@@ -106,6 +110,21 @@ export const MESSAGES = {
 
   /** Apni property sell / rent out karni ho */
   listProperty: [HELLO, 'I want to sell / rent out my property.', '', '🏠 Property type & size: ', '📍 Location: ', '💰 Expected price / rent: '].join('\n'),
+
+  /** Website form bhejne wale ko jane wali AUTO-REPLY email */
+  autoReply: [
+    'Assalam o Alaikum! 🏡',
+    '',
+    'Thank you for contacting Bangash Real Estate & Builders. We have received your enquiry and our agent will contact you shortly.',
+    '',
+    'For a faster response, WhatsApp or call us: 0332-0445759',
+    'Office: Gulistan Plaza No. 18, B Block, Street 13-A, Sector 4, Airport Housing Society, Rawalpindi (open daily 9 AM – 10 PM)',
+    '',
+    'Bangash Real Estate & Builders — Your Trust, Our Commitment.',
+  ].join('\n'),
+
+  /** Aapko aane wali lead email ka subject */
+  leadSubject: 'New property enquiry from website — Bangash Real Estate',
 
   /** Email ka default subject + body */
   emailSubject: 'Property Enquiry — Bangash Real Estate & Builders',

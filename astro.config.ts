@@ -6,7 +6,7 @@ import { SITE } from './src/config/site';
 export default defineConfig({
   site: SITE.url,
   trailingSlash: 'always',
-  integrations: [sitemap({ filter: (page) => !page.includes('/404'), lastmod: new Date(), changefreq: 'weekly' })],
+  integrations: [sitemap({ filter: (page) => !page.includes('/404') && !page.includes('/thank-you'), lastmod: new Date(), changefreq: 'weekly' })],
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   build: { inlineStylesheets: 'auto' },
   compressHTML: true,

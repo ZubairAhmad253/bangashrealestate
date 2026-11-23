@@ -744,3 +744,19 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 }
 .toc a { display: inline-block; padding: 8px 0; }
 .toc ol { gap: 0; }
+
+/* Toast (WhatsApp confirmation) */
+.toast { position: fixed; left: 50%; bottom: 96px; z-index: 300; width: max-content; max-width: min(92vw, 460px); padding: 14px 20px 14px 48px; border-radius: var(--radius); background: var(--brand-primary-strong); color: #fff; font-size: var(--fs-sm); font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; transform: translate(-50%, 20px); pointer-events: none; transition: opacity 0.35s, transform 0.45s var(--ease-spring); }
+.toast::before { content: ""; position: absolute; left: 16px; top: 50%; width: 20px; height: 20px; margin-top: -10px; border-radius: 50%; background: var(--whatsapp); }
+.toast::after { content: ""; position: absolute; left: 22px; top: 50%; width: 8px; height: 4px; margin-top: -3px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg); }
+.toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* Thank-you page */
+.thanks { min-height: 78vh; display: grid; place-items: center; text-align: center; }
+.thanks__inner { max-width: 720px; }
+.thanks__inner .lead { margin: 16px auto 0; }
+.thanks__check { width: 92px; height: 92px; margin: 0 auto 22px; border-radius: 50%; display: grid; place-items: center; background: var(--gradient-gold); color: var(--brand-primary-strong); box-shadow: 0 20px 50px -16px color-mix(in srgb, var(--brand-accent) 70%, transparent); animation: pop 0.7s var(--ease-spring) both; }
+.thanks__check svg { width: 46px; height: 46px; stroke-width: 3; }
+@keyframes pop { from { transform: scale(0.3); opacity: 0; } }
+.thanks__actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 28px; }
+.form__actions .btn { flex: 1 1 200px; }
