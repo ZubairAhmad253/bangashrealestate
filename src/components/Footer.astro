@@ -1,7 +1,8 @@
 ---
-import Logo from './Logo.astro';
+import { Image } from 'astro:assets';
+import logoGold from '../assets/brand/logo-gold.jpg';
 import Icon from './Icon.astro';
-import { SITE, whatsappLink } from '../config/site';
+import { SITE, whatsappLink, emailLink } from '../config/site';
 import { SERVICES } from '../data/services';
 import { AREAS } from '../data/areas';
 
@@ -14,10 +15,14 @@ const year = new Date().getFullYear();
   <div class="container">
     <div class="footer-grid">
       <div>
-        <Logo id="logo-footer" />
+        <a href="/" class="footer-logo" aria-label={SITE.name}>
+          <Image src={logoGold} alt={`${SITE.name} logo`} width={168} height={168} />
+          <span><strong>Bangash</strong><span>Real Estate &amp; Builders</span></span>
+        </a>
         <p style="margin-top:18px;max-width:340px">
-          Trusted real estate agents and builders in Rawalpindi &amp; Islamabad. Buy, sell or rent plots, houses and flats — or let us build your next home.
+          Your trusted partner in real estate &amp; construction — buy, sell or rent houses, flats and plots in Rawalpindi &amp; Islamabad, or let us build your next home.
         </p>
+        <p class="footer-motto">“{SITE.motto}”</p>
         {
           socials.length > 0 && (
             <div class="socials">
@@ -49,10 +54,10 @@ const year = new Date().getFullYear();
       <div>
         <h3>Get in Touch</h3>
         <ul class="footer-links footer-contact">
-          <li><Icon name="pin" /><span>{SITE.address.street}, {SITE.address.city}</span></li>
+          <li><Icon name="pin" /><a href={SITE.mapsUrl} target="_blank" rel="noopener">{SITE.address.street}, {SITE.address.city}</a></li>
           <li><Icon name="phone" /><a href={`tel:${SITE.phoneLink}`}>{SITE.phone}</a></li>
           <li><Icon name="whatsapp" /><a href={whatsappLink()} target="_blank" rel="noopener">WhatsApp Chat</a></li>
-          <li><Icon name="mail" /><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
+          <li><Icon name="mail" /><a href={emailLink()} style="word-break:break-all">{SITE.email}</a></li>
           <li><Icon name="clock" /><span>{SITE.hours}</span></li>
         </ul>
       </div>

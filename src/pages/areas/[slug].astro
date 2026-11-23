@@ -9,7 +9,7 @@ import CTA from '../../components/CTA.astro';
 import { AREAS, type Area } from '../../data/areas';
 import { propertiesInArea } from '../../data/properties';
 import { SERVICES } from '../../data/services';
-import { whatsappLink } from '../../config/site';
+import { MESSAGES, whatsappLink } from '../../config/site';
 
 export function getStaticPaths() {
   return AREAS.map((area) => ({ params: { slug: area.slug }, props: { area } }));
@@ -18,6 +18,8 @@ export function getStaticPaths() {
 const { area: a } = Astro.props as { area: Area };
 const listings = propertiesInArea(a.slug);
 const cityLabel = a.city === 'Rawalpindi / Islamabad' ? 'Rawalpindi & Islamabad' : a.city;
+// "DHA Islamabad–Rawalpindi" jaise naam mein city pehle se ho to dobara na lagayein
+const place = /rawalpindi|islamabad/i.test(a.name) ? a.name : `${a.name}, ${cityLabel}`;
 const faqs = [
   { q: `Do you have houses for sale in ${a.name}?`, a: `Yes. We regularly have houses, portions and plots in ${a.name}. Many deals are not listed online, so message us on WhatsApp with your budget and size for the latest options.` },
   { q: `Can I rent a house or flat in ${a.name} through you?`, a: `Yes. We deal in rentals in ${a.name} for families and professionals, including tenant verification and rental agreements.` },
@@ -26,18 +28,18 @@ const faqs = [
 ---
 
 <BaseLayout
-  title={`Property in ${a.name} ${cityLabel} — Plots, Houses & Flats`}
-  description={`Buy, sell or rent plots, houses and flats in ${a.name}, ${cityLabel}. ${a.short} Contact Bangash Real Estate for verified listings.`}
+  title={`Property in ${place} — Houses, Plots & Flats`}
+  description={`Buy, sell or rent houses, plots & flats in ${place}. Verified listings, fair prices and construction services by Bangash Real Estate.`}
   image={a.image}
 >
   <PageHero
     eyebrow={cityLabel}
-    title={`Property in ${a.name}, ${cityLabel}`}
+    title={`Property in ${place}`}
     lead={a.short}
     crumbs={[{ label: 'Areas', href: '/areas/' }, { label: a.name }]}
   >
     <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px" data-reveal="up">
-      <a href={whatsappLink(`Assalam o Alaikum! I'm looking for property in ${a.name}.`)} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="whatsapp" /> Ask about {a.name}</a>
+      <a href={whatsappLink(MESSAGES.area(a.name))} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="whatsapp" /> Ask about {a.name}</a>
       <a href={`/properties/?area=${a.slug}`} class="btn btn-outline">See listings <Icon name="arrow-right" /></a>
     </div>
   </PageHero>
@@ -46,7 +48,7 @@ const faqs = [
     <div class="container split">
       <div class="img-stack" data-reveal="right">
         <div class="img-stack__main" data-tilt="4">
-          <Image src={a.image} alt={`Homes in ${a.name}, ${cityLabel}`} widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" loading="eager" />
+          <Image src={a.image} alt={`Homes in ${place}`} widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" loading="eager" />
         </div>
       </div>
       <div class="prose">
@@ -68,7 +70,7 @@ const faqs = [
       ) : (
         <div class="empty-state is-visible">
           <p style="margin-bottom:18px">New listings in {a.name} are added regularly. Message us for current availability.</p>
-          <a href={whatsappLink(`Assalam o Alaikum! Do you have any property available in ${a.name}?`)} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Check availability</a>
+          <a href={whatsappLink(MESSAGES.area(a.name))} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Check availability</a>
         </div>
       )}
     </div>

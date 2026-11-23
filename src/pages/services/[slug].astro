@@ -9,7 +9,7 @@ import CTA from '../../components/CTA.astro';
 import { SERVICES, type Service } from '../../data/services';
 import { PROPERTIES } from '../../data/properties';
 import { AREAS } from '../../data/areas';
-import { SITE, whatsappLink } from '../../config/site';
+import { SITE, MESSAGES, whatsappLink } from '../../config/site';
 
 export function getStaticPaths() {
   return SERVICES.map((service) => ({ params: { slug: service.slug }, props: { service } }));
@@ -33,7 +33,7 @@ const schema = {
 <BaseLayout title={s.seoTitle} description={s.seoDescription} image={s.image} schema={[schema]}>
   <PageHero eyebrow={s.name} title={s.h1} lead={s.intro} crumbs={[{ label: 'Services', href: '/services/' }, { label: s.name }]}>
     <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px" data-reveal="up">
-      <a href={whatsappLink(`Assalam o Alaikum! I need help with: ${s.name}.`)} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="whatsapp" /> {s.slug === 'construction' ? 'Get a free quote' : 'Talk to an agent'}</a>
+      <a href={whatsappLink(s.slug === 'construction' ? MESSAGES.construction : MESSAGES.service(s.name))} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="whatsapp" /> {s.slug === 'construction' ? 'Get a free quote' : 'Talk to an agent'}</a>
       {s.propertyType && <a href={`/properties/?type=${s.propertyType}`} class="btn btn-outline">Browse {s.menuLabel.toLowerCase()} <Icon name="arrow-right" /></a>}
     </div>
   </PageHero>

@@ -1,4 +1,5 @@
 ---
+/* Signboard wala logo (buildings + chhat + khirki) — SVG mein taake har size par sharp rahe. */
 import { SITE } from '../config/site';
 interface Props { id?: string }
 const { id = 'logo' } = Astro.props;
@@ -6,22 +7,33 @@ const gid = `${id}-grad`;
 ---
 
 <a href="/" class="logo" aria-label={`${SITE.name} — Home`}>
-  <svg class="logo__mark" viewBox="0 0 48 48" aria-hidden="true">
+  <svg class="logo__mark logo__mark--sign" viewBox="0 0 60 52" aria-hidden="true">
     <defs>
-      <linearGradient id={gid} x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-        <stop offset="0" style="stop-color: var(--brand-primary-strong)" />
-        <stop offset=".5" style="stop-color: var(--brand-primary)" />
-        <stop offset="1" style="stop-color: var(--brand-secondary)" />
+      <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" style="stop-color: var(--brand-secondary)" />
+        <stop offset="1" style="stop-color: var(--brand-primary)" />
       </linearGradient>
     </defs>
-    <rect width="48" height="48" rx="14" fill={`url(#${gid})`} />
-    <path d="M10 23.5 24 12l14 11.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M15 21.5V36h18V21.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity=".9" />
-    <path d="M21 36v-7.5a3 3 0 0 1 6 0V36" fill="#fff" />
-    <circle cx="33.5" cy="14" r="2.4" fill="#fff" opacity=".85" />
+    <g fill={`url(#${gid})`}>
+      <rect x="11" y="20" width="8" height="24" rx="1" />
+      <rect x="21" y="5" width="9" height="39" rx="1" />
+      <rect x="32" y="12" width="8" height="32" rx="1" />
+      <rect x="42" y="22" width="7" height="22" rx="1" />
+    </g>
+    <g stroke="#fff" stroke-opacity=".45" stroke-width="1">
+      <path d="M15 23v18M25.5 8v33M36 15v26M45.5 25v16" />
+    </g>
+    <path d="M3 47 30 30.5 57 47Z" fill="#fff" />
+    <path d="M3 47 30 30.5 57 47" fill="none" style="stroke: var(--brand-primary-strong)" stroke-width="4.2" stroke-linejoin="miter" stroke-linecap="round" />
+    <g style="fill: var(--brand-primary)">
+      <rect x="27.4" y="38" width="2.3" height="2.3" />
+      <rect x="30.3" y="38" width="2.3" height="2.3" />
+      <rect x="27.4" y="40.9" width="2.3" height="2.3" />
+      <rect x="30.3" y="40.9" width="2.3" height="2.3" />
+    </g>
   </svg>
   <span class="logo__text">
-    <span class="logo__name">{SITE.shortName}</span>
-    <span class="logo__sub">Real Estate</span>
+    <span class="logo__name">BANGASH</span>
+    <span class="logo__sub">Real Estate &amp; Builders</span>
   </span>
 </a>

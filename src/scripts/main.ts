@@ -31,18 +31,32 @@ const revealEls = $$('[data-reveal]');
 if (reduceMotion || !('IntersectionObserver' in window)) {
   revealEls.forEach((el) => el.classList.add('is-visible'));
 } else {
+  const pending = new Set(revealEls);
+  const show = (el: Element) => {
+    el.classList.add('is-visible');
+    pending.delete(el as HTMLElement);
+    io.unobserve(el);
+  };
   const io = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          io.unobserve(entry.target);
-        }
-      });
-    },
+    (entries) => entries.forEach((entry) => entry.isIntersecting && show(entry.target)),
     { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
   );
   revealEls.forEach((el) => io.observe(el));
+
+  // Fallback: tez scroll (fling) ya link se jump mein observer beech ke elements miss kar sakta hai —
+  // jo bhi element screen ke neeche wale kinare se upar aa chuka ho, use dikha dein.
+  let ticking = false;
+  const sweep = () => {
+    ticking = false;
+    const limit = window.innerHeight;
+    pending.forEach((el) => el.getBoundingClientRect().top < limit && show(el));
+    if (!pending.size) window.removeEventListener('scroll', onRevealScroll);
+  };
+  const onRevealScroll = () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(sweep); }
+  };
+  window.addEventListener('scroll', onRevealScroll, { passive: true });
+  window.addEventListener('load', sweep);
 }
 
 /* ---------- Animated counters ---------- */
@@ -187,11 +201,14 @@ if (contactForm) {
   const build = () => {
     const d = new FormData(contactForm);
     return [
-      'Assalam o Alaikum, Bangash Real Estate!',
-      `Name: ${d.get('name') || '-'}`,
-      `Phone: ${d.get('phone') || '-'}`,
-      `Interested in: ${d.get('interest') || '-'}`,
-      `Area: ${d.get('area') || '-'}`,
+      'Assalam o Alaikum, Bangash Real Estate & Builders! 🏡',
+      'I am contacting you from your website.',
+      '',
+      `👤 Name: ${d.get('name') || '-'}`,
+      `📞 Phone: ${d.get('phone') || '-'}`,
+      `🏠 Interested in: ${d.get('interest') || '-'}`,
+      `📍 Area: ${d.get('area') || 'Any'}`,
+      `💰 Budget: ${d.get('budget') || '-'}`,
       '',
       `${d.get('message') || ''}`,
     ].join('\n');
@@ -205,6 +222,8 @@ if (contactForm) {
   $('[data-send-email]', contactForm)?.addEventListener('click', () => {
     if (!contactForm.reportValidity()) return;
     const email = contactForm.dataset.email!;
-    window.location.href = `mailto:${email}?subject=${encodeURIComponent('Property enquiry — website')}&body=${encodeURIComponent(build())}`;
+    const subject = `${contactForm.dataset.subject} — ${new FormData(contactForm).get('interest')}`;
+    const body = build().replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\uFE0F?\s?/gu, '') + '\n\nJazakAllah,';
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   });
 }

@@ -5,6 +5,10 @@ import '../styles/global.css';
 import SEO, { type SEOProps } from '../components/SEO.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { getImage } from 'astro:assets';
+import logoGold from '../assets/brand/logo-gold.jpg';
+
+const touchIcon = await getImage({ src: logoGold, width: 180, height: 180, format: 'png' });
 
 type Props = SEOProps;
 const props = Astro.props;
@@ -15,9 +19,10 @@ const props = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#2563eb" />
+    <meta name="theme-color" content="#141c55" />
     <meta name="format-detection" content="telephone=no" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={touchIcon.src} />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <!-- Animations sirf JS ke saath chalti hain; bina JS content hamesha visible -->
     <script is:inline>document.documentElement.classList.add('js');</script>

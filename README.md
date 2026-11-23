@@ -17,7 +17,10 @@ npm run preview   # preview the production build
 
 | Cheez | File |
 |---|---|
-| Phone, WhatsApp, email, address, social links, stats, domain | `src/config/site.ts` |
+| Phone, WhatsApp, email, address, map, social links, stats, domain | `src/config/site.ts` |
+| **WhatsApp & email ke custom messages** | `src/config/site.ts` → `MESSAGES` |
+| Google reviews (testimonials) | `src/data/content.ts` → `TESTIMONIALS` |
+| Logo (gold) | `src/assets/brand/logo-gold.jpg` · header logo: `src/components/Logo.astro` |
 | **Colors / gradients / fonts** (poora color scheme) | `src/styles/theme.css` |
 | Layout & component styles, animations | `src/styles/global.css` |
 | Property listings (add / remove / prices) | `src/data/properties.ts` |
@@ -32,7 +35,7 @@ npm run preview   # preview the production build
 3. `PROPERTIES` list mein ek naya object add karein — page, sitemap aur SEO khud ban jayenge.
 
 ### Color scheme change karna
-`src/styles/theme.css` mein sirf `--brand-primary`, `--brand-primary-strong`, `--brand-secondary` aur `--brand-accent` badlein. Saare tints, gradients aur shadows khud update ho jayenge.
+`src/styles/theme.css` mein sirf `--brand-primary`, `--brand-primary-strong`, `--brand-secondary`, `--brand-accent` aur `--brand-accent-light` badlein. Saare tints, gradients aur shadows khud update ho jayenge. Abhi ka theme signboard ke navy/blue aur logo ke gold se bana hai.
 
 ## Deploy
 

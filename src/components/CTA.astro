@@ -1,10 +1,11 @@
 ---
 import Icon from './Icon.astro';
 import { SITE, whatsappLink } from '../config/site';
-interface Props { title?: string; text?: string }
+interface Props { title?: string; text?: string; message?: string }
 const {
   title = 'Ready to buy, sell, rent or build?',
-  text = 'Tell us what you are looking for — our team will share the best options in Rawalpindi & Islamabad within hours.',
+  text = 'Tell us your requirements, preferred location and budget — our team will share the best options in Rawalpindi & Islamabad.',
+  message,
 } = Astro.props;
 ---
 
@@ -16,7 +17,7 @@ const {
       <h2>{title}</h2>
       <p>{text}</p>
       <div class="cta__actions">
-        <a href={whatsappLink()} class="btn btn-white" target="_blank" rel="noopener"><Icon name="whatsapp" /> Chat on WhatsApp</a>
+        <a href={whatsappLink(message)} class="btn btn-white" target="_blank" rel="noopener"><Icon name="whatsapp" /> Chat on WhatsApp</a>
         <a href={`tel:${SITE.phoneLink}`} class="btn btn-glass"><Icon name="phone" /> Call {SITE.phone}</a>
       </div>
     </div>

@@ -7,7 +7,7 @@ import Icon from '../../components/Icon.astro';
 import Logo from '../../components/Logo.astro';
 import { PROPERTIES, formatPrice, purposeLabel, typeLabel, type Property } from '../../data/properties';
 import { getArea } from '../../data/areas';
-import { SITE, whatsappLink } from '../../config/site';
+import { SITE, MESSAGES, whatsappLink, emailLink } from '../../config/site';
 
 export function getStaticPaths() {
   return PROPERTIES.map((property) => ({ params: { slug: property.slug }, props: { property } }));
@@ -19,7 +19,9 @@ const city = area?.city.split(' /')[0] ?? 'Rawalpindi';
 const priceText = `PKR ${formatPrice(p.price)}${p.purpose === 'rent' ? ' /month' : ''}`;
 const images = [p.image, ...(p.gallery ?? [])].slice(0, 3);
 const related = PROPERTIES.filter((x) => x.slug !== p.slug && (x.area === p.area || x.type === p.type)).slice(0, 3);
-const waMsg = `Assalam o Alaikum! I'm interested in: ${p.title} (${p.location}) — ${priceText}. Please share more details.`;
+const pageUrl = new URL(`/properties/${p.slug}/`, SITE.url).href;
+const waMsg = MESSAGES.property({ title: p.title, location: `${p.location}, ${city}`, price: priceText, url: pageUrl });
+const mailHref = emailLink(`Enquiry: ${p.title} — ${p.location}`, `Assalam o Alaikum Bangash Real Estate & Builders,\n\nI am interested in this property:\n\n${p.title}\n${p.location}, ${city}\n${priceText}\n${pageUrl}\n\nName: \nPhone / WhatsApp: \nPreferred visit time: \n\nJazakAllah,`);
 
 const schema = {
   '@context': 'https://schema.org',
@@ -45,7 +47,7 @@ const schema = {
 ---
 
 <BaseLayout
-  title={`${p.title} ${purposeLabel[p.purpose]} in ${p.location}`}
+  title={`${p.title}${/\b(sale|rent)\b/i.test(p.title) ? '' : ` ${purposeLabel[p.purpose]}`} in ${area?.name ?? p.location}`}
   description={`${p.title} ${purposeLabel[p.purpose].toLowerCase()} in ${p.location}, ${city}. ${p.size}${p.beds ? `, ${p.beds} beds` : ''} — ${priceText}. Contact Bangash Real Estate.`}
   image={p.image}
   schema={[schema]}
@@ -110,7 +112,7 @@ const schema = {
           <div style="display:grid;gap:10px">
             <a href={whatsappLink(waMsg)} class="btn btn-whatsapp btn-block" target="_blank" rel="noopener"><Icon name="whatsapp" /> Enquire on WhatsApp</a>
             <a href={`tel:${SITE.phoneLink}`} class="btn btn-primary btn-block"><Icon name="phone" /> Call {SITE.phone}</a>
-            <a href={`mailto:${SITE.email}?subject=${encodeURIComponent('Enquiry: ' + p.title)}`} class="btn btn-outline btn-block"><Icon name="mail" /> Email us</a>
+            <a href={mailHref} class="btn btn-outline btn-block"><Icon name="mail" /> Email us</a>
           </div>
         </div>
       </aside>

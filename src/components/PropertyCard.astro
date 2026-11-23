@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
-import { whatsappLink } from '../config/site';
+import { SITE, MESSAGES, whatsappLink } from '../config/site';
 import { getArea } from '../data/areas';
 import { formatPrice, purposeLabel, typeLabel, type Property } from '../data/properties';
 
@@ -52,7 +52,7 @@ const url = `/properties/${p.slug}/`;
   </div>
   <a
     class="property-card__wa"
-    href={whatsappLink(`Assalam o Alaikum! I'm interested in: ${p.title} (${p.location}) — PKR ${formatPrice(p.price)}`)}
+    href={whatsappLink(MESSAGES.property({ title: p.title, location: p.location, price: `PKR ${formatPrice(p.price)}${p.purpose === 'rent' ? ' /month' : ''}`, url: new URL(url, SITE.url).href }))}
     target="_blank"
     rel="noopener"
     aria-label={`Ask about ${p.title} on WhatsApp`}

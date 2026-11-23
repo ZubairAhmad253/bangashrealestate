@@ -6,7 +6,7 @@ import Icon from '../../components/Icon.astro';
 import CTA from '../../components/CTA.astro';
 import { PROPERTIES } from '../../data/properties';
 import { AREAS } from '../../data/areas';
-import { SITE, whatsappLink } from '../../config/site';
+import { SITE, MESSAGES, whatsappLink } from '../../config/site';
 
 const schema = {
   '@context': 'https://schema.org',
@@ -23,7 +23,7 @@ const schema = {
 
 <BaseLayout
   title="Properties for Sale & Rent in Rawalpindi & Islamabad"
-  description="Browse plots, houses and flats for sale and rent in Rawalpindi & Islamabad — Airport Housing Society, Ghauri Town, Bahria Town, DHA and more. Filter by type, purpose and area."
+  description="Browse plots, houses and flats for sale and rent in Airport Housing Society, Ghauri Town, Bahria Town, DHA and across Rawalpindi & Islamabad."
   schema={[schema]}
 >
   <PageHero
@@ -72,10 +72,10 @@ const schema = {
       <div class="empty-state" data-empty>
         <h2 style="font-size:var(--fs-xl);color:var(--text)">No matching listing right now</h2>
         <p style="margin:10px 0 20px">We get new properties every week — tell us what you need and we'll find it for you.</p>
-        <a href={whatsappLink('Assalam o Alaikum! I am looking for a property that is not listed on your website.')} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Tell us on WhatsApp</a>
+        <a href={whatsappLink()} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Tell us on WhatsApp</a>
       </div>
     </div>
   </section>
 
-  <CTA title="Want to sell or rent out your property?" text="List it with Bangash Real Estate — we bring genuine buyers and tenants from across Rawalpindi & Islamabad." />
+  <CTA title="Want to sell or rent out your property?" text="List it with Bangash Real Estate & Builders — we bring genuine buyers and tenants from across Rawalpindi & Islamabad." message={MESSAGES.listProperty} />
 </BaseLayout>

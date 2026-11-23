@@ -71,9 +71,9 @@ export const SERVICES: Service[] = [
     icon: 'map',
     image: plot1,
     short: 'Residential & commercial plots with verified documents in top societies.',
-    seoTitle: 'Plots for Sale in Rawalpindi & Islamabad — Airport Society, Ghauri Town',
+    seoTitle: 'Plots for Sale in Airport Society, Ghauri Town & Rawalpindi',
     seoDescription:
-      'Buy or sell residential and commercial plots in Rawalpindi & Islamabad — Airport Housing Society, Ghauri Town, Bahria Town, DHA and more. Verified documents & fair prices.',
+      'Buy or sell residential & commercial plots in Airport Housing Society, Ghauri Town, Bahria Town, DHA & more. Verified documents, fair prices.',
     h1: 'Plots for Sale in Rawalpindi & Islamabad',
     intro:
       'Whether you want to build your dream home or invest for the future, we help you buy and sell residential and commercial plots in Rawalpindi and Islamabad’s most trusted societies — with document verification, fair pricing and smooth transfer.',

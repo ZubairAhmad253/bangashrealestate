@@ -2,10 +2,9 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
-import { SITE, whatsappLink } from '../config/site';
+import { SITE, MESSAGES, whatsappLink, emailLink } from '../config/site';
 import { AREAS } from '../data/areas';
 
-const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(SITE.mapQuery)}&z=14&output=embed`;
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'ContactPage',
@@ -17,7 +16,7 @@ const schema = {
 
 <BaseLayout
   title="Contact Bangash Real Estate — Rawalpindi & Islamabad"
-  description={`Contact Bangash Real Estate on WhatsApp, phone or email for plots, houses & flats in Rawalpindi & Islamabad. Office: ${SITE.address.street}, ${SITE.address.city}.`}
+  description={`Contact Bangash Real Estate & Builders on WhatsApp, phone or email. Office: ${SITE.address.short}, ${SITE.address.city}. Open daily 9 AM – 10 PM.`}
   schema={[schema]}
 >
   <PageHero
@@ -38,21 +37,21 @@ const schema = {
           <span class="contact-item__icon"><Icon name="phone" /></span>
           <div><span>Call</span><strong>{SITE.phone}</strong></div>
         </a>
-        <a href={`mailto:${SITE.email}`} class="contact-item" data-reveal="right" style="--d:.12s">
+        <a href={emailLink()} class="contact-item" data-reveal="right" style="--d:.12s">
           <span class="contact-item__icon"><Icon name="mail" /></span>
-          <div><span>Email</span><strong>{SITE.email}</strong></div>
+          <div><span>Email</span><strong style="word-break:break-all">{SITE.email}</strong></div>
         </a>
-        <div class="contact-item" data-reveal="right" style="--d:.18s">
+        <a href={SITE.mapsUrl} class="contact-item" target="_blank" rel="noopener" data-reveal="right" style="--d:.18s">
           <span class="contact-item__icon"><Icon name="pin" /></span>
-          <div><span>Office</span><strong>{SITE.address.street}, {SITE.address.city}</strong></div>
-        </div>
+          <div><span>Office · Get directions</span><strong>{SITE.address.street}, {SITE.address.city}</strong></div>
+        </a>
         <div class="contact-item" data-reveal="right" style="--d:.24s">
           <span class="contact-item__icon"><Icon name="clock" /></span>
           <div><span>Hours</span><strong>{SITE.hours}</strong></div>
         </div>
       </div>
 
-      <form class="form" data-contact-form data-whatsapp={SITE.whatsapp} data-email={SITE.email} data-reveal="left">
+      <form class="form" data-contact-form data-whatsapp={SITE.whatsapp} data-email={SITE.email} data-subject={MESSAGES.emailSubject} data-reveal="left">
         <h2 style="font-size:var(--fs-xl)">Send an enquiry</h2>
         <div class="form-row">
           <div class="field"><label for="c-name">Your name</label><input id="c-name" name="name" required autocomplete="name" placeholder="e.g. Ali Khan" /></div>
@@ -79,6 +78,7 @@ const schema = {
             </select>
           </div>
         </div>
+        <div class="field"><label for="c-budget">Budget (optional)</label><input id="c-budget" name="budget" placeholder="e.g. 1.5 Crore or 50,000 / month" /></div>
         <div class="field"><label for="c-msg">Message</label><textarea id="c-msg" name="message" placeholder="Budget, size, number of rooms…"></textarea></div>
         <div class="form__actions">
           <button type="submit" class="btn btn-whatsapp"><Icon name="whatsapp" /> Send via WhatsApp</button>
@@ -91,7 +91,14 @@ const schema = {
 
   <section class="section" style="padding-top:0">
     <div class="container" data-reveal="up">
-      <iframe class="map-embed" src={mapSrc} title={`${SITE.name} office location map`} loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <div class="map-head">
+        <div>
+          <h2>Visit our office</h2>
+          <p class="muted">{SITE.address.street}, {SITE.address.city}</p>
+        </div>
+        <a href={SITE.mapsUrl} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="pin" /> Get directions</a>
+      </div>
+      <iframe class="map-embed" src={SITE.mapEmbed} title={`${SITE.name} office location map`} loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
   </section>
 </BaseLayout>

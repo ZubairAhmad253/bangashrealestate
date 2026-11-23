@@ -5,7 +5,7 @@ import Icon from '../components/Icon.astro';
 import PropertyCard from '../components/PropertyCard.astro';
 import FAQ from '../components/FAQ.astro';
 import CTA from '../components/CTA.astro';
-import { SITE, whatsappLink } from '../config/site';
+import { SITE, MESSAGES, whatsappLink } from '../config/site';
 import { SERVICES } from '../data/services';
 import { AREAS } from '../data/areas';
 import { featuredProperties, propertiesInArea } from '../data/properties';
@@ -28,8 +28,8 @@ const headline: { text: string; gradient?: boolean }[] = [
 ---
 
 <BaseLayout
-  title="Bangash Real Estate — Plots, Houses & Flats for Sale & Rent in Rawalpindi & Islamabad"
-  description="Bangash Real Estate: buy, sell or rent plots, houses & flats in Airport Housing Society, Ghauri Town, Bahria Town, DHA & across Rawalpindi/Islamabad. We also build houses & apartments."
+  title="Bangash Real Estate | Plots, Houses & Flats in Rawalpindi & Islamabad"
+  description="Buy, sell or rent plots, houses & flats in Airport Housing Society, Ghauri Town, Bahria Town & DHA, Rawalpindi/Islamabad. We also build houses & flats."
 >
   <!-- ================= HERO ================= -->
   <section class="hero">
@@ -83,7 +83,7 @@ const headline: { text: string; gradient?: boolean }[] = [
 
         <ul class="hero__trust" role="list" data-reveal="up" style="--d:.8s">
           <li><Icon name="shield" /> Verified listings</li>
-          <li><Icon name="file" /> Complete paperwork</li>
+          <li><Icon name="bank" /> Bank loan available</li>
           <li><Icon name="hardhat" /> Builders on demand</li>
         </ul>
       </div>
@@ -101,7 +101,7 @@ const headline: { text: string; gradient?: boolean }[] = [
           <div><strong>New Listing</strong><span>10 Marla · Airport Society</span></div>
         </div>
         <div class="float-card float-card--c">
-          <div><div class="stars">{[1, 2, 3, 4, 5].map(() => <Icon name="star" />)}</div><span>Loved by {SITE.stats[2].value}+ families</span></div>
+          <div><div class="stars">{[1, 2, 3, 4, 5].map(() => <Icon name="star" />)}</div><span><strong style="display:inline">{SITE.googleRating}</strong> rating on Google</span></div>
         </div>
         <div class="float-card float-card--b">
           <span class="float-card__icon"><Icon name="hardhat" /></span>
@@ -244,7 +244,7 @@ const headline: { text: string; gradient?: boolean }[] = [
         </ol>
         <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px" data-reveal="up">
           <a href="/services/construction/" class="btn btn-primary">Construction details <Icon name="arrow-right" /></a>
-          <a href={whatsappLink('Assalam o Alaikum! I want a quote for construction on my plot.')} class="btn btn-outline" target="_blank" rel="noopener"><Icon name="whatsapp" /> Get a quote</a>
+          <a href={whatsappLink(MESSAGES.construction)} class="btn btn-outline" target="_blank" rel="noopener"><Icon name="whatsapp" /> Get a quote</a>
         </div>
       </div>
     </div>
@@ -276,7 +276,24 @@ const headline: { text: string; gradient?: boolean }[] = [
         <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="users" /></span>Client stories</p>
         <h2 data-reveal="up" style="--d:.08s">Families who <span class="gradient-text">trust us</span></h2>
       </div>
-      <div class="testimonials" data-reveal="left">
+      <div class="rating-card" data-reveal="up">
+        <div class="rating-card__score">
+          <span class="rating-card__num gold-text">{SITE.googleRating}</span>
+          <div>
+            <div class="stars">{[1, 2, 3, 4, 5].map(() => <Icon name="star" />)}</div>
+            <span class="rating-card__g"><Icon name="google" /> Google Reviews</span>
+          </div>
+        </div>
+        <div>
+          <h3>Rated {SITE.googleRating} out of 5 by our clients</h3>
+          <p>Families across Airport Housing Society and Rawalpindi trust us for honest dealing. Read what they say on Google — and if we've helped you, please leave a review.</p>
+        </div>
+        <div class="rating-card__actions">
+          <a href={SITE.mapsUrl} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="google" /> Read reviews</a>
+        </div>
+      </div>
+      {TESTIMONIALS.length > 0 && (
+      <div class="testimonials" data-reveal="left" style="margin-top:28px">
         {TESTIMONIALS.map((t) => (
           <figure class="testimonial">
             <Icon name="quote" class="testimonial__quote" />
@@ -289,6 +306,7 @@ const headline: { text: string; gradient?: boolean }[] = [
           </figure>
         ))}
       </div>
+      )}
     </div>
   </section>
 
