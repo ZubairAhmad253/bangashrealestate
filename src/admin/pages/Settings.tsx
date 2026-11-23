@@ -39,12 +39,13 @@ export function Settings({ ctx }: { ctx: Ctx }) {
   const save = async () => {
     if (hook && !/^https:\/\/api\.vercel\.com\//.test(hook.trim())) return toast.err('The deploy hook must start with "https://api.vercel.com/".');
     setSaving(true);
+    // Save the deploy hook FIRST — saving `settings` fires the rebuild trigger, which reads the hook.
+    const r2 = await sb.from('private_settings').update({ deploy_hook_url: hook.trim() || null }).eq('id', 1);
     const r1 = await sb.from('settings').update({
       phone: s.phone?.trim() || null, whatsapp: s.whatsapp?.trim() || null, email: s.email?.trim() || null, hours: s.hours?.trim() || null,
       google_rating: s.google_rating ? Number(s.google_rating) : null,
       stats: stats.map((x) => ({ value: Number(x.value) || 0, suffix: x.suffix, label: x.label.trim() })),
     }).eq('id', 1);
-    const r2 = await sb.from('private_settings').update({ deploy_hook_url: hook.trim() || null }).eq('id', 1);
     setSaving(false);
     if (r1.error || r2.error) return toast.err(r1.error ?? r2.error);
     toast.ok('Settings saved ✓ The website will update in 1–2 minutes.');
