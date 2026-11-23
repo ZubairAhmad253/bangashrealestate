@@ -1,0 +1,108 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import PropertyCard from '../components/PropertyCard.astro';
+import Icon from '../components/Icon.astro';
+import FAQ from '../components/FAQ.astro';
+import CTA from '../components/CTA.astro';
+import { CITIES, type City } from '../data/cities';
+import { AREAS } from '../data/areas';
+import { PROPERTIES } from '../data/properties';
+import { SERVICES } from '../data/services';
+import { MESSAGES, whatsappLink } from '../config/site';
+
+export function getStaticPaths() {
+  return CITIES.map((city) => ({ params: { city: city.slug }, props: { city } }));
+}
+
+const { city: c } = Astro.props as { city: City };
+const areas = AREAS.filter((a) => a.city.includes(c.name));
+const areaSlugs = new Set(areas.map((a) => a.slug));
+const listings = PROPERTIES.filter((p) => areaSlugs.has(p.area)).slice(0, 6);
+const other = CITIES.find((x) => x.slug !== c.slug)!;
+---
+
+<BaseLayout title={c.title} description={c.description} image={c.image}>
+  <PageHero eyebrow={`Bangash Real Estate · ${c.name}, Pakistan`} title={c.h1} lead={c.lead} crumbs={[{ label: c.h1 }]}>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px" data-reveal="up">
+      <a href={whatsappLink(MESSAGES.area(c.name))} class="btn btn-primary" target="_blank" rel="noopener"><Icon name="whatsapp" /> Find property in {c.name}</a>
+      <a href="/properties/" class="btn btn-outline">Browse listings <Icon name="arrow-right" /></a>
+    </div>
+  </PageHero>
+
+  <section class="section" style="padding-top:0">
+    <div class="container split">
+      <div class="img-stack" data-reveal="right">
+        <div class="img-stack__main" data-tilt="4">
+          <Image src={c.image} alt={`Real estate in ${c.name} — houses and property by Bangash Real Estate`} widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" loading="eager" />
+        </div>
+      </div>
+      <div class="prose">
+        {c.body.map((b, i) => (
+          <>
+            <h2 style={i === 0 ? 'margin-top:0' : ''} data-reveal="up">{b.heading}</h2>
+            <p data-reveal="up">{b.text}</p>
+          </>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head">
+        <h2 data-reveal="up">Areas we cover in <span class="gradient-text">{c.name}</span></h2>
+      </div>
+      <div class="area-grid">
+        {areas.map((a, i) => (
+          <a href={`/areas/${a.slug}/`} class="area-tile" data-reveal="up" style={`--d:${(i % 4) * 0.08}s`}>
+            <Image src={a.image} alt={`Property in ${a.name}, ${c.name}`} widths={[400, 700]} sizes="(max-width: 700px) 92vw, 320px" />
+            <span class="area-tile__city">{a.city}</span>
+            <h3>{a.name}</h3>
+            <span class="area-tile__meta"><span>View area</span><span class="area-tile__go"><Icon name="arrow-up-right" /></span></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {listings.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-head section-head--row">
+          <div><h2 data-reveal="up">Properties in <span class="gradient-text">{c.name}</span></h2></div>
+          <a href="/properties/" class="btn btn-outline" data-reveal="left">View all <Icon name="arrow-right" /></a>
+        </div>
+        <div class="grid grid-3">{listings.map((p, i) => <PropertyCard property={p} delay={(i % 3) * 0.08} />)}</div>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--tint">
+    <div class="container">
+      <div class="section-head section-head--center"><h2 data-reveal="up">Real estate services in <span class="gradient-text">{c.name}</span></h2></div>
+      <div class="grid grid-4">
+        {SERVICES.map((s, i) => (
+          <a href={`/services/${s.slug}/`} class="service-card" data-reveal="up" style={`--d:${i * 0.08}s`}>
+            <span class="service-card__icon"><Icon name={s.icon} /></span>
+            <h3>{s.name}</h3>
+            <span class="link-arrow">Learn more <Icon name="arrow-right" /></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head section-head--center"><h2 data-reveal="up">Real estate in {c.name} — <span class="gradient-text">FAQs</span></h2></div>
+      <FAQ faqs={c.faqs} />
+      <p style="text-align:center;margin-top:32px" data-reveal="up">
+        Also see: <a class="link-arrow" style="display:inline" href={`/real-estate-${other.slug}/`}>{other.h1}</a>
+      </p>
+    </div>
+  </section>
+
+  <CTA />
+</BaseLayout>

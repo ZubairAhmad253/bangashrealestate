@@ -45,6 +45,17 @@ const year = new Date().getFullYear();
       </div>
 
       <div>
+        <h3>Explore</h3>
+        <ul class="footer-links">
+          <li><a href="/real-estate-rawalpindi/">Real Estate in Rawalpindi</a></li>
+          <li><a href="/real-estate-islamabad/">Real Estate in Islamabad</a></li>
+          <li><a href="/guides/">Property Guides</a></li>
+          <li><a href="/tools/marla-calculator/">Marla Calculator</a></li>
+          <li><a href="/areas/">All Areas</a></li>
+        </ul>
+      </div>
+
+      <div>
         <h3>Popular Areas</h3>
         <ul class="footer-links">
           {AREAS.slice(0, 6).map((a) => <li><a href={`/areas/${a.slug}/`}>{a.name}</a></li>)}

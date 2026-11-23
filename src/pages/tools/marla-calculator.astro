@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import FAQ from '../../components/FAQ.astro';
+import CTA from '../../components/CTA.astro';
+import { SITE } from '../../config/site';
+
+const faqs = [
+  { q: 'How many square feet are in 1 marla?', a: 'In most modern housing societies (Bahria Town, DHA and many Rawalpindi/Islamabad societies) 1 marla = 225 sq ft. The traditional revenue marla is 272.25 sq ft.' },
+  { q: 'How many square feet are in 5 marla?', a: '5 marla = 1,125 sq ft using the 225 sq ft standard, or about 1,361 sq ft using the 272.25 sq ft standard.' },
+  { q: 'How many square feet are in 10 marla?', a: '10 marla = 2,250 sq ft (225 standard) or about 2,723 sq ft (272.25 standard).' },
+  { q: 'How many marla are in 1 kanal?', a: '1 kanal = 20 marla. That is 4,500 sq ft with the 225 sq ft marla, or 5,445 sq ft with the 272.25 sq ft marla.' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Marla Calculator — Marla, Kanal & Square Feet Converter',
+  url: new URL('/tools/marla-calculator/', SITE.url).href,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: 0, priceCurrency: 'PKR' },
+  provider: { '@id': `${SITE.url}/#business` },
+};
+---
+
+<BaseLayout
+  title="Marla Calculator — Convert Marla, Kanal & Square Feet (Pakistan)"
+  description="Free marla calculator for Pakistan: convert marla, kanal, square feet, square yards and square metres. Supports 225 and 272.25 sq ft marla standards."
+  schema={[schema]}
+>
+  <PageHero
+    eyebrow="Free tool"
+    title="Marla Calculator — Marla, Kanal & Square Feet"
+    lead="Convert Pakistani land units instantly. Choose the marla standard your society uses."
+    crumbs={[{ label: 'Guides', href: '/guides/' }, { label: 'Marla Calculator' }]}
+  />
+
+  <section class="section" style="padding-top:0">
+    <div class="container" style="max-width:900px">
+      <form class="calc" data-calc data-reveal="up" onsubmit="return false">
+        <div class="calc__inputs">
+          <div class="field">
+            <label for="calc-value">Area</label>
+            <input id="calc-value" type="number" inputmode="decimal" min="0" step="any" value="5" />
+          </div>
+          <div class="field">
+            <label for="calc-unit">Unit</label>
+            <select id="calc-unit">
+              <option value="marla" selected>Marla</option>
+              <option value="kanal">Kanal</option>
+              <option value="sqft">Square feet</option>
+              <option value="sqyd">Square yards (gaz)</option>
+              <option value="sqm">Square metres</option>
+              <option value="acre">Acre</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="calc-std">1 Marla =</label>
+            <select id="calc-std">
+              <option value="225" selected>225 sq ft (societies)</option>
+              <option value="272.25">272.25 sq ft (traditional)</option>
+            </select>
+          </div>
+        </div>
+        <div class="calc__results" aria-live="polite">
+          <div><span>Square feet</span><strong data-out="sqft">1,125</strong></div>
+          <div><span>Marla</span><strong data-out="marla">5</strong></div>
+          <div><span>Kanal</span><strong data-out="kanal">0.25</strong></div>
+          <div><span>Square yards</span><strong data-out="sqyd">125</strong></div>
+          <div><span>Square metres</span><strong data-out="sqm">104.52</strong></div>
+          <div><span>Acre</span><strong data-out="acre">0.026</strong></div>
+        </div>
+      </form>
+
+      <div class="prose" style="margin-top:48px">
+        <h2>Quick reference</h2>
+        <p>Most housing societies in Rawalpindi and Islamabad use <strong>1 marla = 225 sq ft</strong>. Older land records may use the traditional <strong>272.25 sq ft</strong> marla. Read our full <a href="/guides/marla-kanal-square-feet-guide/">Marla, Kanal &amp; Square Feet guide</a> for details.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head section-head--center"><h2 data-reveal="up">Marla & kanal <span class="gradient-text">FAQs</span></h2></div>
+      <FAQ faqs={faqs} />
+    </div>
+  </section>
+
+  <CTA title="Looking for a plot of the right size?" text="Tell us the size, area and budget — we'll find verified plots and houses for you in Rawalpindi & Islamabad." />
+</BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-calc]');
+  if (form) {
+    const value = form.querySelector<HTMLInputElement>('#calc-value')!;
+    const unit = form.querySelector<HTMLSelectElement>('#calc-unit')!;
+    const std = form.querySelector<HTMLSelectElement>('#calc-std')!;
+    const fmt = (n: number) => (n >= 1000 ? Math.round(n).toLocaleString('en-PK') : Number(n.toPrecision(4)).toLocaleString('en-PK', { maximumFractionDigits: 4 }));
+    const update = () => {
+      const marla = Number(std.value);
+      const toSqft: Record<string, number> = { sqft: 1, sqyd: 9, sqm: 10.7639, marla, kanal: marla * 20, acre: 43560 };
+      const sqft = (Number(value.value) || 0) * toSqft[unit.value];
+      form.querySelectorAll<HTMLElement>('[data-out]').forEach((el) => {
+        el.textContent = fmt(sqft / toSqft[el.dataset.out!]);
+      });
+    };
+    [value, unit, std].forEach((el) => el.addEventListener('input', update));
+    update();
+  }
+</script>

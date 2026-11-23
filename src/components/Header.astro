@@ -47,7 +47,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
       </ul>
     </nav>
 
-    <a href={whatsappLink()} class="btn btn-primary btn-sm header-cta" target="_blank" rel="noopener">
+    <a href={whatsappLink()} class="btn btn-gold btn-sm header-cta" target="_blank" rel="noopener">
       <Icon name="whatsapp" /> WhatsApp Us
     </a>
 
@@ -68,6 +68,11 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     <a href="/properties/" class="drawer__link" aria-current={isActive('/properties/') ? 'page' : undefined}><Icon name="search" /> All Properties</a>
     <p class="drawer__group">Services</p>
     {SERVICES.map((s) => <a href={`/services/${s.slug}/`} class="drawer__link" aria-current={isActive(`/services/${s.slug}/`) ? 'page' : undefined}><Icon name={s.icon} /> {s.name}</a>)}
+    <p class="drawer__group">Explore</p>
+    <a href="/real-estate-rawalpindi/" class="drawer__link" aria-current={isActive('/real-estate-rawalpindi/') ? 'page' : undefined}><Icon name="pin" /> Real Estate in Rawalpindi</a>
+    <a href="/real-estate-islamabad/" class="drawer__link" aria-current={isActive('/real-estate-islamabad/') ? 'page' : undefined}><Icon name="building" /> Real Estate in Islamabad</a>
+    <a href="/guides/" class="drawer__link" aria-current={isActive('/guides/') ? 'page' : undefined}><Icon name="file" /> Property Guides</a>
+    <a href="/tools/marla-calculator/" class="drawer__link" aria-current={isActive('/tools/') ? 'page' : undefined}><Icon name="area" /> Marla Calculator</a>
     <p class="drawer__group">Company</p>
     <a href="/areas/" class="drawer__link" aria-current={isActive('/areas/') ? 'page' : undefined}><Icon name="pin" /> Areas We Cover</a>
     <a href="/about/" class="drawer__link" aria-current={isActive('/about/') ? 'page' : undefined}><Icon name="users" /> About Us</a>

@@ -1,42 +1,50 @@
 /* ==========================================================================
-   BANGASH REAL ESTATE — THEME FILE
+   BANGASH REAL ESTATE & BUILDERS — THEME FILE
    --------------------------------------------------------------------------
    Poori website ka color scheme, fonts, gradients aur shadows yahin se
-   control hote hain. Color change karna ho to sirf neeche wale
-   "BRAND COLORS" ki values badlein — baqi sab (light tints, borders,
-   gradients, glows) khud-ba-khud update ho jayenge.
+   control hote hain. Color change karna ho to sirf "BRAND COLORS" ki
+   values badlein — baqi sab khud update ho jayega.
+
+   Do themes ready hain:
+     1) GOLD (default)  — logo jaisa black + gold, light ivory background
+     2) BLUE            — signboard jaisa navy + blue + gold
+   Blue try karna ho to src/layouts/BaseLayout.astro mein
+   <html ... data-theme="gold"> ko data-theme="blue" kar dein.
    ========================================================================== */
 
-:root {
-  /* ---------- BRAND COLORS (sirf ye badlein) ----------
-     Signboard ka navy + royal blue, aur logo ka gold. */
-  --brand-primary: #1f4fc4;        /* Royal blue (signboard buildings) */
-  --brand-primary-strong: #141c55; /* Deep navy (signboard text) */
-  --brand-secondary: #3f93e6;      /* Sky blue (buildings ke upar wala hissa) */
-  --brand-accent: #c8962e;         /* Gold (logo) — badges, stars, highlights */
-  --brand-accent-light: #f2d27c;   /* Light gold (gold gradient ka roshan hissa) */
-  --whatsapp: #25d366;             /* WhatsApp green */
+:root,
+[data-theme="gold"] {
+  /* ---------- BRAND COLORS (sirf ye badlein) ---------- */
+  --brand-primary: #94691a;        /* Deep gold — links, icons (light bg par parhne layak) */
+  --brand-primary-strong: #0d0d0d; /* Logo ka black — buttons, dark sections */
+  --brand-secondary: #d4a63c;      /* Bright gold */
+  --brand-accent: #c8962e;         /* Gold — badges, stars */
+  --brand-accent-light: #f4d47e;   /* Light gold (chamak) */
+  --whatsapp: #25d366;
 
-  /* ---------- GRADIENTS (brand colors se bante hain) ---------- */
-  --gradient-brand: linear-gradient(120deg, var(--brand-primary-strong) 0%, var(--brand-primary) 55%, var(--brand-secondary) 100%);
-  --gradient-text: linear-gradient(100deg, var(--brand-primary) 0%, var(--brand-secondary) 45%, var(--brand-accent) 100%);
-  --gradient-gold: linear-gradient(135deg, var(--brand-accent-light) 0%, var(--brand-accent) 50%, color-mix(in srgb, var(--brand-accent) 70%, #000) 100%);
-  --gradient-dark: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary-strong) 80%, #000) 0%, var(--brand-primary-strong) 55%, color-mix(in srgb, var(--brand-primary-strong) 70%, var(--brand-primary)) 100%);
-  --gradient-soft: linear-gradient(135deg,
-      color-mix(in srgb, var(--brand-primary) 10%, white) 0%,
-      color-mix(in srgb, var(--brand-secondary) 12%, white) 100%);
-  --gradient-hero-bg: radial-gradient(1200px 600px at 85% -10%, color-mix(in srgb, var(--brand-secondary) 16%, transparent), transparent 60%),
-      radial-gradient(900px 500px at -10% 10%, color-mix(in srgb, var(--brand-primary) 14%, transparent), transparent 60%);
+  /* ---------- SURFACES & TEXT ---------- */
+  --bg: #faf8f3;                   /* Ivory */
+  --surface: #ffffff;
+  --surface-2: #f5f1e7;
+  --surface-glass: rgb(255 255 255 / 0.74);
+  --text: #15130e;
+  --text-muted: #5d5646;
+  --text-soft: #8f8774;
+  --border: #ebe4d2;
+  --border-strong: #d9cfb6;
 
-  /* ---------- AUTO TINTS (brand se derive hote hain) ---------- */
-  --brand-primary-50: color-mix(in srgb, var(--brand-primary) 6%, white);
-  --brand-primary-100: color-mix(in srgb, var(--brand-primary) 12%, white);
-  --brand-primary-200: color-mix(in srgb, var(--brand-primary) 24%, white);
-  --brand-secondary-50: color-mix(in srgb, var(--brand-secondary) 8%, white);
-  --brand-secondary-100: color-mix(in srgb, var(--brand-secondary) 16%, white);
-  --brand-glow: color-mix(in srgb, var(--brand-primary) 35%, transparent);
+  --footer-bg: #0a0a0a;
+  --footer-text: #cfc6b1;
+  --theme-color: #0d0d0d;
+}
 
-  /* ---------- SURFACES & TEXT (light design) ---------- */
+[data-theme="blue"] {
+  --brand-primary: #1f4fc4;
+  --brand-primary-strong: #141c55;
+  --brand-secondary: #3f93e6;
+  --brand-accent: #c8962e;
+  --brand-accent-light: #f2d27c;
+
   --bg: #f7f9fc;
   --surface: #ffffff;
   --surface-2: #f1f5fb;
@@ -47,9 +55,30 @@
   --border: #e3e9f2;
   --border-strong: #cdd6e4;
 
-  /* Footer (deep navy, brand blue se mix) */
-  --footer-bg: color-mix(in srgb, var(--brand-primary-strong) 35%, #05070f);
+  --footer-bg: color-mix(in srgb, #141c55 35%, #05070f);
   --footer-text: #c5d0e6;
+  --theme-color: #141c55;
+}
+
+:root {
+  /* ---------- GRADIENTS (brand colors se khud bante hain) ---------- */
+  --gradient-brand: linear-gradient(120deg, var(--brand-primary-strong) 0%, color-mix(in srgb, var(--brand-primary-strong) 82%, var(--brand-primary)) 60%, color-mix(in srgb, var(--brand-primary-strong) 62%, var(--brand-primary)) 100%);
+  --gradient-text: linear-gradient(100deg, var(--brand-primary) 0%, var(--brand-secondary) 50%, var(--brand-primary) 100%);
+  --gradient-gold: linear-gradient(135deg, var(--brand-accent-light) 0%, var(--brand-accent) 50%, color-mix(in srgb, var(--brand-accent) 70%, #000) 100%);
+  --gradient-dark: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary-strong) 80%, #000) 0%, var(--brand-primary-strong) 55%, color-mix(in srgb, var(--brand-primary-strong) 80%, var(--brand-primary)) 100%);
+  --gradient-soft: linear-gradient(135deg,
+      color-mix(in srgb, var(--brand-secondary) 9%, white) 0%,
+      color-mix(in srgb, var(--brand-primary) 6%, white) 100%);
+  --gradient-hero-bg: radial-gradient(1200px 600px at 85% -10%, color-mix(in srgb, var(--brand-secondary) 16%, transparent), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, color-mix(in srgb, var(--brand-primary) 10%, transparent), transparent 60%);
+
+  /* ---------- AUTO TINTS ---------- */
+  --brand-primary-50: color-mix(in srgb, var(--brand-primary) 6%, white);
+  --brand-primary-100: color-mix(in srgb, var(--brand-primary) 12%, white);
+  --brand-primary-200: color-mix(in srgb, var(--brand-primary) 24%, white);
+  --brand-secondary-50: color-mix(in srgb, var(--brand-secondary) 8%, white);
+  --brand-secondary-100: color-mix(in srgb, var(--brand-secondary) 16%, white);
+  --brand-glow: color-mix(in srgb, var(--brand-primary-strong) 35%, transparent);
 
   /* ---------- TYPOGRAPHY ---------- */
   --font-body: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -71,9 +100,9 @@
   --radius-xl: 32px;
   --radius-full: 999px;
 
-  --shadow-sm: 0 1px 2px rgb(11 21 48 / 0.06), 0 1px 3px rgb(11 21 48 / 0.04);
-  --shadow: 0 10px 30px -12px rgb(11 21 48 / 0.18);
-  --shadow-lg: 0 30px 60px -20px rgb(11 21 48 / 0.28);
+  --shadow-sm: 0 1px 2px rgb(20 16 6 / 0.06), 0 1px 3px rgb(20 16 6 / 0.04);
+  --shadow: 0 10px 30px -12px rgb(20 16 6 / 0.18);
+  --shadow-lg: 0 30px 60px -20px rgb(20 16 6 / 0.28);
   --shadow-brand: 0 14px 34px -10px var(--brand-glow);
 
   /* ---------- LAYOUT & MOTION ---------- */

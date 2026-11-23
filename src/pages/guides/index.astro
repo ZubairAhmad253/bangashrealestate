@@ -1,0 +1,49 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import CTA from '../../components/CTA.astro';
+
+const guides = (await getCollection('guides')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const fmt = (d: Date) => d.toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<BaseLayout
+  title="Property Guides — Real Estate Tips for Rawalpindi & Islamabad"
+  description="Free real estate guides for Pakistan: marla & kanal sizes, property document checklists and area guides for Rawalpindi & Islamabad buyers and tenants."
+>
+  <PageHero
+    eyebrow="Property guides"
+    title="Real Estate Guides for Rawalpindi & Islamabad"
+    lead="Practical advice from our team — so you can buy, rent or build with confidence."
+    crumbs={[{ label: 'Guides' }]}
+  />
+
+  <section class="section" style="padding-top:0">
+    <div class="container grid grid-3">
+      <a href="/tools/marla-calculator/" class="service-card" data-reveal="up" style="justify-content:center">
+        <span class="service-card__icon"><Icon name="area" /></span>
+        <h2 style="font-size:var(--fs-xl)">Marla Calculator</h2>
+        <p>Convert marla, kanal, square feet, square yards and square metres instantly.</p>
+        <span class="link-arrow">Open calculator <Icon name="arrow-right" /></span>
+      </a>
+      {guides.map((g, i) => (
+        <a href={`/guides/${g.id}/`} class="property-card" data-reveal="up" style={`--d:${((i + 1) % 3) * 0.08}s`}>
+          <div class="property-card__media" style="aspect-ratio:16/10">
+            <Image src={g.data.image} alt={g.data.imageAlt} widths={[400, 700]} sizes="(max-width: 700px) 92vw, 380px" />
+          </div>
+          <div class="property-card__body">
+            <div class="service-card__tags">{g.data.tags.map((t) => <span class="tag">{t}</span>)}</div>
+            <h2 class="property-card__title">{g.data.title}</h2>
+            <p class="muted" style="font-size:var(--fs-sm)">{g.data.description}</p>
+            <p class="property-card__loc" style="margin-top:auto"><Icon name="clock" /><time datetime={g.data.date.toISOString()}>{fmt(g.data.date)}</time></p>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <CTA />
+</BaseLayout>

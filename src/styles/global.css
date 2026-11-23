@@ -558,7 +558,7 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .site-footer::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: var(--gradient-gold); }
 .site-footer__glow { position: absolute; width: 600px; height: 600px; right: -200px; top: -300px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--brand-secondary) 25%, transparent), transparent 70%); pointer-events: none; }
 .footer-grid { position: relative; display: grid; gap: 40px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
-@media (min-width: 1024px) { .footer-grid { grid-template-columns: 1.6fr 1fr 1fr 1.2fr; } }
+@media (min-width: 1024px) { .footer-grid { grid-template-columns: 1.35fr 0.9fr 0.95fr 0.95fr 1.55fr; gap: 28px; } }
 .site-footer .logo__name { color: #fff; }
 .site-footer .logo__sub { color: var(--brand-accent-light); }
 .site-footer h3 { color: #fff; font-size: 1.05rem; margin-bottom: 16px; }
@@ -664,3 +664,83 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
   .gallery::-webkit-scrollbar { display: none; }
   .gallery__item { scroll-snap-align: start; }
 }
+
+/* ==========================================================================
+   GOLD THEME DETAILS — logo jaisa black + gold
+   ========================================================================== */
+.logo__mark--img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 6px 16px -6px rgb(0 0 0 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.08); }
+.logo__name { background: var(--gradient-text); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: 0.04em; }
+.logo__sub { color: var(--text-muted); }
+.site-footer .logo__name { background: var(--gradient-gold); -webkit-background-clip: text; background-clip: text; }
+
+/* Dark badges ke andar icons gold */
+.float-card .float-card__icon,
+.contact-item .contact-item__icon:not(.contact-item__icon--wa),
+.service-card:hover .service-card__icon,
+.step__num,
+.faq details[open] .faq__icon { color: var(--brand-accent-light); }
+.badge--rent { background: var(--brand-primary-strong); color: var(--brand-accent-light); }
+.btn-primary { box-shadow: var(--shadow-brand), inset 0 0 0 1px color-mix(in srgb, var(--brand-accent) 35%, transparent); }
+.btn-primary::after { background: linear-gradient(110deg, transparent 30%, color-mix(in srgb, var(--brand-accent-light) 40%, transparent) 50%, transparent 70%); }
+.service-card::before { background: var(--gradient-gold); }
+.check-list li::before { background: var(--gradient-gold); }
+.scroll-progress { background: var(--gradient-gold); }
+.btn-outline { color: var(--text); }
+.btn-outline:hover { border-color: var(--brand-accent); }
+
+/* ==========================================================================
+   GUIDES, CALCULATOR, SEO CONTENT
+   ========================================================================== */
+.article-body { margin-top: 40px; }
+.prose a { color: var(--brand-primary); font-weight: 600; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--brand-primary) 35%, transparent); text-underline-offset: 3px; }
+.prose a:hover { text-decoration-color: currentColor; }
+.prose ol { margin: 14px 0; padding-left: 22px; }
+.prose blockquote { margin: 24px 0; padding: 18px 22px; border-left: 4px solid var(--brand-accent); border-radius: 0 var(--radius) var(--radius) 0; background: var(--gradient-soft); color: var(--text); }
+.prose table { width: 100%; margin: 22px 0; border-collapse: collapse; font-size: var(--fs-sm); background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: 0 0 0 1px var(--border); }
+.prose th, .prose td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+.prose th { background: var(--brand-primary-strong); color: var(--brand-accent-light); font-weight: 700; }
+.prose tr:last-child td { border-bottom: 0; }
+.prose em { color: var(--text-soft); }
+@media (max-width: 640px) { .prose table { display: block; overflow-x: auto; } }
+
+.toc { margin-top: 32px; padding: 20px 24px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
+.toc strong { font-family: var(--font-heading); }
+.toc ol { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 6px; color: var(--text-muted); }
+.toc a:hover { color: var(--brand-primary); }
+
+.article-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; margin-top: 48px; padding: 24px; border-radius: var(--radius-lg); background: var(--gradient-soft); border: 1px solid var(--border); }
+.article-cta strong { font-family: var(--font-heading); font-size: 1.15rem; }
+
+.related-guides { list-style: none; padding: 0; display: grid; gap: 10px; }
+.related-guides a { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 20px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); font-weight: 600; transition: transform var(--dur) var(--ease-out), box-shadow var(--dur), border-color var(--dur); }
+.related-guides a:hover { transform: translateX(6px); box-shadow: var(--shadow); border-color: var(--brand-accent); }
+.related-guides svg { width: 18px; height: 18px; flex: none; color: var(--brand-primary); }
+
+.calc { padding: clamp(20px, 3vw, 32px); border-radius: var(--radius-xl); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-lg); }
+.calc__inputs { display: grid; gap: 12px; }
+@media (min-width: 700px) { .calc__inputs { grid-template-columns: 1fr 1fr 1.2fr; } }
+.calc__inputs input { font-size: 1.3rem; font-weight: 700; }
+.calc__results { display: grid; gap: 12px; margin-top: 18px; grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 700px) { .calc__results { grid-template-columns: repeat(3, 1fr); } }
+.calc__results div { padding: 18px; border-radius: var(--radius); background: var(--gradient-dark); color: #fff; }
+.calc__results span { display: block; font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--footer-text); }
+.calc__results strong { display: block; margin-top: 6px; font-family: var(--font-heading); font-size: clamp(1.3rem, 1rem + 1.2vw, 1.9rem); background: var(--gradient-gold); -webkit-background-clip: text; background-clip: text; color: transparent; word-break: break-word; }
+
+/* Home SEO content block */
+.seo-block { display: grid; gap: clamp(28px, 4vw, 56px); }
+@media (min-width: 1024px) { .seo-block { grid-template-columns: 1.1fr 0.9fr; } }
+.seo-links { display: grid; gap: 10px; align-content: start; }
+.seo-links a { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); font-weight: 700; transition: transform var(--dur) var(--ease-out), box-shadow var(--dur), border-color var(--dur); }
+.seo-links a:hover { transform: translateX(6px); box-shadow: var(--shadow); border-color: var(--brand-accent); }
+.seo-links a span { flex: 1; }
+.seo-links a small { display: block; font-weight: 500; color: var(--text-muted); }
+.seo-links .feature__icon { margin: 0; width: 44px; height: 44px; }
+.seo-links svg.icon-arrow-right { width: 18px; height: 18px; color: var(--brand-primary); }
+
+/* Chhote laptops (1024–1199px): nav ko jagah dene ke liye header CTA chhupayein — floating WhatsApp button maujood hai */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .header-cta { display: none; }
+  .nav__link { padding: 10px 11px; }
+}
+.toc a { display: inline-block; padding: 8px 0; }
+.toc ol { gap: 0; }

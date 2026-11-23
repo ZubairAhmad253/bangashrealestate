@@ -58,9 +58,11 @@ const business = {
   areaServed: [
     { '@type': 'City', name: 'Rawalpindi' },
     { '@type': 'City', name: 'Islamabad' },
+    { '@type': 'Country', name: 'Pakistan' },
     ...AREAS.map((a) => ({ '@type': 'Place', name: `${a.name}, ${a.city}` })),
   ],
-  sameAs: Object.values(SITE.socials).filter(Boolean),
+  sameAs: [SITE.mapsUrl, ...Object.values(SITE.socials).filter(Boolean)],
+  knowsAbout: ['Real estate in Rawalpindi', 'Real estate in Islamabad', 'Houses for sale', 'Houses for rent', 'Flats for rent', 'Plots for sale', 'House construction'],
 };
 
 const website = {

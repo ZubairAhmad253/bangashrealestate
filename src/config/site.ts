@@ -42,6 +42,8 @@ export const SITE = {
   /** Contact page par embedded map */
   mapEmbed:
     'https://maps.google.com/maps?q=Bangash%20real%20estate%20and%20builders%2C%20Airport%20Housing%20Society%20Sector%204%2C%20Rawalpindi&ll=33.5881869,73.1232242&z=17&output=embed',
+  /** Google Search Console verification code (sirf content="..." wala hissa) */
+  googleVerification: '',
   /** Google reviews */
   googleRating: 4.9,
   hours: 'Open daily: 9:00 AM – 10:00 PM',
@@ -140,6 +142,7 @@ export const NAV = [
   { label: 'Properties', href: '/properties/' },
   { label: 'Services', href: '/services/', children: true },
   { label: 'Areas', href: '/areas/' },
+  { label: 'Guides', href: '/guides/' },
   { label: 'About', href: '/about/' },
   { label: 'Contact', href: '/contact/' },
 ] as const;

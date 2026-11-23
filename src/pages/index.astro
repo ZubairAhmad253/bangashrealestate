@@ -21,15 +21,16 @@ const homeAreas = [...AREAS].sort((a, b) => a.priority - b.priority).slice(0, 5)
 const [construction, ...sellServices] = SERVICES;
 
 // Hero headline — har word alag animate hota hai
+// SEO: H1 mein main keywords — "Real Estate", "Rawalpindi", "Islamabad"
 const headline: { text: string; gradient?: boolean }[] = [
-  { text: 'Find' }, { text: 'Your' }, { text: 'Dream', gradient: true }, { text: 'Property', gradient: true },
+  { text: 'Trusted' }, { text: 'Real', gradient: true }, { text: 'Estate', gradient: true },
   { text: 'in' }, { text: 'Rawalpindi' }, { text: '&' }, { text: 'Islamabad' },
 ];
 ---
 
 <BaseLayout
-  title="Bangash Real Estate | Plots, Houses & Flats in Rawalpindi & Islamabad"
-  description="Buy, sell or rent plots, houses & flats in Airport Housing Society, Ghauri Town, Bahria Town & DHA, Rawalpindi/Islamabad. We also build houses & flats."
+  title="Bangash Real Estate | Real Estate in Rawalpindi & Islamabad, Pakistan"
+  description="Bangash Real Estate & Builders — trusted real estate agency in Rawalpindi & Islamabad, Pakistan. Buy, sell or rent houses, flats & plots. Bank loan available."
 >
   <!-- ================= HERO ================= -->
   <section class="hero">
@@ -42,7 +43,7 @@ const headline: { text: string; gradient?: boolean }[] = [
       <div>
         <p class="eyebrow" data-reveal="down">
           <span class="eyebrow__dot"><Icon name="sparkles" /></span>
-          Trusted in Rawalpindi &amp; Islamabad
+          Bangash Real Estate &amp; Builders
         </p>
         <h1>
           {headline.map((w, i) => (
@@ -50,7 +51,7 @@ const headline: { text: string; gradient?: boolean }[] = [
           ))}
         </h1>
         <p class="hero__lead" data-reveal="up" style="--d:.5s">
-          Buy, sell or rent <strong>plots, houses &amp; flats</strong> in Airport Housing Society, Ghauri Town, Bahria Town, DHA and beyond — or let our builders construct your next home.
+          Buy, sell or rent <strong>houses, flats &amp; plots</strong> in Airport Housing Society, Ghauri Town, Bahria Town, DHA and beyond — or let our builders construct your dream home.
         </p>
 
         <form class="search-panel" action="/properties/" method="get" data-search data-reveal="up" style="--d:.65s" role="search" aria-label="Search properties">
@@ -307,6 +308,34 @@ const headline: { text: string; gradient?: boolean }[] = [
         ))}
       </div>
       )}
+    </div>
+  </section>
+
+  <!-- ================= SEO CONTENT ================= -->
+  <section class="section section--tint">
+    <div class="container seo-block">
+      <div class="prose">
+        <p class="eyebrow" data-reveal="up"><span class="eyebrow__dot"><Icon name="pin" /></span>Rawalpindi · Islamabad · Pakistan</p>
+        <h2 data-reveal="up" style="margin-top:16px">Real Estate in Rawalpindi &amp; Islamabad — <span class="gradient-text">done right</span></h2>
+        <p data-reveal="up">
+          <strong>Bangash Real Estate &amp; Builders</strong> is a Rawalpindi-based real estate agency serving families and investors across the twin cities of
+          <a href="/real-estate-rawalpindi/">Rawalpindi</a> and <a href="/real-estate-islamabad/">Islamabad</a>, Pakistan. From our office in Gulistan Plaza,
+          Sector 4, <a href="/areas/airport-housing-society/">Airport Housing Society</a>, we help clients buy, sell and rent
+          <a href="/services/houses/">houses</a>, <a href="/services/flats/">flats</a> and <a href="/services/plots/">plots</a>.
+        </p>
+        <p data-reveal="up">
+          Our team works daily in <a href="/areas/ghauri-town/">Ghauri Town</a>, <a href="/areas/gulzar-e-quaid/">Gulzar-e-Quaid</a>,
+          <a href="/areas/chaklala-scheme-3/">Chaklala Scheme 3</a>, <a href="/areas/bahria-town/">Bahria Town</a>, <a href="/areas/dha/">DHA</a> and the
+          Islamabad Expressway societies — so you get genuine listings, verified documents and fair market prices. Bank loan facility is available on
+          selected properties, and our builders can <a href="/services/construction/">construct your house or flats</a> on your own plot.
+        </p>
+      </div>
+      <div class="seo-links" data-reveal="left">
+        <a href="/real-estate-rawalpindi/"><span class="feature__icon"><Icon name="pin" /></span><span>Real Estate in Rawalpindi<small>Houses, plots &amp; flats</small></span><Icon name="arrow-right" /></a>
+        <a href="/real-estate-islamabad/"><span class="feature__icon"><Icon name="building" /></span><span>Real Estate in Islamabad<small>Expressway, Bahria &amp; DHA</small></span><Icon name="arrow-right" /></a>
+        <a href="/tools/marla-calculator/"><span class="feature__icon"><Icon name="area" /></span><span>Marla Calculator<small>Marla, kanal &amp; sq ft converter</small></span><Icon name="arrow-right" /></a>
+        <a href="/guides/"><span class="feature__icon"><Icon name="file" /></span><span>Property Guides<small>Tips for buyers &amp; tenants</small></span><Icon name="arrow-right" /></a>
+      </div>
     </div>
   </section>
 

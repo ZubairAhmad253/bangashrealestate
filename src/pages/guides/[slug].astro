@@ -1,0 +1,87 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Icon from '../../components/Icon.astro';
+import CTA from '../../components/CTA.astro';
+import { SITE, whatsappLink } from '../../config/site';
+
+export async function getStaticPaths() {
+  const guides = await getCollection('guides');
+  return guides.map((guide) => ({ params: { slug: guide.id }, props: { guide } }));
+}
+
+const { guide } = Astro.props as { guide: CollectionEntry<'guides'> };
+const { Content, headings } = await render(guide);
+const d = guide.data;
+const url = new URL(`/guides/${guide.id}/`, SITE.url).href;
+const fmt = (x: Date) => x.toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' });
+const others = (await getCollection('guides')).filter((g) => g.id !== guide.id);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.description,
+  datePublished: d.date.toISOString(),
+  dateModified: (d.updated ?? d.date).toISOString(),
+  mainEntityOfPage: url,
+  author: { '@type': 'Organization', name: SITE.name, url: SITE.url },
+  publisher: { '@id': `${SITE.url}/#business` },
+};
+---
+
+<BaseLayout title={d.title} description={d.description} image={d.image} type="article" schema={[schema]}>
+  <article>
+    <section class="page-hero" style="padding-bottom:36px">
+      <div class="hero__grid-bg" aria-hidden="true"></div>
+      <div class="container page-hero__inner" style="max-width:900px">
+        <Breadcrumbs items={[{ label: 'Guides', href: '/guides/' }, { label: d.title }]} />
+        <div class="service-card__tags" style="margin-top:22px">{d.tags.map((t) => <span class="tag">{t}</span>)}</div>
+        <h1 data-reveal="up">{d.title}</h1>
+        <p class="lead" data-reveal="up" style="margin-top:14px">{d.description}</p>
+        <p class="property-card__loc" style="margin-top:16px"><Icon name="clock" /> <time datetime={d.date.toISOString()}>{fmt(d.date)}</time> · By {SITE.name}</p>
+      </div>
+    </section>
+
+    <div class="container" style="max-width:900px">
+      <div class="gallery__item" style="aspect-ratio:16/8" data-reveal="zoom">
+        <Image src={d.image} alt={d.imageAlt} widths={[640, 960, 1400]} sizes="(max-width: 900px) 92vw, 860px" loading="eager" fetchpriority="high" />
+      </div>
+
+      {headings.filter((h) => h.depth === 2).length > 2 && (
+        <nav class="toc" aria-label="On this page">
+          <strong>On this page</strong>
+          <ol>{headings.filter((h) => h.depth === 2).map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+        </nav>
+      )}
+
+      <div class="prose article-body">
+        <Content />
+      </div>
+
+      <div class="article-cta">
+        <div>
+          <strong>Have a question about this?</strong>
+          <p class="muted">Our team in Airport Housing Society, Rawalpindi is happy to help — free advice on WhatsApp.</p>
+        </div>
+        <a href={whatsappLink()} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Ask on WhatsApp</a>
+      </div>
+    </div>
+  </article>
+
+  {others.length > 0 && (
+    <section class="section">
+      <div class="container" style="max-width:900px">
+        <h2 style="font-size:var(--fs-2xl);margin-bottom:20px">More <span class="gradient-text">guides</span></h2>
+        <ul class="related-guides" role="list">
+          {others.map((g) => <li><a href={`/guides/${g.id}/`}><span>{g.data.title}</span><Icon name="arrow-right" /></a></li>)}
+          <li><a href="/tools/marla-calculator/"><span>Marla Calculator — convert marla, kanal & square feet</span><Icon name="arrow-right" /></a></li>
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <CTA />
+</BaseLayout>
