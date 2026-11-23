@@ -273,6 +273,19 @@ export function Empty({ icon, title, text, children }: { icon: string; title: st
   );
 }
 
+export function Skeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <div class="a-skeleton" aria-busy="true" aria-label="Loading">
+      {Array.from({ length: rows }, () => (
+        <div class="a-skeleton__row">
+          <span class="a-skeleton__thumb" />
+          <span class="a-skeleton__lines"><i /><i /><i /></span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function Loading() {
   return <div class="a-loading"><span class="a-spinner" /> Loading…</div>;
 }

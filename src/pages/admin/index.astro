@@ -1,27 +1,28 @@
 ---
 /* Admin panel — separate from the website, not indexed by Google */
-import '@fontsource-variable/plus-jakarta-sans';
-import '@fontsource-variable/outfit';
-import '../../styles/theme.css';
+import '@fontsource-variable/manrope';
+import '@fontsource-variable/playfair-display';
 import '../../admin/admin.css';
 import { getImage } from 'astro:assets';
 import App from '../../admin/App';
 import logoMark from '../../assets/brand/logo-mark.png';
+import loginPhoto from '../../assets/images/hero-house.jpg';
 
 const favicon = await getImage({ src: logoMark, width: 64, height: 64, format: 'png' });
+const loginBg = await getImage({ src: loginPhoto, width: 1400, format: 'webp', quality: 72 });
 ---
 
 <!doctype html>
-<html lang="en" data-theme="gold">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#0d0d0d" />
+    <meta name="theme-color" content="#f7f4ee" />
     <link rel="icon" href={favicon.src} type="image/png" />
     <title>Admin Panel — Bangash Real Estate</title>
   </head>
-  <body class="a-body">
+  <body class="a-body" style={`--login-bg: url('${loginBg.src}')`}>
     <App client:only="preact">
       <div class="a-center" slot="fallback"><span class="a-spinner"></span></div>
     </App>

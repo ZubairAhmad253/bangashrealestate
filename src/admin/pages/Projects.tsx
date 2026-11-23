@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { sb, slugify, shortId, removeImages, type ProjectRow } from '../lib';
-import { Icon, Field, Segmented, Toggle, PhotoUploader, Empty, Loading, PageHead, toast, confirmDialog } from '../ui';
+import { Icon, Field, Segmented, Toggle, PhotoUploader, Empty, Skeleton, PageHead, toast, confirmDialog } from '../ui';
 import { go, type Ctx } from '../App';
 import { SITE_URL } from '../meta';
 
 const CATEGORY: Record<ProjectRow['category'], string> = { house: 'House', flats: 'Flats / Apartments', renovation: 'Renovation', commercial: 'Commercial' };
 const SAVED_MSG = 'Saved ✓ The website will update in 1–2 minutes.';
 
-export function ProjectsList({ ctx: _ctx }: { ctx: Ctx }) {
+export function ProjectsList({ ctx }: { ctx: Ctx }) {
+  const isSuper = ctx.me.role === 'super_admin';
   const [rows, setRows] = useState<ProjectRow[] | null>(null);
   const load = () =>
     sb.from('projects').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
@@ -35,7 +36,7 @@ export function ProjectsList({ ctx: _ctx }: { ctx: Ctx }) {
       <PageHead title="Construction Projects" icon="hammer" sub="Homes and buildings you have built — shown on the website's 'Our Projects' page">
         <a href="#/projects/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add project</a>
       </PageHead>
-      {rows === null ? <Loading /> : rows.length === 0 ? (
+      {rows === null ? <Skeleton rows={3} /> : rows.length === 0 ? (
         <Empty icon="hammer" title="No projects yet" text="Add photos of homes you have built — it builds trust with new clients.">
           <a href="#/projects/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add your first project</a>
         </Empty>
@@ -57,9 +58,9 @@ export function ProjectsList({ ctx: _ctx }: { ctx: Ctx }) {
                 </div>
               </div>
               <div class="a-item__side">
-                <a href={`#/projects/${p.id}`} class="a-btn a-btn--ghost a-btn--sm"><Icon name="edit" size={16} /> Edit</a>
+                <a href={`#/projects/${p.id}`} class="a-btn a-btn--soft a-btn--sm"><Icon name="edit" size={16} /> Edit</a>
                 {p.published && <a href={`${SITE_URL}/projects/${p.slug}/`} target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm"><Icon name="external" size={16} /> View</a>}
-                <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" onClick={() => remove(p)}><Icon name="trash" size={16} /> Delete</button>
+                {isSuper && <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" onClick={() => remove(p)}><Icon name="trash" size={16} /> Delete</button>}
               </div>
             </article>
           ))}
@@ -95,7 +96,7 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
     });
   }, [id]);
 
-  if (!f) return <div class="a-page"><Loading /></div>;
+  if (!f) return <div class="a-page"><Skeleton rows={3} /></div>;
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => {
     dirty.current = true;
     setF((prev) => (prev ? { ...prev, [k]: v } : prev));

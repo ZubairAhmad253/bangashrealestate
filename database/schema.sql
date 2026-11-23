@@ -17,7 +17,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- Admins & roles  (super_admin = everything, editor = content + leads)
+-- Admins & roles  (super_admin = everything incl. deleting, editor = add/edit content + leads)
 -- ---------------------------------------------------------------------
 create table if not exists public.admins (
   user_id    uuid primary key references auth.users (id) on delete cascade,
@@ -173,24 +173,39 @@ drop policy if exists "properties: public read" on public.properties;
 create policy "properties: public read" on public.properties for select to anon, authenticated
   using (status <> 'hidden' or public.is_admin());
 drop policy if exists "properties: admins write" on public.properties;
-create policy "properties: admins write" on public.properties for all to authenticated
+drop policy if exists "properties: admins insert" on public.properties;
+create policy "properties: admins insert" on public.properties for insert to authenticated with check (public.is_admin());
+drop policy if exists "properties: admins update" on public.properties;
+create policy "properties: admins update" on public.properties for update to authenticated
   using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "properties: super delete" on public.properties;
+create policy "properties: super delete" on public.properties for delete to authenticated using (public.is_super_admin());
 
 -- projects
 drop policy if exists "projects: public read" on public.projects;
 create policy "projects: public read" on public.projects for select to anon, authenticated
   using (published or public.is_admin());
 drop policy if exists "projects: admins write" on public.projects;
-create policy "projects: admins write" on public.projects for all to authenticated
+drop policy if exists "projects: admins insert" on public.projects;
+create policy "projects: admins insert" on public.projects for insert to authenticated with check (public.is_admin());
+drop policy if exists "projects: admins update" on public.projects;
+create policy "projects: admins update" on public.projects for update to authenticated
   using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "projects: super delete" on public.projects;
+create policy "projects: super delete" on public.projects for delete to authenticated using (public.is_super_admin());
 
 -- testimonials
 drop policy if exists "testimonials: public read" on public.testimonials;
 create policy "testimonials: public read" on public.testimonials for select to anon, authenticated
   using (published or public.is_admin());
 drop policy if exists "testimonials: admins write" on public.testimonials;
-create policy "testimonials: admins write" on public.testimonials for all to authenticated
+drop policy if exists "testimonials: admins insert" on public.testimonials;
+create policy "testimonials: admins insert" on public.testimonials for insert to authenticated with check (public.is_admin());
+drop policy if exists "testimonials: admins update" on public.testimonials;
+create policy "testimonials: admins update" on public.testimonials for update to authenticated
   using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "testimonials: super delete" on public.testimonials;
+create policy "testimonials: super delete" on public.testimonials for delete to authenticated using (public.is_super_admin());
 
 -- leads (the website can only submit new leads; only admins can read them)
 drop policy if exists "leads: website insert" on public.leads;
@@ -202,7 +217,8 @@ drop policy if exists "leads: admins update" on public.leads;
 create policy "leads: admins update" on public.leads for update to authenticated
   using (public.is_admin()) with check (public.is_admin());
 drop policy if exists "leads: admins delete" on public.leads;
-create policy "leads: admins delete" on public.leads for delete to authenticated using (public.is_admin());
+drop policy if exists "leads: super delete" on public.leads;
+create policy "leads: super delete" on public.leads for delete to authenticated using (public.is_super_admin());
 
 -- settings (everyone can read; only the super admin can change them)
 drop policy if exists "settings: public read" on public.settings;

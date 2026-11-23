@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { sb, requestRebuild, type Admin, type SettingsRow } from '../lib';
-import { Icon, Field, Loading, PageHead, Segmented, toast, confirmDialog } from '../ui';
+import { Icon, Field, Skeleton, PageHead, Segmented, toast, confirmDialog } from '../ui';
 import type { Ctx } from '../App';
 import { SITE } from '../../config/site';
 
@@ -32,7 +32,7 @@ export function Settings({ ctx }: { ctx: Ctx }) {
     void loadAdmins();
   }, []);
 
-  if (!s) return <div class="a-page"><Loading /></div>;
+  if (!s) return <div class="a-page"><Skeleton rows={3} /></div>;
   const stats = s.stats as Stat[];
   const setStat = (i: number, patch: Partial<Stat>) => setS({ ...s, stats: stats.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
 

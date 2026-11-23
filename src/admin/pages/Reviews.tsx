@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'preact/hooks';
 import { sb, type TestimonialRow } from '../lib';
-import { Icon, Field, Toggle, Empty, Loading, PageHead, toast, confirmDialog } from '../ui';
+import { Icon, Field, Toggle, Empty, Skeleton, PageHead, toast, confirmDialog } from '../ui';
 import type { Ctx } from '../App';
 
 const SAVED_MSG = 'Saved ✓ The website will update in 1–2 minutes.';
 type Draft = Pick<TestimonialRow, 'name' | 'place' | 'text' | 'rating' | 'published'> & { id?: string };
 const NEW: Draft = { name: '', place: '', text: '', rating: 5, published: true };
 
-export function Reviews({ ctx: _ctx }: { ctx: Ctx }) {
+export function Reviews({ ctx }: { ctx: Ctx }) {
+  const isSuper = ctx.me.role === 'super_admin';
   const [rows, setRows] = useState<TestimonialRow[] | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
@@ -57,7 +58,7 @@ export function Reviews({ ctx: _ctx }: { ctx: Ctx }) {
       </PageHead>
       <p class="a-alert a-alert--info">Tip: open your reviews on Google Maps and copy the name and text here.</p>
 
-      {rows === null ? <Loading /> : rows.length === 0 ? (
+      {rows === null ? <Skeleton rows={2} /> : rows.length === 0 ? (
         <Empty icon="star" title="No reviews yet" text="Until you add reviews, the website shows your Google rating (4.9★) card.">
           <button class="a-btn a-btn--gold" onClick={() => setDraft({ ...NEW })}><Icon name="plus" /> Add your first review</button>
         </Empty>
@@ -75,7 +76,7 @@ export function Reviews({ ctx: _ctx }: { ctx: Ctx }) {
                 <button class="a-icon-btn" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up"><Icon name="left" /></button>
                 <button class="a-icon-btn" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label="Move down"><Icon name="right" /></button>
                 <button class="a-btn a-btn--ghost a-btn--sm" onClick={() => setDraft({ ...r })}><Icon name="edit" size={16} /> Edit</button>
-                <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" onClick={() => remove(r)}><Icon name="trash" size={16} /> Delete</button>
+                {isSuper && <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" onClick={() => remove(r)}><Icon name="trash" size={16} /> Delete</button>}
               </div>
             </article>
           ))}

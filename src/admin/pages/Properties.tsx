@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { sb, formatPrice, slugify, shortId, removeImages, type PropertyRow } from '../lib';
-import { Icon, Field, Segmented, Toggle, Stepper, Chips, PhotoUploader, Empty, Loading, PageHead, toast, confirmDialog } from '../ui';
+import { Icon, Field, Segmented, Toggle, Stepper, Chips, PhotoUploader, Empty, PageHead, Skeleton, toast, confirmDialog } from '../ui';
 import { go, type Ctx } from '../App';
 import { AREA_OPTIONS, areaName, SITE_URL } from '../meta';
+import { importSampleListings, SAMPLE_COUNT, SAMPLE_SLUGS } from '../importSamples';
 
 const STATUS: Record<PropertyRow['status'], { label: string; cls: string }> = {
   available: { label: 'Live', cls: 'a-pill--live' },
-  hidden: { label: 'Hidden (draft)', cls: 'a-pill--muted' },
+  hidden: { label: 'Hidden', cls: 'a-pill--muted' },
   sold: { label: 'Sold', cls: 'a-pill--sold' },
   rented: { label: 'Rented', cls: 'a-pill--sold' },
 };
@@ -15,10 +16,16 @@ const TYPE_LABEL = { house: 'House', flat: 'Flat', plot: 'Plot' } as const;
 const SAVED_MSG = 'Saved ✓ The website will update in 1–2 minutes.';
 
 /* ==================== LIST ==================== */
-export function PropertiesList({ ctx: _ctx }: { ctx: Ctx }) {
+type TypeFilter = 'all' | PropertyRow['type'];
+type StatusFilter = 'all' | 'available' | 'hidden' | 'done';
+
+export function PropertiesList({ ctx }: { ctx: Ctx }) {
+  const isSuper = ctx.me.role === 'super_admin';
   const [rows, setRows] = useState<PropertyRow[] | null>(null);
   const [q, setQ] = useState('');
-  const [filter, setFilter] = useState<'all' | 'available' | 'hidden' | 'done'>('all');
+  const [type, setType] = useState<TypeFilter>('all');
+  const [status, setStatus] = useState<StatusFilter>('all');
+  const [importing, setImporting] = useState<{ done: number; total: number; label: string } | null>(null);
 
   const load = () =>
     sb.from('properties').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
@@ -40,54 +47,110 @@ export function PropertiesList({ ctx: _ctx }: { ctx: Ctx }) {
     setRows((r) => r?.filter((x) => x.id !== p.id) ?? r);
     toast.ok('Property deleted.');
   };
+  const runImport = async () => {
+    if (!(await confirmDialog('Import website listings?', `This copies the ${SAMPLE_COUNT} listings currently shown on the website — with all their photos — into your database. It takes about a minute.`, 'Import listings', false))) return;
+    setImporting({ done: 0, total: 1, label: 'Starting…' });
+    try {
+      const n = await importSampleListings((done, total, label) => setImporting({ done, total, label }));
+      toast.ok(n ? `${n} listings imported ✓ The website will update in 1–2 minutes.` : 'All website listings are already in the database.');
+      await load();
+    } catch (e) {
+      toast.err(e);
+    }
+    setImporting(null);
+  };
+
+  const counts = useMemo(() => {
+    const c = { all: 0, house: 0, flat: 0, plot: 0 };
+    (rows ?? []).forEach((r) => { c.all++; c[r.type]++; });
+    return c;
+  }, [rows]);
+  const missingSamples = rows ? SAMPLE_SLUGS.filter((s) => !rows.some((r) => r.slug === s)).length : 0;
 
   const shown = useMemo(() => {
     const term = q.trim().toLowerCase();
     return (rows ?? []).filter((p) => {
-      if (filter === 'available' && p.status !== 'available') return false;
-      if (filter === 'hidden' && p.status !== 'hidden') return false;
-      if (filter === 'done' && !['sold', 'rented'].includes(p.status)) return false;
+      if (type !== 'all' && p.type !== type) return false;
+      if (status === 'available' && p.status !== 'available') return false;
+      if (status === 'hidden' && p.status !== 'hidden') return false;
+      if (status === 'done' && !['sold', 'rented'].includes(p.status)) return false;
       return !term || `${p.title} ${p.location} ${areaName(p.area)}`.toLowerCase().includes(term);
     });
-  }, [rows, q, filter]);
+  }, [rows, q, type, status]);
 
   return (
     <div class="a-page">
-      <PageHead title="Properties" icon="home" sub="Houses, flats and plots for sale or rent">
+      <PageHead title="Properties" icon="home" sub="All houses, flats and plots — for sale and for rent">
         <a href="#/properties/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add property</a>
       </PageHead>
+
+      {isSuper && rows !== null && missingSamples > 0 && (
+        <section class="a-banner">
+          <span class="a-banner__icon"><Icon name="upload" size={22} /></span>
+          <div class="a-banner__text">
+            <strong>Bring the website listings into your database</strong>
+            <p>{missingSamples} listing{missingSamples > 1 ? 's' : ''} on the website {missingSamples > 1 ? 'are' : 'is'} not in your database yet. Import them once — photos and details included — and manage everything from here.</p>
+            {importing && (
+              <div class="a-progress" role="progressbar" aria-valuemin={0} aria-valuemax={importing.total} aria-valuenow={importing.done}>
+                <span style={{ width: `${Math.round((importing.done / Math.max(1, importing.total)) * 100)}%` }} />
+                <small>{importing.done}/{importing.total} photos · {importing.label}</small>
+              </div>
+            )}
+          </div>
+          <button class="a-btn a-btn--gold" onClick={runImport} disabled={!!importing}>{importing ? 'Importing…' : 'Import listings'}</button>
+        </section>
+      )}
+
+      <div class="a-tabs" role="tablist" aria-label="Property type">
+        {([
+          ['all', 'All', 'layers'],
+          ['house', 'Houses', 'home'],
+          ['flat', 'Flats', 'building'],
+          ['plot', 'Plots', 'map'],
+        ] as const).map(([v, label, icon]) => (
+          <button role="tab" aria-selected={type === v} class={type === v ? 'is-on' : ''} onClick={() => setType(v)}>
+            <Icon name={icon} size={16} /> {label} <b>{counts[v]}</b>
+          </button>
+        ))}
+      </div>
 
       <div class="a-toolbar">
         <div class="a-search">
           <Icon name="search" />
           <input type="search" placeholder="Search by title, area or sector…" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
         </div>
-        <Segmented value={filter} onChange={setFilter} options={[
-          { value: 'all', label: 'All' },
+        <Segmented value={status} onChange={setStatus} options={[
+          { value: 'all', label: 'Any status' },
           { value: 'available', label: 'Live' },
           { value: 'hidden', label: 'Hidden' },
-          { value: 'done', label: 'Sold/Rented' },
+          { value: 'done', label: 'Sold / Rented' },
         ]} />
       </div>
 
-      {rows === null ? <Loading /> : shown.length === 0 ? (
+      {rows === null ? <Skeleton rows={4} /> : shown.length === 0 ? (
         rows.length === 0 ? (
-          <Empty icon="home" title="No properties yet" text="Add your first property — your real listings will replace the sample listings on the website.">
-            <a href="#/properties/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add your first property</a>
+          <Empty icon="home" title="No properties yet" text={isSuper ? 'Import the website listings above, or add your first property.' : 'Add your first property — it will appear on the website automatically.'}>
+            <a href="#/properties/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add a property</a>
           </Empty>
         ) : <Empty icon="search" title="Nothing found" text="Try a different search or filter." />
       ) : (
         <div class="a-items">
-          {shown.map((p) => (
-            <article class="a-item" key={p.id}>
+          {shown.map((p, i) => (
+            <article class="a-item" key={p.id} style={{ '--i': Math.min(i, 12) }}>
               <a href={`#/properties/${p.id}`} class="a-item__thumb">
                 {p.images[0] ? <img src={p.images[0]} alt="" loading="lazy" /> : <span><Icon name="image" size={28} /></span>}
                 <span class={`a-pill ${STATUS[p.status].cls}`}>{STATUS[p.status].label}</span>
+                {p.images.length > 1 && <span class="a-item__count"><Icon name="image" size={12} /> {p.images.length}</span>}
               </a>
               <div class="a-item__body">
+                <div class="a-item__meta">
+                  <span class="a-chiplet">{TYPE_LABEL[p.type]}</span>
+                  <span class={`a-chiplet ${p.purpose === 'sale' ? 'a-chiplet--sale' : 'a-chiplet--rent'}`}>{p.purpose === 'sale' ? 'For Sale' : 'For Rent'}</span>
+                  <span class="a-muted a-small">{p.size}</span>
+                </div>
                 <a href={`#/properties/${p.id}`} class="a-item__title">{p.title}</a>
+                <p class="a-muted a-small"><Icon name="pin" size={14} /> {p.location}{p.area && !p.location.toLowerCase().includes(areaName(p.area).toLowerCase()) ? `, ${areaName(p.area)}` : ''}</p>
                 <p class="a-item__price">PKR {formatPrice(p.price)}{p.purpose === 'rent' && <small> /month</small>}</p>
-                <p class="a-muted a-small"><Icon name="pin" size={14} /> {p.location}{p.area ? `, ${areaName(p.area)}` : ''} · {TYPE_LABEL[p.type]} · {p.purpose === 'sale' ? 'For Sale' : 'For Rent'}</p>
                 <div class="a-item__actions">
                   <button class={`a-tag${p.featured ? ' is-on' : ''}`} onClick={() => update(p, { featured: !p.featured })} title="Show on the home page"><Icon name="star" size={14} /> Featured</button>
                   <button class={`a-tag a-tag--hot${p.hot ? ' is-on' : ''}`} onClick={() => update(p, { hot: !p.hot })}><Icon name="fire" size={14} /> Hot</button>
@@ -100,9 +163,9 @@ export function PropertiesList({ ctx: _ctx }: { ctx: Ctx }) {
                 </div>
               </div>
               <div class="a-item__side">
-                <a href={`#/properties/${p.id}`} class="a-btn a-btn--ghost a-btn--sm"><Icon name="edit" size={16} /> Edit</a>
+                <a href={`#/properties/${p.id}`} class="a-btn a-btn--soft a-btn--sm"><Icon name="edit" size={16} /> Edit</a>
                 {p.status === 'available' && <a href={`${SITE_URL}/properties/${p.slug}/`} target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm"><Icon name="external" size={16} /> View</a>}
-                <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" onClick={() => remove(p)}><Icon name="trash" size={16} /> Delete</button>
+                {isSuper && <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" onClick={() => remove(p)}><Icon name="trash" size={16} /> Delete</button>}
               </div>
             </article>
           ))}
@@ -178,7 +241,7 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
     return () => window.removeEventListener('beforeunload', warn);
   }, []);
 
-  if (!f) return <div class="a-page"><Loading /></div>;
+  if (!f) return <div class="a-page"><Skeleton rows={3} /></div>;
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => {
     dirty.current = true;
     setF((prev) => (prev ? { ...prev, [k]: v } : prev));

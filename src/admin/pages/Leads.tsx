@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { sb, timeAgo, waDigits, type LeadRow } from '../lib';
-import { Icon, Segmented, Empty, Loading, PageHead, toast, confirmDialog } from '../ui';
+import { Icon, Segmented, Empty, Skeleton, PageHead, toast, confirmDialog } from '../ui';
 import type { Ctx } from '../App';
 
 const STATUS_LABEL: Record<LeadRow['status'], string> = { new: 'New', contacted: 'Contacted', closed: 'Closed', spam: 'Spam' };
@@ -59,7 +59,7 @@ export function Leads({ ctx }: { ctx: Ctx }) {
         ]} />
       </div>
 
-      {rows === null ? <Loading /> : shown.length === 0 ? (
+      {rows === null ? <Skeleton rows={3} /> : shown.length === 0 ? (
         <Empty icon="leads" title={tab === 'new' ? 'No new enquiries 🎉' : 'Nothing in this list'} text="Every enquiry from the website contact form appears here." />
       ) : (
         <div class="a-leads">
@@ -100,7 +100,7 @@ export function Leads({ ctx }: { ctx: Ctx }) {
                       {(['new', 'contacted', 'closed', 'spam'] as const).map((s) => (
                         <button class={`a-tag${l.status === s ? ' is-on' : ''}`} onClick={() => update(l, { status: s }, `Status: ${STATUS_LABEL[s]}`)}>{STATUS_LABEL[s]}</button>
                       ))}
-                      <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" style={{ marginLeft: 'auto' }} onClick={() => remove(l)}><Icon name="trash" size={16} /> Delete</button>
+                      {ctx.me.role === 'super_admin' && <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" style={{ marginLeft: 'auto' }} onClick={() => remove(l)}><Icon name="trash" size={16} /> Delete</button>}
                     </div>
                   </div>
                 )}
