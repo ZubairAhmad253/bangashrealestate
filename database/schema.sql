@@ -293,4 +293,22 @@ $$;
 revoke all on function public.set_my_name(text) from public, anon;
 grant execute on function public.set_my_name(text) to authenticated;
 
+-- ---------------------------------------------------------------------
+-- Table access (GRANTs). Naye Supabase projects tables ko khud access
+-- nahi dete — yahan sirf zaroori access diya gaya hai. Asal hifazat
+-- upar wali Row Level Security policies karti hain.
+-- ---------------------------------------------------------------------
+grant usage on schema public to anon, authenticated;
+
+-- Website (bina login): sirf parhna + nayi lead bhejna
+grant select on public.properties, public.projects, public.testimonials, public.settings to anon;
+grant insert on public.leads to anon;
+
+-- Admin panel (login ke baad) — RLS tay karti hai ke kaun kya kar sakta hai
+grant select, insert, update, delete on public.properties, public.projects, public.testimonials, public.leads to authenticated;
+grant select, update on public.settings to authenticated;
+grant select, insert, update, delete on public.admins, public.private_settings to authenticated;
+
+grant execute on function public.is_admin(), public.is_super_admin() to anon, authenticated;
+
 -- Done ✅
