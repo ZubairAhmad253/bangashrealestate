@@ -12,7 +12,7 @@ export const SITE = {
   tagline: 'Plots, Houses & Flats in Rawalpindi & Islamabad',
 
   /** Live domain — sitemap, canonical URLs aur social previews isi se bante hain. */
-  url: 'https://www.bangashrealestate.com',
+  url: 'https://bangashrealestate.vercel.app',
 
   description:
     'Bangash Real Estate — trusted property dealers in Rawalpindi & Islamabad. Buy, sell or rent plots, houses and flats in Airport Housing Society, Ghauri Town, Bahria Town, DHA and more. We also build homes and apartments on contract.',
