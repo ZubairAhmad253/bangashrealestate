@@ -5,7 +5,8 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import PropertyCard from '../../components/PropertyCard.astro';
 import Icon from '../../components/Icon.astro';
 import Logo from '../../components/Logo.astro';
-import { PROPERTIES, formatPrice, purposeLabel, typeLabel, type Property } from '../../data/properties';
+import { PROPERTIES, formatPrice, priceText as priceOf, purposeLabel, typeLabel, type Property } from '../../data/properties';
+import VideoEmbed from '../../components/VideoEmbed.astro';
 import { getArea } from '../../data/areas';
 import { SITE, MESSAGES, whatsappLink, emailLink } from '../../config/site';
 
@@ -16,7 +17,9 @@ export function getStaticPaths() {
 const { property: p } = Astro.props as { property: Property };
 const area = getArea(p.area);
 const city = area?.city.split(' /')[0] ?? 'Rawalpindi';
-const priceText = `PKR ${formatPrice(p.price)}${p.purpose === 'rent' ? ' /month' : ''}`;
+const priceText = priceOf(p);
+const hidePrice = priceText === 'Price on request';
+const videos = p.videos ?? [];
 const images = [p.image, ...(p.gallery ?? [])].slice(0, 3);
 const related = PROPERTIES.filter((x) => x.slug !== p.slug && (x.area === p.area || x.type === p.type)).slice(0, 3);
 const pageUrl = new URL(`/properties/${p.slug}/`, SITE.url).href;
@@ -31,8 +34,7 @@ const schema = {
   url: new URL(`/properties/${p.slug}/`, SITE.url).href,
   offers: {
     '@type': 'Offer',
-    price: p.price,
-    priceCurrency: 'PKR',
+    ...(hidePrice ? {} : { price: p.price, priceCurrency: 'PKR' }),
     availability: 'https://schema.org/InStock',
     businessFunction: p.purpose === 'rent' ? 'http://purl.org/goodrelations/v1#LeaseOut' : 'http://purl.org/goodrelations/v1#Sell',
     seller: { '@id': `${SITE.url}/#business` },
@@ -87,6 +89,12 @@ const schema = {
             <div class="key-fact"><Icon name="key" /><span>Purpose</span><strong>{purposeLabel[p.purpose]}</strong></div>
           </div>
         </div>
+        {videos.length > 0 && (
+          <div class="detail-card" data-reveal="up">
+            <h2>Video tour</h2>
+            <div class="video-tour">{videos.map((v, i) => <VideoEmbed url={v} title={`${p.title} — video ${i + 1}`} />)}</div>
+          </div>
+        )}
         <div class="detail-card" data-reveal="up">
           <h2>About this property</h2>
           <p class="muted">{p.description}</p>
@@ -105,7 +113,9 @@ const schema = {
       <aside class="sticky-aside">
         <div class="detail-card" data-reveal="left">
           <p class="muted" style="font-weight:600">{p.purpose === 'rent' ? 'Monthly rent' : 'Demand'}</p>
-          <p class="price-big"><span class="gradient-text">PKR {formatPrice(p.price)}</span>{p.purpose === 'rent' && <small> /month</small>}</p>
+          {hidePrice
+            ? <p class="price-big price-big--ask"><span class="gradient-text">Price on request</span></p>
+            : <p class="price-big"><span class="gradient-text">PKR {formatPrice(p.price)}</span>{p.purpose === 'rent' && <small> /month</small>}</p>}
           <div class="agent-box">
             <Logo id={`logo-agent-${p.slug}`} />
           </div>

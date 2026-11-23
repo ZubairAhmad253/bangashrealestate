@@ -4,6 +4,7 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Img from '../../components/Img.astro';
 import Icon from '../../components/Icon.astro';
 import CTA from '../../components/CTA.astro';
+import VideoEmbed from '../../components/VideoEmbed.astro';
 import { PROJECTS, categoryLabel, statusLabel, type Project } from '../../data/projects';
 import { SITE, MESSAGES, whatsappLink } from '../../config/site';
 
@@ -55,6 +56,12 @@ const schema = {
         </a>
       ))}
     </div>
+    {(p.videos?.length ?? 0) > 0 && (
+      <div class="detail-card" style="margin-top:28px">
+        <h2 style="font-size:var(--fs-xl);margin-bottom:14px">Video tour</h2>
+        <div class="video-tour">{(p.videos ?? []).map((v, i) => <VideoEmbed url={v} title={`${p.title} — video ${i + 1}`} />)}</div>
+      </div>
+    )}
     {p.description && (
       <div class="detail-card prose" style="margin-top:28px">
         <h2 style="margin-top:0">About this project</h2>

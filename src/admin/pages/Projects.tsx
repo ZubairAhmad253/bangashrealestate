@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { sb, slugify, shortId, removeImages, type ProjectRow } from '../lib';
-import { Icon, Field, Segmented, Toggle, PhotoUploader, Empty, Skeleton, PageHead, toast, confirmDialog } from '../ui';
+import { sb, slugify, shortId, removeImages, isStoredMedia, type ProjectRow } from '../lib';
+import { Icon, Field, Segmented, Toggle, PhotoUploader, VideoManager, Empty, Skeleton, PageHead, toast, confirmDialog } from '../ui';
 import { go, type Ctx } from '../App';
 import { SITE_URL } from '../meta';
 
@@ -72,9 +72,9 @@ export function ProjectsList({ ctx }: { ctx: Ctx }) {
 
 interface FormState {
   title: string; category: ProjectRow['category']; status: ProjectRow['status']; location: string; size: string;
-  year: string; description: string; images: string[]; featured: boolean; published: boolean;
+  year: string; description: string; images: string[]; videos: string[]; featured: boolean; published: boolean;
 }
-const EMPTY: FormState = { title: '', category: 'house', status: 'completed', location: '', size: '', year: String(new Date().getFullYear()), description: '', images: [], featured: false, published: true };
+const EMPTY: FormState = { title: '', category: 'house', status: 'completed', location: '', size: '', year: String(new Date().getFullYear()), description: '', images: [], videos: [], featured: false, published: true };
 
 export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
   const isNew = id === 'new';
@@ -92,7 +92,7 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
       if (error || !data) { toast.err(error ?? 'Project not found'); go('projects'); return; }
       const p = data as ProjectRow;
       setRow(p);
-      setF({ title: p.title, category: p.category, status: p.status, location: p.location, size: p.size, year: p.year ? String(p.year) : '', description: p.description, images: p.images, featured: p.featured, published: p.published });
+      setF({ title: p.title, category: p.category, status: p.status, location: p.location, size: p.size, year: p.year ? String(p.year) : '', description: p.description, images: p.images, videos: p.videos ?? [], featured: p.featured, published: p.published });
     });
   }, [id]);
 
@@ -112,20 +112,20 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
     setErrors(e);
     if (Object.keys(e).length) return toast.err('Please check the fields marked in red.');
     setSaving(true);
-    const data = { title: f.title.trim(), category: f.category, status: f.status, location: f.location.trim(), size: f.size.trim(), year, description: f.description.trim(), images: f.images, featured: f.featured, published: f.published };
+    const data = { title: f.title.trim(), category: f.category, status: f.status, location: f.location.trim(), size: f.size.trim(), year, description: f.description.trim(), images: f.images, videos: f.videos, featured: f.featured, published: f.published };
     const res = isNew
       ? await sb.from('projects').insert({ ...data, slug: `${slugify(`${data.title} ${data.location}`)}-${shortId()}` })
       : await sb.from('projects').update(data).eq('id', id);
     setSaving(false);
     if (res.error) return toast.err(res.error);
-    if (row) await removeImages(row.images.filter((u) => !f.images.includes(u))).catch(() => {});
+    if (row) await removeImages([...row.images.filter((u) => !f.images.includes(u)), ...(row.videos ?? []).filter((u) => !f.videos.includes(u) && isStoredMedia(u))]).catch(() => {});
     dirty.current = false;
     toast.ok(SAVED_MSG);
     go('projects');
   };
   const cancel = async () => {
     if (dirty.current && !(await confirmDialog('Discard changes?', 'Your changes have not been saved.', 'Discard'))) return;
-    const unused = uploaded.current.filter((u) => !(row?.images ?? []).includes(u));
+    const unused = uploaded.current.filter((u) => ![...(row?.images ?? []), ...(row?.videos ?? [])].includes(u));
     if (unused.length) await removeImages(unused).catch(() => {});
     go('projects');
   };
@@ -137,6 +137,10 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
         <h2 class="a-card__title"><span>1</span> Photos</h2>
         <PhotoUploader images={f.images} onChange={(v) => set('images', v)} folder={folder.current} onUploaded={(u) => uploaded.current.push(u)} />
         {errors.images && <p class="a-field__error">{errors.images}</p>}
+      </section>
+      <section class="a-card">
+        <h2 class="a-card__title"><span><Icon name="play" size={16} /></span> Videos (optional)</h2>
+        <VideoManager videos={f.videos} onChange={(v) => set('videos', v)} folder={folder.current} onUploaded={(u) => uploaded.current.push(u)} />
       </section>
       <section class="a-card">
         <h2 class="a-card__title"><span>2</span> Details</h2>

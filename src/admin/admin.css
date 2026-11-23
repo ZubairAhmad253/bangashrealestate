@@ -1,6 +1,6 @@
 /* ==========================================================================
    BANGASH ADMIN PANEL — light, warm, premium
-   Headings: Playfair Display · Body: Manrope · Accent: logo gold
+   Fonts: switchable presets (My Account → Appearance) · Accent: logo gold
    ========================================================================== */
 .a-body {
   --a-bg: #f7f4ee;
@@ -21,9 +21,15 @@
   --a-shadow: 0 1px 2px rgb(60 45 10 / 0.04), 0 10px 28px -14px rgb(60 45 10 / 0.18);
   --a-shadow-lg: 0 24px 60px -24px rgb(60 45 10 / 0.35);
   --a-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Font preset "modern" (default) — --a-serif is the HEADING font */
   --a-font: "Manrope Variable", "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --a-serif: "Playfair Display Variable", "Playfair Display", Georgia, serif;
+  --a-serif: "Sora Variable", "Sora", var(--a-font);
+  --a-head-weight: 650;
+  --a-head-tracking: -0.025em;
 }
+.a-body[data-font="sleek"] { --a-font: "Urbanist Variable", system-ui, sans-serif; --a-serif: "Urbanist Variable", system-ui, sans-serif; --a-head-weight: 750; --a-head-tracking: -0.02em; }
+.a-body[data-font="classic"] { --a-font: "Poppins", system-ui, sans-serif; --a-serif: "Poppins", system-ui, sans-serif; --a-head-weight: 600; --a-head-tracking: -0.02em; }
+.a-body[data-font="website"] { --a-font: "Plus Jakarta Sans Variable", system-ui, sans-serif; --a-serif: "Outfit Variable", system-ui, sans-serif; --a-head-weight: 700; --a-head-tracking: -0.02em; }
 
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; }
@@ -42,7 +48,7 @@ html { scroll-behavior: smooth; }
 :where(.a-body) a { color: inherit; text-decoration: none; }
 :where(.a-body) button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; }
 .a-body button:disabled { cursor: not-allowed; opacity: 0.55; }
-.a-body h1, .a-body h2, .a-body h3 { font-family: var(--a-serif); font-weight: 650; letter-spacing: -0.01em; line-height: 1.2; color: var(--a-text); }
+.a-body h1, .a-body h2, .a-body h3 { font-family: var(--a-serif); font-weight: var(--a-head-weight); letter-spacing: var(--a-head-tracking); line-height: 1.2; color: var(--a-text); }
 .a-body :focus-visible { outline: 3px solid color-mix(in srgb, var(--a-gold) 60%, transparent); outline-offset: 2px; border-radius: 10px; }
 .a-body ::selection { background: #f3dfa9; }
 .a-body * { scrollbar-width: thin; scrollbar-color: var(--a-line-strong) transparent; }
@@ -438,7 +444,7 @@ html { scroll-behavior: smooth; }
 .a-reviews { display: grid; gap: 12px; }
 @media (min-width: 800px) { .a-reviews { grid-template-columns: 1fr 1fr; } }
 .a-review { display: grid; gap: 10px; padding: 20px; border-radius: 20px; background: var(--a-surface); border: 1px solid var(--a-line); box-shadow: var(--a-shadow-sm); animation: a-item 0.45s var(--a-ease) both; }
-.a-review p { font-family: var(--a-serif); font-style: italic; font-size: 16.5px; line-height: 1.55; }
+.a-review p { font-size: 15.5px; line-height: 1.6; color: var(--a-text); }
 .a-review__stars { color: var(--a-gold); letter-spacing: 2px; font-size: 18px; }
 .a-review__stars span { color: var(--a-line-strong); }
 .a-rating { display: flex; gap: 4px; }
@@ -476,3 +482,42 @@ html { scroll-behavior: smooth; }
 /* Lining figures for numbers in the serif font (Playfair defaults to old-style) */
 .a-body { font-variant-numeric: lining-nums; }
 .a-stat strong, .a-item__price, .a-preview strong, .a-steps b, .a-hero h1, .a-me__avatar { font-variant-numeric: lining-nums tabular-nums; font-feature-settings: "lnum" 1, "tnum" 1; }
+
+
+/* ==========================================================================
+   TABS IN FORMS, VIDEOS, HIDDEN PRICE, FONT PICKER
+   ========================================================================== */
+.a-tabs--form { position: sticky; top: 0; z-index: 15; margin: 0 -4px; padding: 0 4px; background: color-mix(in srgb, var(--a-bg) 92%, transparent); backdrop-filter: blur(10px); }
+@media (max-width: 959px) { .a-tabs--form { top: 61px; } }
+.a-tabs .a-dot { width: 8px; height: 8px; border-radius: 50%; background: #e0473a; box-shadow: 0 0 0 3px #fdeeec; }
+.a-tabpanel { animation: a-page 0.35s var(--a-ease) both; }
+.a-stack { display: grid; gap: 20px; }
+.a-preview.is-hidden { background: var(--a-soft); border-color: var(--a-line); }
+.a-preview.is-hidden strong { color: var(--a-muted); }
+.a-item__price--hidden { display: inline-flex; align-items: center; gap: 6px; font-size: 15px !important; color: var(--a-muted) !important; }
+.a-savebar__hint { margin-right: auto; }
+
+.a-videos { display: grid; gap: 14px; }
+.a-videos__add { display: grid; gap: 12px; }
+@media (min-width: 700px) { .a-videos__add { grid-template-columns: 1fr 1fr; } }
+.a-videos__card { display: grid; gap: 8px; align-content: start; padding: 16px; border-radius: 16px; background: var(--a-soft); border: 1px solid var(--a-line); }
+.a-videos__card .a-row input { min-height: 44px !important; }
+.a-videos__icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--a-gold-soft); color: var(--a-gold-deep); border: 1px solid #f0dfb2; }
+.a-videos__icon--yt { background: #fdeeec; color: #e62117; border-color: #f6d2cc; }
+.a-videos__list { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.a-video { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #1f1b14; box-shadow: var(--a-shadow-sm); animation: a-pop 0.35s var(--a-ease); }
+.a-video img, .a-video video { width: 100%; height: 100%; object-fit: cover; }
+.a-video__badge { position: absolute; left: 8px; top: 8px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; background: rgb(255 255 255 / 0.92); color: var(--a-text); }
+.a-video__play { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: rgb(255 255 255 / 0.92); color: var(--a-gold-deep); box-shadow: var(--a-shadow); }
+.a-video .a-photo__bar { align-items: center; }
+.a-video .a-photo__bar a, .a-video .a-photo__bar button { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: rgb(255 255 255 / 0.94); color: var(--a-text); }
+.a-video .a-photo__bar button.is-danger { background: #e0473a; color: #fff; }
+.a-video__num { margin-right: auto; padding-left: 4px; font-size: 12px; font-weight: 800; color: #fff; }
+
+.a-fonts { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.a-font { display: grid; gap: 4px; padding: 16px; text-align: left; border-radius: 16px; background: var(--a-surface) !important; border: 1.5px solid var(--a-line) !important; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s var(--a-ease); }
+.a-font:hover { transform: translateY(-2px); border-color: var(--a-line-strong) !important; }
+.a-font.is-on { border-color: var(--a-gold) !important; box-shadow: 0 0 0 4px rgb(214 166 64 / 0.18); background: #fffcf4 !important; }
+.a-font__sample { font-size: 30px; line-height: 1.1; color: var(--a-text); }
+.a-font__name { font-weight: 800; font-size: 14px; }
+.a-font__desc { font-size: 12.5px; color: var(--a-muted); }

@@ -34,6 +34,8 @@ const fromRow = (r: PropertyRow): Property => ({
   hot: r.hot,
   description: r.description,
   features: r.features ?? [],
+  showPrice: r.show_price !== false,
+  videos: r.videos ?? [],
 });
 
 /** Database properties if there are any, otherwise the samples */
@@ -49,6 +51,12 @@ export function formatPrice(price: number): string {
   return price.toLocaleString('en-PK');
 }
 const trim = (n: number) => Number(n.toFixed(2)).toString();
+
+/** Price as shown on the website — respects "Show price on website" */
+export function priceText(p: Pick<Property, 'price' | 'purpose' | 'showPrice'>): string {
+  if (p.showPrice === false || !p.price) return 'Price on request';
+  return `PKR ${formatPrice(p.price)}${p.purpose === 'rent' ? ' /month' : ''}`;
+}
 
 export const typeLabel: Record<PropertyType, string> = { plot: 'Plot', house: 'House', flat: 'Flat' };
 export const purposeLabel: Record<Purpose, string> = { sale: 'For Sale', rent: 'For Rent' };

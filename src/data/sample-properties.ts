@@ -43,6 +43,10 @@ export interface Property {
   gallery?: (ImageMetadata | string)[];
   featured?: boolean;
   hot?: boolean;
+  /** false = show "Price on request" instead of the price */
+  showPrice?: boolean;
+  /** YouTube links or uploaded video URLs */
+  videos?: string[];
   description: string;
   features: string[];
 }

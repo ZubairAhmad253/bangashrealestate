@@ -55,6 +55,8 @@ create table if not exists public.properties (
   description text not null default '' check (char_length(description) <= 5000),
   features    text[] not null default '{}',
   images      text[] not null default '{}',
+  videos      text[] not null default '{}',
+  show_price  boolean not null default true,
   featured    boolean not null default false,
   hot         boolean not null default false,
   status      text not null default 'available' check (status in ('available', 'sold', 'rented', 'hidden')),
@@ -76,6 +78,7 @@ create table if not exists public.projects (
   year        smallint check (year between 1990 and 2100),
   description text not null default '' check (char_length(description) <= 5000),
   images      text[] not null default '{}',
+  videos      text[] not null default '{}',
   featured    boolean not null default false,
   published   boolean not null default true,
   created_at  timestamptz not null default now(),
@@ -236,7 +239,7 @@ create policy "private: super only" on public.private_settings for all to authen
 -- Photos storage (public bucket "media"; only admins can upload/delete)
 -- ---------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('media', 'media', true, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
+values ('media', 'media', true, 52428800, array['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime', 'video/webm'])
 on conflict (id) do update
   set public = true, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 

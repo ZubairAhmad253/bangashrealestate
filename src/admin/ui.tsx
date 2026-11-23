@@ -1,7 +1,7 @@
 /* Admin panel — small reusable UI components */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { uploadImage, errorText } from './lib';
+import { uploadImage, uploadVideo, youtubeId, errorText, MAX_VIDEO_MB } from './lib';
 
 /* ---------------- Icons ---------------- */
 const PATHS: Record<string, string> = {
@@ -32,6 +32,8 @@ const PATHS: Record<string, string> = {
   menu: 'M4 7h16M4 12h16M4 17h16',
   eye: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
   info: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 16v-4M12 8h.01',
+  play: 'M6 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L7.5 3.64A1 1 0 0 0 6 4.5z',
+  'eye-off': 'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24M1 1l22 22',
   globe: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
 };
 const WA = 'M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.47-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2-1.42.25-.7.25-1.29.18-1.41-.08-.13-.28-.2-.57-.35m-5.42 7.4h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88a9.82 9.82 0 0 1 6.99 2.9 9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.88 9.88m8.41-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89a11.82 11.82 0 0 0-3.48-8.41z';
@@ -257,6 +259,82 @@ export function PhotoUploader({ images, onChange, folder, onUploaded }: { images
       </div>
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => { const t = e.target as HTMLInputElement; if (t.files) void addFiles(t.files); t.value = ''; }} />
       <p class="a-field__hint">The first photo is the cover shown on the listing. Use ★ to make any photo the cover. Photos are resized automatically.</p>
+    </div>
+  );
+}
+
+/* ---------------- Videos ---------------- */
+export function VideoManager({ videos, onChange, folder, onUploaded }: { videos: string[]; onChange: (v: string[]) => void; folder: string; onUploaded?: (url: string) => void }) {
+  const [link, setLink] = useState('');
+  const [busy, setBusy] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  const latest = useRef(videos);
+  latest.current = videos;
+
+  const addLink = () => {
+    const id = youtubeId(link);
+    if (!id) return toast.err('Please paste a valid YouTube link (youtube.com/watch?v=… or youtu.be/…).');
+    const url = `https://www.youtube.com/watch?v=${id}`;
+    if (!videos.includes(url)) onChange([...videos, url]);
+    setLink('');
+    toast.ok('YouTube video added.');
+  };
+  const addFile = async (file: File) => {
+    setBusy(true);
+    try {
+      const url = await uploadVideo(file, folder);
+      onUploaded?.(url);
+      latest.current = [...latest.current, url];
+      onChange(latest.current);
+      toast.ok('Video uploaded.');
+    } catch (e) {
+      toast.err(e);
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div class="a-videos">
+      <div class="a-videos__add">
+        <div class="a-videos__card">
+          <span class="a-videos__icon a-videos__icon--yt"><Icon name="play" size={20} /></span>
+          <strong>Add a YouTube link</strong>
+          <span class="a-muted a-small">Best for longer videos — free, unlimited and good for Google.</span>
+          <div class="a-row">
+            <input value={link} placeholder="https://youtu.be/…" onInput={(e) => setLink(e.currentTarget.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }} />
+            <button type="button" class="a-btn a-btn--soft" onClick={addLink}>Add</button>
+          </div>
+        </div>
+        <div class="a-videos__card">
+          <span class="a-videos__icon"><Icon name="upload" size={20} /></span>
+          <strong>Upload a short video</strong>
+          <span class="a-muted a-small">MP4, MOV or WebM up to {MAX_VIDEO_MB} MB — e.g. a quick walkthrough from your phone.</span>
+          <button type="button" class="a-btn a-btn--ghost" onClick={() => input.current?.click()} disabled={busy}>
+            {busy ? <><span class="a-spinner" /> Uploading… please wait</> : <><Icon name="upload" size={16} /> Choose video</>}
+          </button>
+          <input ref={input} type="file" accept="video/mp4,video/quicktime,video/webm" hidden onChange={(e) => { const t = e.target as HTMLInputElement; const f = t.files?.[0]; if (f) void addFile(f); t.value = ''; }} />
+        </div>
+      </div>
+
+      {videos.length > 0 && (
+        <div class="a-videos__list">
+          {videos.map((url, i) => {
+            const yt = youtubeId(url);
+            return (
+              <figure class="a-video" key={url}>
+                {yt ? <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt="" loading="lazy" /> : <video src={url} preload="metadata" muted playsInline />}
+                <span class="a-video__badge">{yt ? 'YouTube' : 'Uploaded'}</span>
+                <span class="a-video__play"><Icon name="play" size={22} /></span>
+                <div class="a-photo__bar">
+                  <span class="a-video__num">Video {i + 1}</span>
+                  <a href={url} target="_blank" rel="noopener" aria-label="Open video"><Icon name="external" size={16} /></a>
+                  <button type="button" class="is-danger" onClick={() => onChange(videos.filter((x) => x !== url))} aria-label="Remove video"><Icon name="trash" size={16} /></button>
+                </div>
+              </figure>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

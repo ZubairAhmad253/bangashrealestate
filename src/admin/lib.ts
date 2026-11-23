@@ -25,6 +25,8 @@ export interface PropertyRow {
   description: string;
   features: string[];
   images: string[];
+  videos: string[];
+  show_price: boolean;
   featured: boolean;
   hot: boolean;
   status: 'available' | 'sold' | 'rented' | 'hidden';
@@ -43,6 +45,7 @@ export interface ProjectRow {
   year: number | null;
   description: string;
   images: string[];
+  videos: string[];
   featured: boolean;
   published: boolean;
   created_at: string;
@@ -168,6 +171,30 @@ export async function removeImages(urls: string[]): Promise<void> {
   const paths = urls.map(pathFromUrl).filter(Boolean);
   if (paths.length) await sb.storage.from('media').remove(paths);
 }
+
+/* ---------------- Videos ---------------- */
+export const MAX_VIDEO_MB = 50;
+
+/** Returns the YouTube video id for watch / youtu.be / shorts / embed links, otherwise null. */
+export function youtubeId(url: string): string | null {
+  const m = url.trim().match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/i);
+  return m ? m[1] : null;
+}
+
+export async function uploadVideo(file: File, folder: string): Promise<string> {
+  if (!/^video\/(mp4|quicktime|webm)$/.test(file.type)) throw new Error('Please choose an MP4, MOV or WebM video.');
+  if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+    throw new Error(`This video is ${Math.round(file.size / 1048576)} MB — the limit is ${MAX_VIDEO_MB} MB. Upload it to YouTube and paste the link instead.`);
+  }
+  const ext = file.type === 'video/webm' ? 'webm' : file.type === 'video/quicktime' ? 'mov' : 'mp4';
+  const path = `${folder}/videos/${Date.now()}-${shortId()}.${ext}`;
+  const { error } = await sb.storage.from('media').upload(path, file, { contentType: file.type, cacheControl: '31536000' });
+  if (error) throw error;
+  return sb.storage.from('media').getPublicUrl(path).data.publicUrl;
+}
+
+/** Only files stored in our bucket can be removed (not YouTube links). */
+export const isStoredMedia = (url: string) => url.includes('/storage/v1/object/public/media/');
 
 /* ---------------- Website publish ---------------- */
 export async function requestRebuild(): Promise<boolean> {

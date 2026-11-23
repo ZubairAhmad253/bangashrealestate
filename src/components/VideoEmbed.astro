@@ -1,0 +1,32 @@
+---
+/* Video tour — YouTube links load as a lightweight thumbnail and only fetch the player when
+   clicked (keeps pages fast for SEO); uploaded videos use the native <video> player. */
+interface Props { url: string; title: string }
+const { url, title } = Astro.props;
+const yt = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/i)?.[1];
+---
+
+{yt ? (
+  <button type="button" class="video-embed video-embed--yt" data-yt={yt} aria-label={`Play video: ${title}`}>
+    <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt={title} loading="lazy" width="480" height="360" />
+    <span class="video-embed__play" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l10.98-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14z" /></svg>
+    </span>
+  </button>
+) : (
+  <video class="video-embed" src={url} controls playsinline preload="metadata" aria-label={title}></video>
+)}
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-yt]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube-nocookie.com/embed/${btn.dataset.yt}?autoplay=1&rel=0`;
+      iframe.title = btn.getAttribute('aria-label') ?? 'Video';
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      iframe.className = 'video-embed';
+      btn.replaceWith(iframe);
+    }, { once: true });
+  });
+</script>

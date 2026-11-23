@@ -25,6 +25,8 @@ export interface PropertyRow {
   description: string;
   features: string[];
   images: string[];
+  videos?: string[];
+  show_price?: boolean;
   featured: boolean;
   hot: boolean;
   status: string;
@@ -42,6 +44,7 @@ export interface ProjectRow {
   year: number | null;
   description: string;
   images: string[];
+  videos?: string[];
   featured: boolean;
   created_at: string;
 }
