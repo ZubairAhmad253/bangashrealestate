@@ -8,7 +8,20 @@ export const sb = createClient(SUPABASE.url, SUPABASE.publishableKey, {
 
 /* ---------------- Types ---------------- */
 export type Role = 'super_admin' | 'editor';
-export interface Admin { user_id: string; email: string; name: string | null; role: Role; created_at?: string }
+export interface Admin { user_id: string; email: string; name: string | null; role: Role; created_at?: string; activity_seen_at?: string }
+
+export type ActivityEntity = 'property' | 'project' | 'review' | 'lead' | 'settings' | 'admin';
+export interface ActivityRow {
+  id: number;
+  created_at: string;
+  actor_id: string | null;
+  actor_name: string;
+  action: 'created' | 'updated' | 'deleted' | 'status' | 'shown' | 'hidden' | 'role';
+  entity: ActivityEntity;
+  entity_id: string | null;
+  title: string | null;
+  details: { from?: string; to?: string; changed?: string[]; price_from?: number; price_to?: number; interest?: string; source?: string } | null;
+}
 
 export interface PropertyRow {
   id: string;

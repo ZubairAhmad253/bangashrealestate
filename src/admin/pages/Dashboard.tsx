@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { sb, timeAgo, waDigits, type LeadRow } from '../lib';
 import { Icon } from '../ui';
+import { InstallCard } from '../Install';
 import type { Ctx } from '../App';
 
 interface Counts { available: number; sold: number; hidden: number; projects: number; reviews: number }
@@ -44,6 +45,8 @@ export function Dashboard({ ctx }: { ctx: Ctx }) {
           {ctx.newLeads > 0 && <a href="#/leads" class="a-btn a-btn--glass"><Icon name="leads" /> View leads</a>}
         </div>
       </section>
+
+      <InstallCard dismissible />
 
       <div class="a-stats">
         <a href="#/properties" class="a-stat"><span class="a-stat__icon"><Icon name="home" /></span><span>Live listings</span><strong>{counts?.available ?? '–'}</strong></a>

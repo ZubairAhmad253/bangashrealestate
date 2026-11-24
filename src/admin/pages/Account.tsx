@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import { sb } from '../lib';
 import { Icon, Field, PageHead, toast } from '../ui';
 import type { Ctx } from '../App';
+import { InstallCard } from '../Install';
 
 export function Account({ ctx }: { ctx: Ctx }) {
   const [name, setName] = useState(ctx.me.name ?? '');
@@ -29,6 +30,8 @@ export function Account({ ctx }: { ctx: Ctx }) {
   return (
     <div class="a-page a-page--form">
       <PageHead title="My Account" icon="user" sub={`${ctx.me.email} · ${ctx.me.role === 'super_admin' ? 'Super Admin' : 'Editor'}`} />
+
+      <InstallCard />
 
       <section class="a-card">
         <h2 class="a-card__title"><span><Icon name="user" size={16} /></span> Your name</h2>

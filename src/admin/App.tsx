@@ -1,7 +1,7 @@
 /* ==========================================================================
    BANGASH ADMIN PANEL — main app (login, roles, navigation, routing)
    ========================================================================== */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Session } from '@supabase/supabase-js';
 import { sb, errorText, type Admin } from './lib';
 import { Icon, Toasts, ConfirmHost, Loading } from './ui';
@@ -12,6 +12,7 @@ import { ProjectsList, ProjectForm } from './pages/Projects';
 import { Reviews } from './pages/Reviews';
 import { Settings } from './pages/Settings';
 import { Account } from './pages/Account';
+import { Notifications } from './pages/Notifications';
 import logoUrl from '../assets/brand/logo-mark.png';
 
 /* ---------------- Hash router ---------------- */
@@ -27,7 +28,16 @@ function useRoute() {
   return route;
 }
 
-export interface Ctx { me: Admin; newLeads: number; refreshCounts: () => void }
+export interface Ctx {
+  me: Admin;
+  newLeads: number;
+  /** Unread notifications (changes made by other people since the bell was last opened) */
+  unread: number;
+  /** When this admin last opened the notifications */
+  seenAt: string;
+  markSeen: () => void;
+  refreshCounts: () => void;
+}
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -138,6 +148,16 @@ function NoAccess({ email }: { email: string }) {
   );
 }
 
+/* ---------------- Notification bell ---------------- */
+function Bell({ unread, active }: { unread: number; active: boolean }) {
+  return (
+    <a href="#/notifications" class={`a-bell${active ? ' is-active' : ''}${unread ? ' has-new' : ''}`} aria-label={unread ? `Notifications — ${unread} new` : 'Notifications'} title="Notifications">
+      <Icon name="bell" size={20} />
+      {unread > 0 && <b class="a-badge">{unread > 99 ? '99+' : unread}</b>}
+    </a>
+  );
+}
+
 /* ---------------- Layout + navigation ---------------- */
 const NAV = [
   { path: 'dashboard', label: 'Dashboard', icon: 'dashboard', group: 'main' },
@@ -145,6 +165,7 @@ const NAV = [
   { path: 'leads', label: 'Leads', icon: 'leads', group: 'main' },
   { path: 'projects', label: 'Projects', icon: 'hammer', group: 'main' },
   { path: 'reviews', label: 'Reviews', icon: 'star', group: 'main' },
+  { path: 'notifications', label: 'Notifications', icon: 'bell', group: 'main' },
   { path: 'settings', label: 'Settings', icon: 'settings', group: 'account', super: true },
   { path: 'account', label: 'My Account', icon: 'user', group: 'account' },
 ];
@@ -152,10 +173,27 @@ const NAV = [
 function Shell({ me }: { me: Admin }) {
   const route = useRoute();
   const [newLeads, setNewLeads] = useState(0);
+  const [unread, setUnread] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
+  const seenAt = useRef(me.activity_seen_at ?? new Date().toISOString());
   const refreshCounts = () => {
     sb.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'new').then(({ count }) => setNewLeads(count ?? 0));
+    sb.from('activity').select('id', { count: 'exact', head: true })
+      .gt('created_at', seenAt.current)
+      .or(`actor_id.is.null,actor_id.neq.${me.user_id}`)
+      .then(({ count, error }) => setUnread(error ? 0 : count ?? 0));
   };
+  const markSeen = () => {
+    seenAt.current = new Date().toISOString();
+    setUnread(0);
+    sb.rpc('mark_activity_seen').then(() => {}, () => {}); // the request only runs once awaited
+  };
+  // Show the unread count in the browser tab and on the installed app icon
+  useEffect(() => {
+    document.title = `${unread ? `(${unread}) ` : ''}Admin Panel — Bangash Real Estate`;
+    const nav = navigator as Navigator & { setAppBadge?: (n: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
+    (unread ? nav.setAppBadge?.(unread) : nav.clearAppBadge?.())?.catch(() => {});
+  }, [unread]);
   useEffect(() => {
     refreshCounts();
     const t = setInterval(refreshCounts, 60_000);
@@ -164,7 +202,7 @@ function Shell({ me }: { me: Admin }) {
   useEffect(() => setMoreOpen(false), [route]);
 
   const [section, id] = route.split('/');
-  const ctx: Ctx = { me, newLeads, refreshCounts };
+  const ctx: Ctx = { me, newLeads, unread, seenAt: seenAt.current, markSeen, refreshCounts };
   const isSuper = me.role === 'super_admin';
   const nav = NAV.filter((n) => !n.super || isSuper);
 
@@ -174,6 +212,7 @@ function Shell({ me }: { me: Admin }) {
     case 'leads': page = <Leads ctx={ctx} />; break;
     case 'projects': page = id ? <ProjectForm id={id} ctx={ctx} /> : <ProjectsList ctx={ctx} />; break;
     case 'reviews': page = <Reviews ctx={ctx} />; break;
+    case 'notifications': page = <Notifications ctx={ctx} />; break;
     case 'settings': page = isSuper ? <Settings ctx={ctx} /> : <Dashboard ctx={ctx} />; break;
     case 'account': page = <Account ctx={ctx} />; break;
     default: page = <Dashboard ctx={ctx} />;
@@ -184,6 +223,7 @@ function Shell({ me }: { me: Admin }) {
       <Icon name={n.icon} size={20} />
       <span>{n.label}</span>
       {n.path === 'leads' && newLeads > 0 && <b class="a-badge">{newLeads}</b>}
+      {n.path === 'notifications' && unread > 0 && <b class="a-badge">{unread > 99 ? '99+' : unread}</b>}
     </a>
   );
   const displayName = me.name || me.email.split('@')[0];
@@ -191,10 +231,13 @@ function Shell({ me }: { me: Admin }) {
   return (
     <div class="a-shell">
       <aside class="a-side">
-        <a href="#/dashboard" class="a-brand">
-          <img src={logoUrl.src} alt="" width={42} height={42} />
-          <span><strong>BANGASH</strong><small>Admin Panel</small></span>
-        </a>
+        <div class="a-side__head">
+          <a href="#/dashboard" class="a-brand">
+            <img src={logoUrl.src} alt="" width={42} height={42} />
+            <span><strong>BANGASH</strong><small>Admin Panel</small></span>
+          </a>
+          <Bell unread={unread} active={section === 'notifications'} />
+        </div>
         <nav class="a-nav">
           <p class="a-nav__group">Manage</p>
           {nav.filter((n) => n.group === 'main').map(link)}
@@ -213,7 +256,10 @@ function Shell({ me }: { me: Admin }) {
 
       <header class="a-top">
         <a href="#/dashboard" class="a-brand a-brand--sm"><img src={logoUrl.src} alt="" width={34} height={34} /><strong>BANGASH</strong></a>
-        <a href="/" target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm"><Icon name="globe" size={16} /> Website</a>
+        <div class="a-row">
+          <a href="/" target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm"><Icon name="globe" size={16} /> Website</a>
+          <Bell unread={unread} active={section === 'notifications'} />
+        </div>
       </header>
 
       <main class="a-main">{page}</main>
