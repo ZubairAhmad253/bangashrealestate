@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import { SITE } from '../config/site';
+const updated = '24 November 2026';
+---
+
+<BaseLayout title="Terms of Use" description={`Terms for using the ${SITE.name} website and its property listings.`}>
+  <PageHero title="Terms of Use" lead={`Last updated: ${updated}`} crumbs={[{ label: 'Terms of Use' }]} />
+  <section class="section" style="padding-top:0">
+    <div class="container prose" style="max-width:820px">
+      <p>By using <strong>{SITE.url.replace('https://', '')}</strong> you agree to these terms.</p>
+
+      <h2>Property listings</h2>
+      <ul>
+        <li>Listings, prices, sizes and photos are provided in good faith and may change without notice. A property may already be sold or rented.</li>
+        <li>Prices shown are the owner’s demand and are open to negotiation. “Price on request” means the price is shared on enquiry.</li>
+        <li>Nothing on this website is a binding offer. A deal is final only after a written agreement and verification of documents.</li>
+      </ul>
+
+      <h2>Verification</h2>
+      <p>We check documents before showing a property, but buyers and tenants should always verify ownership, society records and dues before paying any token or rent. See our <a href="/guides/property-documents-checklist-rawalpindi-islamabad/">documents checklist</a>.</p>
+
+      <h2>Construction services</h2>
+      <p>Construction estimates on this website or shared on WhatsApp are indicative. The final cost, timeline and scope are set in a written construction agreement.</p>
+
+      <h2>Use of the website</h2>
+      <p>Please do not copy listings, photos or text from this website for commercial use without our permission, and do not misuse the contact form.</p>
+
+      <h2>Liability</h2>
+      <p>We are not responsible for losses arising from relying on website information without verification, or from third-party websites linked here.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about these terms: {SITE.phone} · {SITE.email}</p>
+    </div>
+  </section>
+</BaseLayout>

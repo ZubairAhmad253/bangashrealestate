@@ -60,11 +60,31 @@ const schema = {
             {AREAS.map((a) => <option value={a.slug}>{a.name}</option>)}
           </select>
         </div>
+        <div class="field">
+          <label for="f-beds">Bedrooms</label>
+          <select id="f-beds" name="beds">
+            <option value="">Any</option>
+            <option value="1">1+</option>
+            <option value="2">2+</option>
+            <option value="3">3+</option>
+            <option value="4">4+</option>
+            <option value="5">5+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-sort">Sort by</label>
+          <select id="f-sort" name="sort">
+            <option value="">Newest first</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+          </select>
+        </div>
         <button type="reset" class="btn btn-outline">Reset</button>
       </form>
 
       <p class="results-bar"><span>Showing <strong data-count-results>{PROPERTIES.length}</strong> properties</span></p>
 
+      <h2 class="sr-only">All listings</h2>
       <div class="grid grid-3" data-property-list>
         {PROPERTIES.map((p, i) => <PropertyCard property={p} delay={(i % 3) * 0.08} eager={i < 3} />)}
       </div>

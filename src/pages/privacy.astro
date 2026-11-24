@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import { SITE } from '../config/site';
+const updated = '24 November 2026';
+---
+
+<BaseLayout title="Privacy Policy" description={`How ${SITE.name} collects, uses and protects the information you share through this website.`}>
+  <PageHero title="Privacy Policy" lead={`Last updated: ${updated}`} crumbs={[{ label: 'Privacy Policy' }]} />
+  <section class="section" style="padding-top:0">
+    <div class="container prose" style="max-width:820px">
+      <p>This policy explains what information {SITE.name} (“we”, “us”) collects when you use <strong>{SITE.url.replace('https://', '')}</strong>, and how we use it.</p>
+
+      <h2>Information we collect</h2>
+      <ul>
+        <li><strong>Enquiry details</strong> you send through the contact form: your name, phone / WhatsApp number, email, the type of property you are interested in, preferred area, budget and message.</li>
+        <li><strong>Messages you send us on WhatsApp, phone or email</strong> when you use the buttons on this website.</li>
+        <li><strong>Anonymous usage statistics</strong> such as pages visited and the type of device, collected without cookies, to understand which pages are useful.</li>
+      </ul>
+
+      <h2>How we use your information</h2>
+      <ul>
+        <li>To reply to your enquiry and help you buy, sell, rent or build a property.</li>
+        <li>To send you an automatic confirmation that we received your enquiry.</li>
+        <li>To improve our website and services.</li>
+      </ul>
+      <p>We do <strong>not</strong> sell or rent your personal information to anyone.</p>
+
+      <h2>Sharing</h2>
+      <p>Your enquiry is stored securely with our service providers (website hosting, database and email delivery) only so that we can respond to you. We may share relevant details with a property owner or buyer only when you ask us to arrange a deal or a visit.</p>
+
+      <h2>How long we keep it</h2>
+      <p>We keep enquiry details for as long as needed to help you and for our normal business records, after which they are deleted.</p>
+
+      <h2>Your choices</h2>
+      <p>You can ask us at any time to see, correct or delete the information we hold about you. Contact us on WhatsApp or phone at <strong>{SITE.phone}</strong> or by email at <strong>{SITE.email}</strong>.</p>
+
+      <h2>Third-party services</h2>
+      <p>Links to WhatsApp, Google Maps, Facebook and TikTok take you to those services, which have their own privacy policies.</p>
+
+      <h2>Contact</h2>
+      <p>{SITE.name}, {SITE.address.street}, {SITE.address.city}. Phone: {SITE.phone}.</p>
+    </div>
+  </section>
+</BaseLayout>

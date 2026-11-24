@@ -10,6 +10,7 @@ import loginPhoto from '../../assets/images/hero-house.jpg';
 
 const favicon = await getImage({ src: logoMark, width: 64, height: 64, format: 'png' });
 const loginBg = await getImage({ src: loginPhoto, width: 1400, format: 'webp', quality: 72 });
+const touchIcon = await getImage({ src: logoMark, width: 180, height: 180, format: 'png' });
 ---
 
 <!doctype html>
@@ -20,6 +21,13 @@ const loginBg = await getImage({ src: loginPhoto, width: 1400, format: 'webp', q
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#f7f4ee" />
     <link rel="icon" href={favicon.src} type="image/png" />
+    <!-- Installable on phones: "Add to Home screen" opens the admin like an app -->
+    <link rel="manifest" href="/admin/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href={touchIcon.src} />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Bangash Admin" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Admin Panel — Bangash Real Estate</title>
   </head>
   <body class="a-body" style={`--login-bg: url('${loginBg.src}')`}>

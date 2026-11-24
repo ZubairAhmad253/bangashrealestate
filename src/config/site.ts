@@ -56,10 +56,10 @@ export const SITE = {
 
   // Leave empty to hide the icon
   socials: {
-    facebook: '',
+    facebook: 'https://www.facebook.com/profile.php?id=61591095865560',
     instagram: '',
     youtube: '',
-    tiktok: '',
+    tiktok: 'https://www.tiktok.com/@umersaeed_68',
   },
 
   // ---------------- STATS (defaults — can be changed in admin → Settings) ----------------

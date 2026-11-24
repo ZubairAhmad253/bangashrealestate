@@ -16,4 +16,4 @@ interface Props {
 const { src, ...rest } = Astro.props;
 ---
 
-{typeof src === 'string' ? <Image src={src} inferSize {...rest} /> : <Image src={src} {...rest} />}
+{typeof src === 'string' ? <Image src={src} inferSize quality={72} {...rest} /> : <Image src={src} quality={74} {...rest} />}

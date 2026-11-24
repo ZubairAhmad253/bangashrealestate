@@ -5,6 +5,8 @@ import Icon from '../components/Icon.astro';
 import { SITE, SUPABASE, MESSAGES, whatsappLink, emailLink } from '../config/site';
 // Note: the contact form posts to FormSubmit (the email must be activated once) — see SITE.formEndpoint
 import { AREAS } from '../data/areas';
+const socials = Object.entries(SITE.socials).filter(([, url]) => url);
+const label = (n: string) => ({ facebook: 'Facebook', tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube' })[n] ?? n;
 
 const schema = {
   '@context': 'https://schema.org',
@@ -50,6 +52,21 @@ const schema = {
           <span class="contact-item__icon"><Icon name="clock" /></span>
           <div><span>Hours</span><strong>{SITE.hours}</strong></div>
         </div>
+        {
+          socials.length > 0 && (
+            <div class="contact-follow" data-reveal="right" style="--d:.3s">
+              <span>Follow us for new listings &amp; site videos</span>
+              <div class="contact-follow__links">
+                {socials.map(([name, url]) => (
+                  <a href={url} target="_blank" rel="noopener" class={`follow-btn follow-btn--${name}`}>
+                    <Icon name={name} />
+                    {label(name)}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
       </div>
 
       <form

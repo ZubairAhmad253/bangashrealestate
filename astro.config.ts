@@ -9,7 +9,7 @@ export default defineConfig({
   trailingSlash: 'always',
   integrations: [preact(), sitemap({ filter: (page) => !/\/(404|thank-you|admin)/.test(page), lastmod: new Date(), changefreq: 'weekly' })],
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
-  build: { inlineStylesheets: 'auto' },
+  build: { inlineStylesheets: 'always' },
   compressHTML: true,
   image: { remotePatterns: [{ protocol: 'https', hostname: new URL(SUPABASE.url).hostname }] },
 });

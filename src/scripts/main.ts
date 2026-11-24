@@ -161,14 +161,29 @@ if (filters) {
     if (v && Array.from(f.options).some((o) => o.value === v)) f.value = v;
   });
 
+  const grid = $('[data-property-list]');
+  const sortCards = (mode: string) => {
+    if (!grid) return;
+    const price = (c: HTMLElement) => (c.dataset.price ? Number(c.dataset.price) : NaN);
+    const sorted = [...cards].sort((a, b) => {
+      if (!mode) return cards.indexOf(a) - cards.indexOf(b);
+      const pa = price(a), pb = price(b);
+      if (Number.isNaN(pa) !== Number.isNaN(pb)) return Number.isNaN(pa) ? 1 : -1; // "Price on request" last
+      return mode === 'price-asc' ? pa - pb : pb - pa;
+    });
+    sorted.forEach((c) => grid.appendChild(c));
+  };
+
   const apply = (animate = true) => {
     const active = Object.fromEntries(fields.map((f) => [f.name, f.value]));
+    sortCards(active.sort ?? '');
     let shown = 0;
     cards.forEach((card) => {
       const match =
         (!active.purpose || card.dataset.purpose === active.purpose) &&
         (!active.type || card.dataset.type === active.type) &&
-        (!active.area || card.dataset.area === active.area);
+        (!active.area || card.dataset.area === active.area) &&
+        (!active.beds || Number(card.dataset.beds || 0) >= Number(active.beds));
       card.classList.toggle('is-hidden', !match);
       if (match) {
         card.classList.add('is-visible');

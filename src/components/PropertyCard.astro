@@ -20,6 +20,8 @@ const url = `/properties/${p.slug}/`;
   data-reveal="up"
   style={`--d:${delay}s`}
   data-purpose={p.purpose}
+  data-price={p.showPrice === false || !p.price ? '' : String(p.price)}
+  data-beds={p.beds ?? ''}
   data-type={p.type}
   data-area={p.area}
 >

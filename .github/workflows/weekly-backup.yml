@@ -1,0 +1,32 @@
+# Weekly backup of the website content (listings, projects, reviews, settings).
+# Saved as a downloadable file under Actions → "Weekly backup" → latest run → Artifacts.
+# Only public website data is exported (the same data visitors can see); leads are never included.
+# Full database backups (including hidden listings and leads) can be downloaded from
+# Supabase → Database → Backups.
+name: Weekly backup
+
+on:
+  schedule:
+    - cron: '0 3 * * 0' # every Sunday
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      SB_URL: https://tgqqhzunbkyifcesfndd.supabase.co
+      SB_KEY: sb_publishable_Xa7aSCfk7V3jKSEFDwfeiQ_uv0au2ub
+    steps:
+      - name: Export tables
+        run: |
+          mkdir -p backup
+          for t in properties projects testimonials settings; do
+            curl -sf "$SB_URL/rest/v1/$t?select=*" -H "apikey: $SB_KEY" -o "backup/$t.json"
+            echo "$t: $(grep -o '"id"' "backup/$t.json" | wc -l) rows"
+          done
+      - name: Save backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: bangash-backup-${{ github.run_number }}
+          path: backup/
+          retention-days: 90
