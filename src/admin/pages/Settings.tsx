@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'preact/hooks';
 import { sb, requestRebuild, type Admin, type SettingsRow } from '../lib';
-import { Icon, Field, Skeleton, PageHead, Segmented, toast, confirmDialog } from '../ui';
+import { Icon, Field, Skeleton, PageHead, toast, confirmDialog } from '../ui';
 import { useQuery, afterWrite } from '../store';
 import type { Ctx } from '../App';
 import { SITE } from '../../config/site';
 
 type Stat = { value: number; suffix: string; label: string };
+const ROLE_LABEL: Record<Admin['role'], string> = { super_admin: 'Super Admin', editor: 'Editor' };
+const addedOn = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
 interface SettingsData { settings: SettingsRow; hook: string; admins: Admin[] }
 
 async function fetchSettings(): Promise<SettingsData> {
@@ -84,18 +86,27 @@ export function Settings({ ctx }: { ctx: Ctx }) {
     toast.ok('Admin added.');
     void loadAdmins();
   };
+  const patchAdmins = (fn: (list: Admin[]) => Admin[]) => query.mutate((prev) => ({ ...(prev as SettingsData), admins: fn((prev as SettingsData).admins) }));
   const setRole = async (a: Admin, role: Admin['role']) => {
+    if (role === a.role) return;
+    const who = a.name?.trim() || a.email;
+    // Full access is a big step — ask first (the dropdown snaps back if cancelled)
+    if (role === 'super_admin' && !(await confirmDialog(`Give full access to ${who}?`, 'Super Admins can delete listings, change settings and manage the team.', 'Give full access', false))) {
+      patchAdmins((list) => [...list]);
+      return;
+    }
+    patchAdmins((list) => list.map((x) => (x.user_id === a.user_id ? { ...x, role } : x)));
     const { error } = await sb.from('admins').update({ role }).eq('user_id', a.user_id);
-    if (error) return toast.err(error);
-    toast.ok('Role updated.');
-    void loadAdmins();
+    if (error) { toast.err(error); void loadAdmins(); return; }
+    toast.ok(`${who} is now ${role === 'super_admin' ? 'a Super Admin' : 'an Editor'}.`);
   };
   const removeAdmin = async (a: Admin) => {
-    if (!(await confirmDialog(`Remove admin access for ${a.email}?`, 'This person will no longer be able to sign in to the admin panel.', 'Remove access'))) return;
+    const who = a.name?.trim() || a.email;
+    if (!(await confirmDialog(`Remove admin access for ${who}?`, 'This person will no longer be able to sign in to the admin panel.', 'Remove access'))) return;
     const { error } = await sb.from('admins').delete().eq('user_id', a.user_id);
     if (error) return toast.err(error);
+    patchAdmins((list) => list.filter((x) => x.user_id !== a.user_id));
     toast.ok('Access removed.');
-    void loadAdmins();
   };
 
   return (
@@ -142,23 +153,59 @@ export function Settings({ ctx }: { ctx: Ctx }) {
       </div>
 
       <section class="a-card">
-        <h2 class="a-card__title"><span><Icon name="user" size={16} /></span> Admin users</h2>
-        <ul class="a-list">
-          {admins.map((a) => (
-            <li class="a-list__item">
-              <div>
-                <strong>{a.email}</strong>
-                <small class="a-muted">{a.user_id === ctx.me.user_id ? 'You · Super Admin' : a.role === 'super_admin' ? 'Super Admin — full access' : 'Editor — properties, leads, projects, reviews'}</small>
-              </div>
-              {a.user_id !== ctx.me.user_id && (
-                <div class="a-row">
-                  <Segmented value={a.role} onChange={(r) => setRole(a, r)} options={[{ value: 'editor', label: 'Editor' }, { value: 'super_admin', label: 'Super' }]} />
-                  <button class="a-icon-btn a-btn--danger-text" onClick={() => removeAdmin(a)} aria-label="Remove admin"><Icon name="trash" /></button>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+        <div class="a-card__head">
+          <h2 class="a-card__title"><span><Icon name="user" size={16} /></span> Team</h2>
+          <span class="a-muted a-small">{admins.length} {admins.length === 1 ? 'person' : 'people'}</span>
+        </div>
+        <div class="a-table-wrap">
+          <table class="a-table">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col">Added</th>
+                <th scope="col"><span class="a-sr">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {admins.map((a) => {
+                const isMe = a.user_id === ctx.me.user_id;
+                const name = a.name?.trim();
+                return (
+                  <tr key={a.user_id} class={isMe ? 'is-me' : ''}>
+                    <td class="a-table__name">
+                      <span class="a-me__avatar" aria-hidden="true">{(name || a.email).charAt(0).toUpperCase()}</span>
+                      <span>
+                        {name ? <strong>{name}</strong> : <strong class="a-muted">No name yet</strong>}
+                        {isMe && <em class="a-you">You</em>}
+                      </span>
+                    </td>
+                    <td data-label="Email" class="a-table__email">{a.email}</td>
+                    <td data-label="Role">
+                      {isMe ? (
+                        <span class="a-pill a-pill--role">{ROLE_LABEL[a.role]}</span>
+                      ) : (
+                        <select class="a-select-sm" value={a.role} onChange={(e) => setRole(a, e.currentTarget.value as Admin['role'])} aria-label={`Role of ${a.email}`}>
+                          <option value="editor">Editor</option>
+                          <option value="super_admin">Super Admin</option>
+                        </select>
+                      )}
+                    </td>
+                    <td data-label="Added" class="a-table__date">{addedOn(a.created_at)}</td>
+                    <td class="a-table__actions">
+                      {!isMe && <button class="a-icon-btn a-btn--danger-text" onClick={() => removeAdmin(a)} aria-label={`Remove ${a.email}`} title="Remove access"><Icon name="trash" /></button>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p class="a-field__hint a-roles">
+          <span><strong>Editor</strong> — adds and edits listings, leads, projects and reviews. Cannot delete or open Settings.</span>
+          <span><strong>Super Admin</strong> — full access, including deleting and managing the team.</span>
+        </p>
         <details class="a-details">
           <summary>+ Add a new admin</summary>
           <p class="a-muted a-small">First create the account in Supabase → Authentication → Users → "Add user", then enter its email and UID here.</p>
@@ -166,7 +213,10 @@ export function Settings({ ctx }: { ctx: Ctx }) {
             <Field label="Email"><input type="email" value={newAdmin.email} onInput={(e) => setNewAdmin({ ...newAdmin, email: e.currentTarget.value })} /></Field>
             <Field label="User UID"><input value={newAdmin.user_id} onInput={(e) => setNewAdmin({ ...newAdmin, user_id: e.currentTarget.value })} placeholder="43c6b883-…" /></Field>
             <Field label="Role">
-              <Segmented value={newAdmin.role} onChange={(r) => setNewAdmin({ ...newAdmin, role: r })} options={[{ value: 'editor', label: 'Editor' }, { value: 'super_admin', label: 'Super Admin' }]} />
+              <select value={newAdmin.role} onChange={(e) => setNewAdmin({ ...newAdmin, role: e.currentTarget.value as Admin['role'] })}>
+                <option value="editor">Editor</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
             </Field>
           </div>
           <button class="a-btn a-btn--primary" onClick={addAdmin}><Icon name="plus" /> Add admin</button>

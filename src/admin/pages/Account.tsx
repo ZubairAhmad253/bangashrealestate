@@ -4,6 +4,7 @@ import { Icon, Field, PageHead, toast } from '../ui';
 import { mutate } from '../store';
 import type { Ctx } from '../App';
 import { InstallCard } from '../Install';
+import { WhatsAppReplies } from '../WhatsAppReplies';
 
 export function Account({ ctx }: { ctx: Ctx }) {
   const [name, setName] = useState(ctx.me.name ?? '');
@@ -51,6 +52,7 @@ export function Account({ ctx }: { ctx: Ctx }) {
           <div><button class="a-btn a-btn--primary" disabled={busy}>{busy ? 'Saving…' : 'Change password'}</button></div>
         </form>
       </section>
+      <WhatsAppReplies />
       <button class="a-btn a-btn--ghost a-btn--danger-text" onClick={() => sb.auth.signOut()}><Icon name="logout" /> Sign out</button>
     </div>
   );

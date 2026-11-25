@@ -240,19 +240,20 @@ if (filters) {
 /* ---------- Contact form → email (with auto-reply) / WhatsApp + leads inbox ---------- */
 const contactForm = $<HTMLFormElement>('[data-contact-form]');
 if (contactForm) {
+  // The details the visitor filled in, as a clear message for the agent (plain text — no emojis)
   const build = () => {
     const d = new FormData(contactForm);
+    const line = (label: string, key: string, empty = '-') => `${label}: ${String(d.get(key) ?? '').trim() || empty}`;
+    const note = String(d.get('message') ?? '').trim();
     return [
-      'Hello Bangash Real Estate & Builders! 🏡',
-      'I am contacting you from your website.',
+      "Hello Bangash Real Estate & Builders! I'm contacting you through your website.",
       '',
-      `👤 Name: ${d.get('name') || '-'}`,
-      `📞 Phone: ${d.get('phone') || '-'}`,
-      `🏠 Interested in: ${d.get('interest') || '-'}`,
-      `📍 Area: ${d.get('area') || 'Any'}`,
-      `💰 Budget: ${d.get('budget') || '-'}`,
-      '',
-      `${d.get('message') || ''}`,
+      line('Name', 'name'),
+      line('Phone', 'phone'),
+      line('Interested in', 'interest'),
+      line('Area', 'area', 'Any'),
+      line('Budget', 'budget'),
+      ...(note ? ['', note] : []),
     ].join('\n');
   };
   // Save the lead to the admin "Leads" inbox (Supabase). The form keeps working even if this fails.
@@ -295,14 +296,29 @@ if (contactForm) {
     if (!required.every((f) => f.reportValidity())) return;
     const wa = contactForm.dataset.whatsapp!;
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(build())}`, '_blank', 'noopener');
-    showToast(WA_TOAST);
+    showToast(WA_TOASTS.detail);
     track('generate_lead', { method: 'contact_form_whatsapp', interest: String(new FormData(contactForm).get('interest') ?? '') });
     void saveLead('whatsapp');
   });
 }
 
-/* ---------- Toast: WhatsApp click ke baad confirmation ---------- */
-const WA_TOAST = 'WhatsApp opened — please press Send. Our agent will contact you shortly.';
+/* ---------- After a WhatsApp button: a short note that matches the message that was prepared ----------
+   • details already in the message (a listing, the contact form) → the agent will contact you
+   • a general message → the agent will reply; here is what to tell them */
+const WA_TOASTS = {
+  detail: 'WhatsApp is open — just press Send. Our agent will contact you shortly.',
+  general: 'WhatsApp is open — press Send. Our agent will reply soon; tell them what you need: buy or rent, house, flat or plot, area and budget.',
+  owner: 'WhatsApp is open — press Send. Our agent will reply soon; share the property type, size, location and your expected price.',
+  build: 'WhatsApp is open — press Send. Our agent will reply soon; share your plot size and location.',
+};
+const waKind = (href: string): keyof typeof WA_TOASTS => {
+  let text = '';
+  try { text = new URL(href).searchParams.get('text') ?? ''; } catch { /* not a full URL */ }
+  if (/https?:\/\//.test(text) || /\nName: /.test(text) || /has been (sold|rented)/.test(text)) return 'detail';
+  if (/sell or rent out/i.test(text)) return 'owner';
+  if (/quote for building/i.test(text)) return 'build';
+  return 'general';
+};
 function showToast(text: string) {
   let toast = document.querySelector<HTMLElement>('.toast');
   if (!toast) {
@@ -320,8 +336,8 @@ function showToast(text: string) {
   toast.dataset.timer = String(window.setTimeout(() => toast!.classList.remove('is-visible'), 6000));
 }
 document.addEventListener('click', (e) => {
-  const link = (e.target as Element).closest?.('a[href^="https://wa.me/"]');
-  if (link) showToast(WA_TOAST);
+  const link = (e.target as Element).closest?.<HTMLAnchorElement>('a[href^="https://wa.me/"]');
+  if (link) showToast(WA_TOASTS[waKind(link.href)]);
 });
 
 /* ---------- Conversion tracking (Google Analytics 4 — only when a GA4 ID is set in site.ts) ---------- */

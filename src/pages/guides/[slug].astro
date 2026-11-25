@@ -6,7 +6,7 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Icon from '../../components/Icon.astro';
 import CTA from '../../components/CTA.astro';
 import FAQ from '../../components/FAQ.astro';
-import { SITE, whatsappLink } from '../../config/site';
+import { SITE, MESSAGES, whatsappLink } from '../../config/site';
 
 export async function getStaticPaths() {
   const guides = await getCollection('guides');
@@ -86,7 +86,7 @@ const schema = {
           <strong>Have a question about this?</strong>
           <p class="muted">Our team in Airport Housing Society, Rawalpindi is happy to help — free advice on WhatsApp.</p>
         </div>
-        <a href={whatsappLink()} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Ask on WhatsApp</a>
+        <a href={whatsappLink(MESSAGES.guide(d.title))} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Ask on WhatsApp</a>
       </div>
     </div>
   </article>

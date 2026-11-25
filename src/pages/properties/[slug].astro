@@ -47,7 +47,7 @@ const related = PROPERTIES.filter((x) => x.slug !== p.slug && score(x) >= 1)
 const pageUrl = new URL(`/properties/${p.slug}/`, SITE.url).href;
 const waMsg = available
   ? MESSAGES.property({ title: p.title, location: `${p.location}, ${city}`, price: priceText, url: pageUrl })
-  : MESSAGES.area(area?.name ?? p.location).replace('I am looking for a property', `I saw "${p.title}" (${closedLabel.toLowerCase()}) and I am looking for something similar`);
+  : MESSAGES.similar({ title: p.title, status: closedLabel.toLowerCase(), area: area?.name ?? city });
 const mailHref = emailLink(`Enquiry: ${p.title} — ${p.location}`, `Dear Bangash Real Estate & Builders team,\n\nI am interested in this property:\n\n${p.title}\n${p.location}, ${city}\n${priceText}\n${pageUrl}\n\nName: \nPhone / WhatsApp: \nPreferred visit time: \n\nThank you,`);
 
 // Page title + description built from the real listing data

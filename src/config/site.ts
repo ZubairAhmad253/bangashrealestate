@@ -98,43 +98,40 @@ export const SUPABASE = {
 /* ==========================================================================
    WHATSAPP & EMAIL — CUSTOM MESSAGES
    These messages are pre-filled when a visitor taps a WhatsApp / email button.
+   Each button sends a message that fits where it was tapped. Plain text only —
+   emojis in WhatsApp links turn into "�" on some phones.
    ========================================================================== */
-const HELLO = 'Hello Bangash Real Estate & Builders! 🏡';
+const HELLO = 'Hello Bangash Real Estate & Builders!';
 
 export const MESSAGES = {
-  /** General WhatsApp button (header, floating button, footer) */
-  general: [
-    HELLO,
-    'I visited your website and I am looking for a property.',
-    '',
-    '🏠 Requirement (House / Flat / Plot — Buy / Rent): ',
-    '📍 Preferred location: ',
-    '💰 Budget: ',
-  ].join('\n'),
+  /** Every general WhatsApp button (header, floating button, footer, contact page) — short and friendly */
+  general: `${HELLO} I found you through your website and would like to discuss a property with you.`,
 
-  /** For a specific property */
+  /** "Enquire" on a listing — with the details, so the agent knows exactly which property */
   property: (p: { title: string; location: string; price: string; url: string }) =>
-    [HELLO, 'I am interested in this property:', '', `🏠 ${p.title}`, `📍 ${p.location}`, `💰 ${p.price}`, `🔗 ${p.url}`, '', 'Please share more details and visit timings.'].join('\n'),
+    [`${HELLO} I'm interested in this property on your website:`, '', p.title, `Location: ${p.location}`, `Price: ${p.price}`, p.url, '', 'Please share more details and when I can visit.'].join('\n'),
+
+  /** A listing that has been sold or rented out → something similar */
+  similar: (p: { title: string; status: string; area: string }) =>
+    `${HELLO} I saw "${p.title}" on your website, but it has been ${p.status}. Do you have something similar in ${p.area}?`,
 
   /** Construction / builder quote */
-  construction: [
-    HELLO,
-    'I want a quote for construction.',
-    '',
-    '📍 Plot location: ',
-    '📐 Plot size (Marla / Kanal): ',
-    '🏗️ Grey structure or complete construction: ',
-    '🏢 House or flats: ',
-  ].join('\n'),
+  construction: `${HELLO} I have a plot and would like a quote for building a house or flats on it.`,
 
-  /** About an area */
-  area: (area: string) => [HELLO, `I am looking for a property in ${area}.`, '', '🏠 Requirement (House / Flat / Plot — Buy / Rent): ', '💰 Budget: '].join('\n'),
+  /** About an area or a city */
+  area: (area: string) => `${HELLO} I'm looking for a property in ${area}. What do you have available at the moment?`,
 
-  /** About a service */
-  service: (service: string) => [HELLO, `I need help with: ${service}.`, '', '📍 Preferred location: ', '💰 Budget: '].join('\n'),
+  /** About a service (plots / houses / flats) */
+  service: (service: string) => `${HELLO} I'm interested in ${service.toLowerCase()} and would like to discuss my options.`,
 
   /** Visitor wants to sell / rent out their property */
-  listProperty: [HELLO, 'I want to sell / rent out my property.', '', '🏠 Property type & size: ', '📍 Location: ', '💰 Expected price / rent: '].join('\n'),
+  listProperty: `${HELLO} I'd like to sell or rent out my property through you.`,
+
+  /** From a property guide */
+  guide: (title: string) => `${HELLO} I read your guide "${title}" and have a question.`,
+
+  /** Properties page when nothing matches the search */
+  notFound: `${HELLO} I couldn't find what I'm looking for on your website. Could you help me find a property?`,
 
   /** AUTO-REPLY email sent to whoever submits the website form */
   autoReply: [
