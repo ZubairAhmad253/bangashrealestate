@@ -8,7 +8,8 @@ import CTA from '../components/CTA.astro';
 import { SITE, MESSAGES, whatsappLink } from '../config/site';
 import { SERVICES } from '../data/services';
 import { AREAS } from '../data/areas';
-import { featuredProperties, propertiesInArea } from '../data/properties';
+import { PROPERTIES, featuredProperties, propertiesInArea } from '../data/properties';
+import { getArea } from '../data/areas';
 import { WHY_US, TESTIMONIALS, HOME_FAQS } from '../data/content';
 
 import heroHouse from '../assets/images/hero-house.jpg';
@@ -17,6 +18,9 @@ import construction1 from '../assets/images/construction-1.jpg';
 import construction3 from '../assets/images/construction-3.jpg';
 
 const featured = featuredProperties().slice(0, 6);
+// "New listing" card shows the newest real listing (hidden when there are none)
+const newest = PROPERTIES[0];
+const newestArea = newest ? getArea(newest.area)?.name ?? newest.location : '';
 const homeAreas = [...AREAS].sort((a, b) => a.priority - b.priority).slice(0, 5);
 const [construction, ...sellServices] = SERVICES;
 
@@ -97,10 +101,12 @@ const headline: { text: string; gradient?: boolean }[] = [
         <div class="hero__img-sub" data-parallax="18">
           <Image src={heroInterior} alt="Elegant living room interior of a house in Islamabad" widths={[240, 400]} sizes="240px" loading="eager" />
         </div>
-        <div class="float-card float-card--a">
-          <span class="float-card__icon"><Icon name="home" /></span>
-          <div><strong>New Listing</strong><span>10 Marla · Airport Society</span></div>
-        </div>
+        {newest && (
+          <a href={`/properties/${newest.slug}/`} class="float-card float-card--a">
+            <span class="float-card__icon"><Icon name="home" /></span>
+            <div><strong>New Listing</strong><span>{newest.size} · {newestArea.replace('Housing Society', 'Society')}</span></div>
+          </a>
+        )}
         <div class="float-card float-card--c">
           <div><div class="stars">{[1, 2, 3, 4, 5].map(() => <Icon name="star" />)}</div><span><strong style="display:inline">{SITE.googleRating}</strong> rating on Google</span></div>
         </div>

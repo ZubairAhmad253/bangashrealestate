@@ -9,6 +9,9 @@ const { url, title } = Astro.props;
 const tiktok = url.match(/tiktok\.com\/(?:@[\w.-]+\/video|player\/v1|embed(?:\/v2)?|video)\/(\d{8,25})/i)?.[1];
 const yt = tiktok ? undefined : url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/i)?.[1];
 const isTikTokLink = /tiktok\.com\//i.test(url);
+// A TikTok link without a video id (e.g. a profile pasted by mistake) → link to that TikTok profile
+const tiktokUser = !tiktok && isTikTokLink ? url.match(/tiktok\.com\/(?:player\/v1\/|embed\/|@)([\w.]+)/i)?.[1] : undefined;
+const tiktokHref = tiktokUser && !/^\d+$/.test(tiktokUser) ? `https://www.tiktok.com/@${tiktokUser}` : url;
 ---
 
 {tiktok ? (
@@ -29,7 +32,7 @@ const isTikTokLink = /tiktok\.com\//i.test(url);
     </span>
   </button>
 ) : isTikTokLink ? (
-  <a class="video-embed video-embed--link" href={url} target="_blank" rel="noopener">Watch this video on TikTok →</a>
+  <a class="video-embed video-embed--link" href={tiktokHref} target="_blank" rel="noopener">{tiktokHref === url ? 'Watch this video on TikTok →' : 'See our property videos on TikTok →'}</a>
 ) : (
   <video class="video-embed" src={url} controls playsinline preload="metadata" aria-label={title}></video>
 )}

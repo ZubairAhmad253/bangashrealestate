@@ -49,6 +49,10 @@ export interface Property {
   videos?: string[];
   description: string;
   features: string[];
+  /** available (default) · sold · rented */
+  status?: 'available' | 'sold' | 'rented';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const SAMPLE_PROPERTIES: Property[] = [

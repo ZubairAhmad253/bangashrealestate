@@ -39,6 +39,19 @@ const analytics = Boolean(process.env.VERCEL);
     <script is:inline>document.documentElement.classList.add('js');</script>
     <SEO {...props} />
     {
+      SITE.ga4Id && (
+        <>
+          <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${SITE.ga4Id}`}></script>
+          <script is:inline define:vars={{ id: SITE.ga4Id }}>
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = function () { window.dataLayer.push(arguments); };
+            window.gtag('js', new Date());
+            window.gtag('config', id);
+          </script>
+        </>
+      )
+    }
+    {
       analytics && (
         <>
           <script is:inline>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>

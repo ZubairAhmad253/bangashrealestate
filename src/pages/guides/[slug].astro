@@ -1,10 +1,11 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import Icon from '../../components/Icon.astro';
 import CTA from '../../components/CTA.astro';
+import FAQ from '../../components/FAQ.astro';
 import { SITE, whatsappLink } from '../../config/site';
 
 export async function getStaticPaths() {
@@ -17,17 +18,29 @@ const { Content, headings } = await render(guide);
 const d = guide.data;
 const url = new URL(`/guides/${guide.id}/`, SITE.url).href;
 const fmt = (x: Date) => x.toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' });
-const others = (await getCollection('guides')).filter((g) => g.id !== guide.id);
+// Related guides first (shared tags), then the newest
+const others = (await getCollection('guides'))
+  .filter((g) => g.id !== guide.id)
+  .map((g) => ({ g, score: g.data.tags.filter((t) => d.tags.includes(t)).length }))
+  .sort((a, b) => b.score - a.score || +b.g.data.date - +a.g.data.date)
+  .slice(0, 6)
+  .map((x) => x.g);
+const updated = d.updated && +d.updated !== +d.date ? d.updated : null;
 
+const cover = await getImage({ src: d.image, width: 1200, height: 675, format: 'jpg', fit: 'cover' });
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: d.title,
+  image: new URL(cover.src, SITE.url).href,
   description: d.description,
   datePublished: d.date.toISOString(),
   dateModified: (d.updated ?? d.date).toISOString(),
   mainEntityOfPage: url,
+  url,
+  inLanguage: 'en-PK',
   author: { '@type': 'Organization', name: SITE.name, url: SITE.url },
+  articleSection: d.tags[0],
   publisher: { '@id': `${SITE.url}/#business` },
 };
 ---
@@ -41,7 +54,7 @@ const schema = {
         <div class="service-card__tags" style="margin-top:22px">{d.tags.map((t) => <span class="tag">{t}</span>)}</div>
         <h1 data-reveal="up">{d.title}</h1>
         <p class="lead" data-reveal="up" style="margin-top:14px">{d.description}</p>
-        <p class="property-card__loc" style="margin-top:16px"><Icon name="clock" /> <time datetime={d.date.toISOString()}>{fmt(d.date)}</time> · By {SITE.name}</p>
+        <p class="property-card__loc" style="margin-top:16px"><Icon name="clock" /> <time datetime={d.date.toISOString()}>{fmt(d.date)}</time>{updated && <> · Updated <time datetime={updated.toISOString()}>{fmt(updated)}</time></>} · By {SITE.name}</p>
       </div>
     </section>
 
@@ -60,6 +73,13 @@ const schema = {
       <div class="prose article-body">
         <Content />
       </div>
+
+      {d.faqs.length > 0 && (
+        <section class="article-faqs">
+          <h2 style="font-size:var(--fs-2xl);margin:40px 0 18px">Frequently asked <span class="gradient-text">questions</span></h2>
+          <FAQ faqs={d.faqs} />
+        </section>
+      )}
 
       <div class="article-cta">
         <div>

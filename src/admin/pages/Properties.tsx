@@ -3,7 +3,7 @@ import { sb, formatPrice, slugify, shortId, removeImages, isStoredMedia, type Pr
 import { Icon, Field, Segmented, Toggle, Stepper, Chips, PhotoUploader, VideoManager, Empty, PageHead, Skeleton, toast, confirmDialog } from '../ui';
 import { go, type Ctx } from '../App';
 import { AREA_OPTIONS, areaName, SITE_URL } from '../meta';
-import { importSampleListings, SAMPLE_COUNT, SAMPLE_SLUGS } from '../importSamples';
+import { SAMPLE_SLUGS } from '../importSamples';
 
 const STATUS: Record<PropertyRow['status'], { label: string; cls: string }> = {
   available: { label: 'Live', cls: 'a-pill--live' },
@@ -25,7 +25,6 @@ export function PropertiesList({ ctx }: { ctx: Ctx }) {
   const [q, setQ] = useState('');
   const [type, setType] = useState<TypeFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('all');
-  const [importing, setImporting] = useState<{ done: number; total: number; label: string } | null>(null);
 
   const load = () =>
     sb.from('properties').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
@@ -47,17 +46,17 @@ export function PropertiesList({ ctx }: { ctx: Ctx }) {
     setRows((r) => r?.filter((x) => x.id !== p.id) ?? r);
     toast.ok('Property deleted.');
   };
-  const runImport = async () => {
-    if (!(await confirmDialog('Import website listings?', `This copies the ${SAMPLE_COUNT} listings currently shown on the website — with all their photos — into your database. It takes about a minute.`, 'Import listings', false))) return;
-    setImporting({ done: 0, total: 1, label: 'Starting…' });
-    try {
-      const n = await importSampleListings((done, total, label) => setImporting({ done, total, label }));
-      toast.ok(n ? `${n} listings imported ✓ The website will update in 1–2 minutes.` : 'All website listings are already in the database.');
-      await load();
-    } catch (e) {
-      toast.err(e);
-    }
-    setImporting(null);
+  // Demo listings (copied from the original sample data) must not stay on the live website
+  const demos = (rows ?? []).filter((r) => SAMPLE_SLUGS.includes(r.slug) && r.status !== 'hidden');
+  const [hidingDemos, setHidingDemos] = useState(false);
+  const hideDemos = async () => {
+    if (!(await confirmDialog('Hide demo listings?', `${demos.length} demo listing${demos.length > 1 ? 's' : ''} with stock photos will be hidden from the website. Nothing is deleted — you can show them again at any time.`, 'Hide demo listings', false))) return;
+    setHidingDemos(true);
+    const { error } = await sb.from('properties').update({ status: 'hidden' }).in('id', demos.map((d) => d.id));
+    setHidingDemos(false);
+    if (error) return toast.err(error);
+    toast.ok(SAVED_MSG);
+    void load();
   };
 
   const counts = useMemo(() => {
@@ -65,7 +64,6 @@ export function PropertiesList({ ctx }: { ctx: Ctx }) {
     (rows ?? []).forEach((r) => { c.all++; c[r.type]++; });
     return c;
   }, [rows]);
-  const missingSamples = rows ? SAMPLE_SLUGS.filter((s) => !rows.some((r) => r.slug === s)).length : 0;
 
   const shown = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -84,20 +82,14 @@ export function PropertiesList({ ctx }: { ctx: Ctx }) {
         <a href="#/properties/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add property</a>
       </PageHead>
 
-      {isSuper && rows !== null && missingSamples > 0 && (
+      {demos.length > 0 && (
         <section class="a-banner">
-          <span class="a-banner__icon"><Icon name="upload" size={22} /></span>
+          <span class="a-banner__icon"><Icon name="eye-off" size={22} /></span>
           <div class="a-banner__text">
-            <strong>Bring the website listings into your database</strong>
-            <p>{missingSamples} listing{missingSamples > 1 ? 's' : ''} on the website {missingSamples > 1 ? 'are' : 'is'} not in your database yet. Import them once — photos and details included — and manage everything from here.</p>
-            {importing && (
-              <div class="a-progress" role="progressbar" aria-valuemin={0} aria-valuemax={importing.total} aria-valuenow={importing.done}>
-                <span style={{ width: `${Math.round((importing.done / Math.max(1, importing.total)) * 100)}%` }} />
-                <small>{importing.done}/{importing.total} photos · {importing.label}</small>
-              </div>
-            )}
+            <strong>{demos.length} demo listing{demos.length > 1 ? 's are' : ' is'} still on the website</strong>
+            <p>These were added as examples with stock photos. Hide them so Google and visitors only see your real properties.</p>
           </div>
-          <button class="a-btn a-btn--gold" onClick={runImport} disabled={!!importing}>{importing ? 'Importing…' : 'Import listings'}</button>
+          <button class="a-btn a-btn--gold" onClick={hideDemos} disabled={hidingDemos}>{hidingDemos ? 'Hiding…' : 'Hide demo listings'}</button>
         </section>
       )}
 
@@ -129,7 +121,7 @@ export function PropertiesList({ ctx }: { ctx: Ctx }) {
 
       {rows === null ? <Skeleton rows={4} /> : shown.length === 0 ? (
         rows.length === 0 ? (
-          <Empty icon="home" title="No properties yet" text={isSuper ? 'Import the website listings above, or add your first property.' : 'Add your first property — it will appear on the website automatically.'}>
+          <Empty icon="home" title="No properties yet" text="Add your first property — it will appear on the website automatically.">
             <a href="#/properties/new" class="a-btn a-btn--gold"><Icon name="plus" /> Add a property</a>
           </Empty>
         ) : <Empty icon="search" title="Nothing found" text="Try a different search or filter." />
@@ -168,7 +160,7 @@ export function PropertiesList({ ctx }: { ctx: Ctx }) {
               </div>
               <div class="a-item__side">
                 <a href={`#/properties/${p.id}`} class="a-btn a-btn--soft a-btn--sm"><Icon name="edit" size={16} /> Edit</a>
-                {p.status === 'available' && <a href={`${SITE_URL}/properties/${p.slug}/`} target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm"><Icon name="external" size={16} /> View</a>}
+                {p.status !== 'hidden' && <a href={`${SITE_URL}/properties/${p.slug}/`} target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm"><Icon name="external" size={16} /> View</a>}
                 {isSuper && <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" onClick={() => remove(p)}><Icon name="trash" size={16} /> Delete</button>}
               </div>
             </article>

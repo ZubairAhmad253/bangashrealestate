@@ -208,7 +208,12 @@ export async function normalizeTikTok(url: string): Promise<string> {
   if (direct) return tiktokPlayerUrl(direct);
   const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url.trim())}`);
   const data = res.ok ? await res.json().catch(() => null) : null;
-  const id = data?.embed_product_id ?? (typeof data?.html === 'string' ? tiktokId(data.html) : null);
+  // A video id is always a long number — a profile link returns the username instead, which is not a video
+  const product = String(data?.embed_product_id ?? '');
+  const id = /^\d{8,25}$/.test(product) ? product : typeof data?.html === 'string' ? tiktokId(data.html) : null;
+  if (!id && (data?.embed_type === 'profile' || /^@?[\w.]+$/.test(product) || /tiktok\.com\/@[\w.]+\/?(\?|$)/i.test(url.trim()))) {
+    throw new Error('This is a TikTok profile link, not a video. Open the video itself in TikTok, tap Share → Copy link, and paste that link.');
+  }
   if (!id) throw new Error('Could not read this TikTok link — open the video in TikTok, tap Share → Copy link, and paste it again.');
   return tiktokPlayerUrl(String(id));
 }

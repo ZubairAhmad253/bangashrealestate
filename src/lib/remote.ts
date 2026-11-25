@@ -29,8 +29,9 @@ export interface PropertyRow {
   show_price?: boolean;
   featured: boolean;
   hot: boolean;
-  status: string;
+  status: 'available' | 'sold' | 'rented';
   created_at: string;
+  updated_at?: string;
 }
 
 export interface ProjectRow {
@@ -96,7 +97,8 @@ async function load(): Promise<RemoteData> {
   if (process.env.SKIP_SUPABASE === '1') return EMPTY;
   try {
     const [properties, projects, testimonials, settings] = await Promise.all([
-      get<PropertyRow[]>('properties?select=*&status=eq.available&order=created_at.desc'),
+      // Sold / rented listings are loaded too: their pages stay online (marked Sold, not indexed) so shared links still work
+      get<PropertyRow[]>('properties?select=*&status=in.(available,sold,rented)&order=created_at.desc'),
       get<ProjectRow[]>('projects?select=*&published=eq.true&order=featured.desc,year.desc.nullslast,created_at.desc'),
       get<TestimonialRow[]>('testimonials?select=id,name,place,text,rating&published=eq.true&order=sort_order.asc,created_at.desc'),
       get<SettingsRow[]>('settings?select=phone,whatsapp,email,hours,google_rating,stats&id=eq.1'),

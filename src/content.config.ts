@@ -15,6 +15,8 @@ const guides = defineCollection({
       image: image(),
       imageAlt: z.string(),
       tags: z.array(z.string()).default([]),
+      /** Optional questions & answers shown at the end of the article */
+      faqs: z.array(z.object({ q: z.string(), a: z.string() })).default([]),
     }),
 });
 

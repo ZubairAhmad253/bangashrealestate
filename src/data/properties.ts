@@ -2,8 +2,10 @@
    PROPERTY LISTINGS
    --------------------------------------------------------------------------
    Real properties are added in the ADMIN PANEL (/admin, stored in Supabase).
-   The SAMPLE listings (sample-properties.ts) are only shown while the
-   database has no properties yet. Every property gets its own SEO page.
+   The SAMPLE listings (sample-properties.ts) are only used for local
+   development before the database exists — never on the live website.
+   Every property gets its own SEO page; sold / rented ones keep their page
+   (marked as sold, not indexed) but are left out of all listings.
    ========================================================================== */
 import type { ImageMetadata } from 'astro';
 import { remote, type PropertyRow } from '../lib/remote';
@@ -36,13 +38,23 @@ const fromRow = (r: PropertyRow): Property => ({
   features: r.features ?? [],
   showPrice: r.show_price !== false,
   videos: r.videos ?? [],
+  status: r.status,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at ?? r.created_at,
 });
 
-/** Database properties if there are any, otherwise the samples */
-export const USING_SAMPLES = remote.properties.length === 0;
-export const PROPERTIES: Property[] = USING_SAMPLES ? SAMPLE_PROPERTIES : remote.properties.map(fromRow);
+/** Samples only when the database is not set up (local development). An empty database shows no listings. */
+export const USING_SAMPLES = !remote.connected;
+/** Every property that has a page — available, sold and rented */
+export const ALL_PROPERTIES: Property[] = USING_SAMPLES ? SAMPLE_PROPERTIES : remote.properties.map(fromRow);
+/** Properties that can still be bought or rented — used for every listing on the website */
+export const PROPERTIES: Property[] = ALL_PROPERTIES.filter((p) => isAvailable(p));
 
 /* ---------------- Helpers ---------------- */
+
+export function isAvailable(p: Pick<Property, 'status'>): boolean {
+  return !p.status || p.status === 'available';
+}
 
 /** Formats PKR as Crore / Lakh: 42,500,000 → "4.25 Crore" */
 export function formatPrice(price: number): string {
@@ -61,7 +73,7 @@ export function priceText(p: Pick<Property, 'price' | 'purpose' | 'showPrice'>):
 export const typeLabel: Record<PropertyType, string> = { plot: 'Plot', house: 'House', flat: 'Flat' };
 export const purposeLabel: Record<Purpose, string> = { sale: 'For Sale', rent: 'For Rent' };
 
-export const getProperty = (slug: string) => PROPERTIES.find((p) => p.slug === slug);
+export const getProperty = (slug: string) => ALL_PROPERTIES.find((p) => p.slug === slug);
 export const featuredProperties = () => {
   const f = PROPERTIES.filter((p) => p.featured);
   return f.length >= 3 ? f : [...f, ...PROPERTIES.filter((p) => !p.featured)];

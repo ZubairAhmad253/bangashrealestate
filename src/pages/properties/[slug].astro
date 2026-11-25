@@ -1,79 +1,144 @@
 ---
+import { getImage } from 'astro:assets';
 import Img from '../../components/Img.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import PropertyCard from '../../components/PropertyCard.astro';
 import Icon from '../../components/Icon.astro';
 import Logo from '../../components/Logo.astro';
-import { PROPERTIES, formatPrice, priceText as priceOf, purposeLabel, typeLabel, type Property } from '../../data/properties';
+import { ALL_PROPERTIES, PROPERTIES, formatPrice, isAvailable, priceText as priceOf, purposeLabel, typeLabel, type Property } from '../../data/properties';
 import VideoEmbed from '../../components/VideoEmbed.astro';
 import { getArea } from '../../data/areas';
 import { SITE, MESSAGES, whatsappLink, emailLink } from '../../config/site';
 
+/* Every available, sold and rented property has a page. Hidden or deleted ones have none (→ 404). */
 export function getStaticPaths() {
-  return PROPERTIES.map((property) => ({ params: { slug: property.slug }, props: { property } }));
+  return ALL_PROPERTIES.map((property) => ({ params: { slug: property.slug }, props: { property } }));
 }
 
 const { property: p } = Astro.props as { property: Property };
 const area = getArea(p.area);
 const city = area?.city.split(' /')[0] ?? 'Rawalpindi';
+const where = area ? (/rawalpindi|islamabad/i.test(area.name) ? area.name : `${area.name}, ${city}`) : `${p.location}, ${city}`;
+const available = isAvailable(p);
+const closedLabel = p.status === 'rented' ? 'Rented out' : 'Sold';
 const priceText = priceOf(p);
 const hidePrice = priceText === 'Price on request';
 const videos = p.videos ?? [];
-const images = [p.image, ...(p.gallery ?? [])].slice(0, 3);
-const related = PROPERTIES.filter((x) => x.slug !== p.slug && (x.area === p.area || x.type === p.type)).slice(0, 3);
+const photos = [p.image, ...(p.gallery ?? [])];
+
+// Full-size versions for the photo viewer (opened by tapping a photo)
+const full = await Promise.all(
+  photos.map((src) =>
+    typeof src === 'string'
+      ? getImage({ src, inferSize: true, width: 1600, format: 'webp', quality: 78 })
+      : getImage({ src, width: 1600, format: 'webp', quality: 78 }),
+  ),
+);
+
+// Similar listings that are still available: same area + type first, then same area, then same type
+const score = (x: Property) => (x.area === p.area ? 2 : 0) + (x.type === p.type ? 1 : 0) + (x.purpose === p.purpose ? 0.5 : 0);
+const related = PROPERTIES.filter((x) => x.slug !== p.slug && score(x) >= 1)
+  .sort((a, b) => score(b) - score(a))
+  .slice(0, 3);
+
 const pageUrl = new URL(`/properties/${p.slug}/`, SITE.url).href;
-const waMsg = MESSAGES.property({ title: p.title, location: `${p.location}, ${city}`, price: priceText, url: pageUrl });
+const waMsg = available
+  ? MESSAGES.property({ title: p.title, location: `${p.location}, ${city}`, price: priceText, url: pageUrl })
+  : MESSAGES.area(area?.name ?? p.location).replace('I am looking for a property', `I saw "${p.title}" (${closedLabel.toLowerCase()}) and I am looking for something similar`);
 const mailHref = emailLink(`Enquiry: ${p.title} — ${p.location}`, `Dear Bangash Real Estate & Builders team,\n\nI am interested in this property:\n\n${p.title}\n${p.location}, ${city}\n${priceText}\n${pageUrl}\n\nName: \nPhone / WhatsApp: \nPreferred visit time: \n\nThank you,`);
 
-const schema = {
-  '@context': 'https://schema.org',
-  '@type': 'RealEstateListing',
-  name: p.title,
-  description: p.description,
-  url: new URL(`/properties/${p.slug}/`, SITE.url).href,
-  offers: {
-    '@type': 'Offer',
-    ...(hidePrice ? {} : { price: p.price, priceCurrency: 'PKR' }),
-    availability: 'https://schema.org/InStock',
-    businessFunction: p.purpose === 'rent' ? 'http://purl.org/goodrelations/v1#LeaseOut' : 'http://purl.org/goodrelations/v1#Sell',
-    seller: { '@id': `${SITE.url}/#business` },
-  },
-  about: {
-    '@type': p.type === 'flat' ? 'Apartment' : p.type === 'house' ? 'SingleFamilyResidence' : 'Place',
-    name: p.title,
-    address: { '@type': 'PostalAddress', streetAddress: p.location, addressLocality: city, addressCountry: 'PK' },
-    ...(p.beds ? { numberOfRooms: p.beds } : {}),
-  },
-};
+// Page title + description built from the real listing data
+const purpose = purposeLabel[p.purpose];
+// Title Case for the search result title ("5 marla house for sale" → "5 Marla House for Sale")
+const SMALL = new Set(['a', 'an', 'and', 'at', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with', 'also']);
+const niceTitle = p.title.replace(/\S+/g, (w, i) => (i > 0 && SMALL.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1)));
+const baseTitle = `${niceTitle}${/\b(sale|rent)\b/i.test(p.title) ? '' : ` ${purpose.replace('For', 'for')}`}`;
+const inArea = /airport|ghauri|bahria|dha|gulzar|chaklala|pwd|korang|media|soan/i.test(p.title) ? '' : ` in ${area?.name ?? p.location}`;
+// Keep titles short enough for Google (~65 characters): drop the city, then the area, if needed
+// (the location is worth a few extra characters, so the area-only version may run a little longer)
+const titleOptions: [string, number][] = [[`${baseTitle}${inArea ? ` in ${where}` : `, ${city}`}`, 68], [`${baseTitle}${inArea}`, 76], [baseTitle, 999]];
+const pick = (extra: number) => titleOptions.find(([t, max]) => t.length + extra <= max)![0];
+const title = available
+  ? pick(0)
+  : `${closedLabel}: ${pick(closedLabel.length + 2).replace(/\s+for (sale|rent)\b/i, '')}`;
+const facts = [p.size, p.beds ? `${p.beds} bed` : '', p.baths ? `${p.baths} bath` : ''].filter(Boolean).join(', ');
+const description = available
+  ? `${facts} ${typeLabel[p.type].toLowerCase()} ${purpose.toLowerCase()} in ${p.location}, ${city} — ${priceText}. See all ${photos.length} photos and enquire on WhatsApp.`
+  : `This ${typeLabel[p.type].toLowerCase()} in ${p.location}, ${city} has been ${closedLabel.toLowerCase()}. See similar ${typeLabel[p.type].toLowerCase()}s that are still available in ${area?.name ?? city}.`;
+
+// Listing schema only while the property is on the market — matches what the page shows
+const absolute = (src: string) => new URL(src, SITE.url).href;
+const schema = available
+  ? [{
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateListing',
+      name: p.title,
+      description: p.description,
+      url: pageUrl,
+      image: full.slice(0, 6).map((i) => absolute(i.src)),
+      ...(p.createdAt ? { datePosted: p.createdAt.slice(0, 10) } : {}),
+      offers: {
+        '@type': 'Offer',
+        ...(hidePrice ? {} : { price: p.price, priceCurrency: 'PKR' }),
+        availability: 'https://schema.org/InStock',
+        businessFunction: p.purpose === 'rent' ? 'http://purl.org/goodrelations/v1#LeaseOut' : 'http://purl.org/goodrelations/v1#Sell',
+        seller: { '@id': `${SITE.url}/#business` },
+      },
+      about: {
+        '@type': p.type === 'flat' ? 'Apartment' : p.type === 'house' ? 'SingleFamilyResidence' : 'Place',
+        name: p.title,
+        address: { '@type': 'PostalAddress', streetAddress: p.location, addressLocality: city, addressRegion: 'Punjab', addressCountry: 'PK' },
+        ...(p.beds ? { numberOfBedrooms: p.beds, numberOfRooms: p.beds } : {}),
+        ...(p.baths ? { numberOfBathroomsTotal: p.baths } : {}),
+      },
+    }]
+  : [];
+
+const crumbs = [
+  { label: 'Properties', href: '/properties/' },
+  ...(area ? [{ label: area.name, href: `/areas/${area.slug}/` }] : []),
+  { label: p.title },
+];
 ---
 
-<BaseLayout
-  title={`${p.title}${/\b(sale|rent)\b/i.test(p.title) ? '' : ` ${purposeLabel[p.purpose]}`} in ${area?.name ?? p.location}`}
-  description={`${p.title} ${purposeLabel[p.purpose].toLowerCase()} in ${p.location}, ${city}. ${p.size}${p.beds ? `, ${p.beds} beds` : ''} — ${priceText}. Contact Bangash Real Estate.`}
-  image={p.image}
-  schema={[schema]}
->
+<BaseLayout title={title} description={description} image={p.image} schema={schema} noindex={!available}>
   <section class="page-hero" style="padding-bottom:40px">
     <div class="hero__grid-bg" aria-hidden="true"></div>
     <div class="container page-hero__inner">
-      <Breadcrumbs items={[{ label: 'Properties', href: '/properties/' }, { label: p.title }]} />
+      <Breadcrumbs items={crumbs} />
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:22px" data-reveal="up">
-        <span class:list={['badge', p.purpose === 'sale' ? 'badge--sale' : 'badge--rent']}>{purposeLabel[p.purpose]}</span>
+        {available
+          ? <span class:list={['badge', p.purpose === 'sale' ? 'badge--sale' : 'badge--rent']}>{purpose}</span>
+          : <span class="badge badge--closed">{closedLabel}</span>}
         <span class="badge" style="border:1px solid var(--border)">{typeLabel[p.type]}</span>
-        {p.hot && <span class="badge badge--hot" style="margin-left:0">Hot deal</span>}
+        {available && p.hot && <span class="badge badge--hot" style="margin-left:0">Hot deal</span>}
       </div>
       <h1 data-reveal="up" style="--d:.08s">{p.title}</h1>
       <p class="property-card__loc" style="margin-top:12px;font-size:1rem" data-reveal="up"><Icon name="pin" />{p.location}, {city}</p>
     </div>
   </section>
 
-  <section class="container">
-    <div class="gallery" data-reveal="zoom">
-      {images.map((img, i) => (
-        <div class="gallery__item">
-          <Img src={img} alt={`${p.title} — photo ${i + 1}`} widths={i === 0 ? [640, 960, 1400] : [400, 700]} sizes={i === 0 ? '(max-width: 768px) 92vw, 820px' : '(max-width: 768px) 92vw, 400px'} loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
+  {!available && (
+    <div class="container">
+      <div class="closed-note" role="status">
+        <Icon name="info" />
+        <div>
+          <strong>This property has been {closedLabel.toLowerCase()}.</strong>
+          <p>It is no longer available. {related.length > 0 ? 'Similar properties that are still available are listed below — or' : ''} message us and we will share similar options in {area?.name ?? city}.</p>
         </div>
+        <a href={whatsappLink(waMsg)} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> Find something similar</a>
+      </div>
+    </div>
+  )}
+
+  <section class="container">
+    <div class="gallery" data-reveal="zoom" data-lightbox>
+      {photos.slice(0, 3).map((img, i) => (
+        <a class="gallery__item" href={full[i].src} data-lightbox-index={i} aria-label={i === Math.min(2, photos.length - 1) && photos.length > 3 ? `View all ${photos.length} photos` : `Open photo ${i + 1} of ${photos.length}`}>
+          <Img src={img} alt={`${p.title} in ${p.location}, ${city} — photo ${i + 1}`} widths={i === 0 ? [480, 720, 960, 1400] : [360, 560, 720]} sizes={i === 0 ? '(max-width: 768px) 92vw, 820px' : '(max-width: 768px) 92vw, 400px'} loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
+          {i === Math.min(2, photos.length - 1) && photos.length > 3 && <span class="gallery__more"><Icon name="image" /> View all {photos.length} photos</span>}
+        </a>
       ))}
     </div>
 
@@ -86,44 +151,69 @@ const schema = {
             {p.beds && <div class="key-fact"><Icon name="bed" /><span>Bedrooms</span><strong>{p.beds}</strong></div>}
             {p.baths && <div class="key-fact"><Icon name="bath" /><span>Bathrooms</span><strong>{p.baths}</strong></div>}
             <div class="key-fact"><Icon name="home" /><span>Type</span><strong>{typeLabel[p.type]}</strong></div>
-            <div class="key-fact"><Icon name="key" /><span>Purpose</span><strong>{purposeLabel[p.purpose]}</strong></div>
+            <div class="key-fact"><Icon name="key" /><span>Status</span><strong>{available ? purpose : closedLabel}</strong></div>
+            <div class="key-fact"><Icon name="pin" /><span>Location</span><strong>{area?.name ?? p.location}</strong></div>
           </div>
         </div>
+        <div class="detail-card" data-reveal="up">
+          <h2>About this property</h2>
+          <p class="muted" style="white-space:pre-line">{p.description}</p>
+          {area && (
+            <p class="muted">
+              Located in {p.location}, <a href={`/areas/${area.slug}/`}>{area.name}</a>. {area.short}
+            </p>
+          )}
+        </div>
+        {p.features.length > 0 && (
+          <div class="detail-card" data-reveal="up">
+            <h2>Features &amp; facilities</h2>
+            <ul class="check-list check-list--2">{p.features.map((f) => <li>{f}</li>)}</ul>
+          </div>
+        )}
         {videos.length > 0 && (
           <div class="detail-card" data-reveal="up">
             <h2>Video tour</h2>
             <div class="video-tour">{videos.map((v, i) => <VideoEmbed url={v} title={`${p.title} — video ${i + 1}`} />)}</div>
           </div>
         )}
-        <div class="detail-card" data-reveal="up">
-          <h2>About this property</h2>
-          <p class="muted">{p.description}</p>
-          {area && (
-            <p class="muted">
-              Located in <a href={`/areas/${area.slug}/`} class="link-arrow" style="display:inline">{area.name}</a>. {area.short}
-            </p>
-          )}
-        </div>
-        <div class="detail-card" data-reveal="up">
-          <h2>Features</h2>
-          <ul class="check-list check-list--2">{p.features.map((f) => <li>{f}</li>)}</ul>
-        </div>
+        {photos.length > 3 && (
+          <div class="detail-card" id="photos">
+            <h2>All photos <span class="muted" style="font-weight:600">({photos.length})</span></h2>
+            <div class="photo-grid" data-lightbox>
+              {photos.map((img, i) => (
+                <a href={full[i].src} data-lightbox-index={i} aria-label={`Open photo ${i + 1} of ${photos.length}`}>
+                  <Img src={img} alt={`${p.title} — photo ${i + 1} of ${photos.length}`} widths={[300, 480]} sizes="(max-width: 768px) 45vw, 240px" loading="lazy" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <aside class="sticky-aside">
         <div class="detail-card" data-reveal="left">
-          <p class="muted" style="font-weight:600">{p.purpose === 'rent' ? 'Monthly rent' : 'Demand'}</p>
-          {hidePrice
-            ? <p class="price-big price-big--ask"><span class="gradient-text">Price on request</span></p>
-            : <p class="price-big"><span class="gradient-text">PKR {formatPrice(p.price)}</span>{p.purpose === 'rent' && <small> /month</small>}</p>}
+          {available ? (
+            <>
+              <p class="muted" style="font-weight:600">{p.purpose === 'rent' ? 'Monthly rent' : 'Demand'}</p>
+              {hidePrice
+                ? <p class="price-big price-big--ask"><span class="gradient-text">Price on request</span></p>
+                : <p class="price-big"><span class="gradient-text">PKR {formatPrice(p.price)}</span>{p.purpose === 'rent' && <small> /month</small>}</p>}
+            </>
+          ) : (
+            <p class="price-big price-big--ask"><span class="gradient-text">{closedLabel}</span></p>
+          )}
           <div class="agent-box">
             <Logo id={`logo-agent-${p.slug}`} />
           </div>
           <div style="display:grid;gap:10px">
-            <a href={whatsappLink(waMsg)} class="btn btn-whatsapp btn-block" target="_blank" rel="noopener"><Icon name="whatsapp" /> Enquire on WhatsApp</a>
+            <a href={whatsappLink(waMsg)} class="btn btn-whatsapp btn-block" target="_blank" rel="noopener"><Icon name="whatsapp" /> {available ? 'Enquire on WhatsApp' : 'Ask for similar'}</a>
             <a href={`tel:${SITE.phoneLink}`} class="btn btn-primary btn-block"><Icon name="phone" /> Call {SITE.phone}</a>
-            <a href={mailHref} class="btn btn-outline btn-block"><Icon name="mail" /> Email us</a>
+            {available && <a href={mailHref} class="btn btn-outline btn-block"><Icon name="mail" /> Email us</a>}
           </div>
+          <ul class="aside-contact" role="list">
+            <li><Icon name="pin" /><span>Office: {SITE.address.short}, {SITE.address.city}</span></li>
+            <li><Icon name="clock" /><span>{SITE.hours}</span></li>
+          </ul>
         </div>
       </aside>
     </div>
@@ -133,10 +223,19 @@ const schema = {
     <section class="section">
       <div class="container">
         <div class="section-head">
-          <h2 data-reveal="up">Similar <span class="gradient-text">properties</span></h2>
+          <h2 data-reveal="up">{available ? 'Similar' : 'Available'} <span class="gradient-text">properties</span></h2>
+          {area && <a href={`/areas/${area.slug}/`} class="link-arrow">More in {area.name} <Icon name="arrow-right" /></a>}
         </div>
         <div class="grid grid-3">{related.map((r, i) => <PropertyCard property={r} delay={i * 0.08} />)}</div>
       </div>
     </section>
   )}
+
+  <dialog class="lightbox" aria-label="Photo viewer" data-lightbox-dialog data-photos={JSON.stringify(full.map((f) => f.src))}>
+    <div class="lightbox__stage" data-lightbox-stage></div>
+    <p class="lightbox__count" data-lightbox-count aria-live="polite"></p>
+    <button class="lightbox__btn lightbox__close" data-lightbox-close aria-label="Close photo viewer"><Icon name="x" /></button>
+    <button class="lightbox__btn lightbox__prev" data-lightbox-prev aria-label="Previous photo"><Icon name="chevron-left" /></button>
+    <button class="lightbox__btn lightbox__next" data-lightbox-next aria-label="Next photo"><Icon name="chevron-right" /></button>
+  </dialog>
 </BaseLayout>

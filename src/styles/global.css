@@ -798,3 +798,54 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .video-embed--tiktok { aspect-ratio: 9 / 16; max-width: 340px; width: 100%; margin-inline: auto; background: #000; }
 .video-embed--tiktok iframe { width: 100%; height: 100%; border: 0; display: block; }
 .video-embed--link { display: grid; place-items: center; aspect-ratio: auto; padding: 28px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #111 0%, #25f4ee33 50%, #fe2c5533 100%), #111; }
+
+/* ---------------- Property detail: all photos, photo viewer, sold / rented ---------------- */
+.badge--closed { background: #5b5b5b; color: #fff; }
+.closed-note { display: grid; gap: 14px; align-items: center; margin: 0 0 24px; padding: 18px 20px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--surface); }
+.closed-note > svg { width: 26px; height: 26px; color: var(--brand-primary); }
+.closed-note p { color: var(--text-muted); margin-top: 4px; }
+@media (min-width: 768px) { .closed-note { grid-template-columns: auto 1fr auto; } }
+.gallery a.gallery__item { display: block; cursor: zoom-in; }
+.gallery__more { position: absolute; inset: auto 12px 12px auto; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-full); background: rgb(13 13 13 / 0.78); color: #fff; font-size: 0.85rem; font-weight: 700; backdrop-filter: blur(6px); }
+.gallery__more svg { width: 16px; height: 16px; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.photo-grid a { display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--radius); cursor: zoom-in; background: var(--surface-2); }
+.photo-grid img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease-out); }
+.photo-grid a:hover img { transform: scale(1.06); }
+.aside-contact { display: grid; gap: 10px; margin: 18px 0 0; padding: 16px 0 0; border-top: 1px solid var(--border); list-style: none; font-size: 0.9rem; color: var(--text-muted); }
+.aside-contact li { display: flex; gap: 10px; align-items: flex-start; }
+.aside-contact svg { flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--brand-primary); }
+.section-head > .link-arrow { margin-top: 10px; }
+.lightbox { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: rgb(8 8 8 / 0.94); color: #fff; }
+.lightbox[open] { display: grid; place-items: center; }
+.lightbox::backdrop { background: rgb(0 0 0 / 0.6); }
+.lightbox__stage img { max-width: min(94vw, 1600px); max-height: 84dvh; object-fit: contain; border-radius: 8px; user-select: none; }
+.lightbox__count { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-weight: 700; font-size: 0.9rem; opacity: 0.85; }
+.lightbox__btn { position: absolute; display: grid; place-items: center; width: 48px; height: 48px; border: 0; border-radius: 50%; background: rgb(255 255 255 / 0.12); color: #fff; cursor: pointer; transition: background 0.2s; }
+.lightbox__btn:hover, .lightbox__btn:focus-visible { background: rgb(255 255 255 / 0.26); }
+.lightbox__btn svg { width: 24px; height: 24px; }
+.lightbox__close { top: 12px; right: 12px; }
+.lightbox__prev { left: 12px; top: 50%; transform: translateY(-50%); }
+.lightbox__next { right: 12px; top: 50%; transform: translateY(-50%); }
+@media (max-width: 640px) { .lightbox__prev, .lightbox__next { top: auto; bottom: 18px; transform: none; } .lightbox__prev { left: calc(50% - 60px); } .lightbox__next { right: calc(50% - 60px); } }
+
+/* Guide FAQs */
+.article-faqs { margin-top: 8px; }
+
+/* Area pages: live listing summary, checks + guides */
+.area-now { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding: 0; list-style: none; }
+.area-now li { padding: 7px 14px; border-radius: var(--radius-full); background: var(--surface); border: 1px solid var(--border); font-size: 0.9rem; color: var(--text-muted); }
+.area-now strong { color: var(--text); }
+.split--top { align-items: start; gap: 24px; }
+a.tag:hover { background: var(--brand-primary); color: #fff; }
+.lightbox__stage { display: grid; place-items: center; }
+
+/* ---------- Performance on phones & tablets ----------
+   Never-ending decorative animations (blurred blobs, shimmering gradient text, floating glass cards,
+   slow zoom, spinning ring) repaint on every frame and keep slower phones busy. On smaller screens
+   they are shown still — the design stays the same. One-off entrance animations are kept. */
+.blob, .cta__orb { will-change: transform; }
+@media (max-width: 1023px) {
+  .blob, .cta__orb, .hero__ring, .float-card, .img-stack__badge, .hero__img-main img, .gradient-text { animation: none; }
+  .js .hero h1 .word.gradient-text { animation: word-in 0.9s var(--ease-out) forwards; animation-delay: calc(var(--i) * 0.08s + 0.15s); }
+}

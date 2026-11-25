@@ -16,7 +16,9 @@ export interface SEOProps {
   schema?: Record<string, unknown>[];
 }
 
-const { title, description = SITE.description, image = defaultOg, noindex = false, type = 'website', schema = [] } = Astro.props as SEOProps;
+const { title, description: rawDescription = SITE.description, image = defaultOg, noindex = false, type = 'website', schema = [] } = Astro.props as SEOProps;
+// Google shows ~155–160 characters of the description — cut long ones at a word boundary
+const description = rawDescription.length > 160 ? `${rawDescription.slice(0, 157).replace(/[\s,;:—–-]+\S*$/, '')}…` : rawDescription;
 
 const site = Astro.site ?? new URL(SITE.url);
 const canonical = new URL(Astro.url.pathname, site).href;

@@ -7,6 +7,17 @@
    also be changed in the admin panel → Settings.)
    ========================================================================== */
 
+/* Values that can also be set in Vercel → Project → Settings → Environment Variables
+   (no code change needed — just redeploy):
+     PUBLIC_SITE_URL                   e.g. https://www.bangashrealestate.com  (when the custom domain is live)
+     PUBLIC_GOOGLE_SITE_VERIFICATION   Google Search Console HTML-tag code
+     PUBLIC_GA4_ID                     Google Analytics 4 measurement ID, e.g. G-XXXXXXXXXX */
+const env = (key: string): string => {
+  const vite = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.[key];
+  const node = typeof process !== 'undefined' ? process.env?.[key] : undefined;
+  return (vite || node || '').trim();
+};
+
 export const SITE = {
   /** Full name exactly as on the Google Business Profile (keep the same for local SEO) */
   name: 'Bangash Real Estate & Builders',
@@ -17,8 +28,9 @@ export const SITE = {
   tagline: 'Your trusted partner in real estate & construction',
   motto: 'Your Trust, Our Commitment.',
 
-  /** Live domain — used for the sitemap, canonical URLs and social previews. */
-  url: 'https://bangashrealestate.vercel.app',
+  /** Live domain — used for the sitemap, canonical URLs, robots.txt and social previews.
+      When the custom domain is ready, set PUBLIC_SITE_URL in Vercel (or change the fallback here). */
+  url: (env('PUBLIC_SITE_URL') || 'https://bangashrealestate.vercel.app').replace(/\/+$/, ''),
 
   description:
     'Bangash Real Estate & Builders — trusted property dealers and builders in Rawalpindi & Islamabad. Buy, sell or rent houses, flats and plots in Airport Housing Society, Ghauri Town, Bahria Town, DHA and more. Bank loan available on selected properties.',
@@ -48,7 +60,9 @@ export const SITE = {
   mapEmbed:
     'https://maps.google.com/maps?q=Bangash%20real%20estate%20and%20builders%2C%20Airport%20Housing%20Society%20Sector%204%2C%20Rawalpindi&ll=33.5881869,73.1232242&z=17&output=embed',
   /** Google Search Console verification code (only the content="..." value) */
-  googleVerification: '',
+  googleVerification: env('PUBLIC_GOOGLE_SITE_VERIFICATION') || '',
+  /** Google Analytics 4 measurement ID (G-…). Empty = GA4 off. WhatsApp / call / form clicks are sent as events. */
+  ga4Id: env('PUBLIC_GA4_ID') || '',
   /** Google rating */
   googleRating: 4.9,
   hours: 'Open daily: 9:00 AM – 10:00 PM',
@@ -64,10 +78,10 @@ export const SITE = {
 
   // ---------------- STATS (defaults — can be changed in admin → Settings) ----------------
   stats: [
-    { value: 12, suffix: '+', label: 'Years of Experience' },
-    { value: 1500, suffix: '+', label: 'Properties Sold & Rented' },
-    { value: 900, suffix: '+', label: 'Happy Families' },
-    { value: 60, suffix: '+', label: 'Homes & Projects Built' },
+    { value: 4, suffix: '+', label: 'Years of Experience' },
+    { value: 70, suffix: '+', label: 'Properties Sold & Rented' },
+    { value: 70, suffix: '+', label: 'Happy Families' },
+    { value: 10, suffix: '+', label: 'Homes & Projects Built' },
   ],
 } as const;
 

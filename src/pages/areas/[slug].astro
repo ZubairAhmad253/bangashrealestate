@@ -6,8 +6,9 @@ import PropertyCard from '../../components/PropertyCard.astro';
 import Icon from '../../components/Icon.astro';
 import FAQ from '../../components/FAQ.astro';
 import CTA from '../../components/CTA.astro';
-import { AREAS, type Area } from '../../data/areas';
-import { propertiesInArea } from '../../data/properties';
+import { getCollection } from 'astro:content';
+import { AREAS, AREA_GUIDES, type Area } from '../../data/areas';
+import { propertiesInArea, formatPrice, typeLabel } from '../../data/properties';
 import { SERVICES } from '../../data/services';
 import { MESSAGES, whatsappLink } from '../../config/site';
 
@@ -20,16 +21,42 @@ const listings = propertiesInArea(a.slug);
 const cityLabel = a.city === 'Rawalpindi / Islamabad' ? 'Rawalpindi & Islamabad' : a.city;
 // Don't repeat the city when the area name already contains it (e.g. "DHA Islamabad–Rawalpindi")
 const place = /rawalpindi|islamabad/i.test(a.name) ? a.name : `${a.name}, ${cityLabel}`;
-const faqs = [
-  { q: `Do you have houses for sale in ${a.name}?`, a: `Yes. We regularly have houses, portions and plots in ${a.name}. Many deals are not listed online, so message us on WhatsApp with your budget and size for the latest options.` },
-  { q: `Can I rent a house or flat in ${a.name} through you?`, a: `Yes. We deal in rentals in ${a.name} for families and professionals, including tenant verification and rental agreements.` },
-  { q: `Can you build a house on my plot in ${a.name}?`, a: `Absolutely. Our construction team builds houses and flats in ${a.name} — grey structure or complete turnkey — with transparent costing.` },
-];
+const info = AREA_GUIDES[a.slug] ?? { faqs: [], checks: [] };
+
+/* "Available right now" — built only from the real listings in the database */
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const byType = (['house', 'flat', 'plot'] as const)
+  .map((t) => ({ t, n: listings.filter((p) => p.type === t).length }))
+  .filter((x) => x.n > 0);
+const lowest = (purpose: 'sale' | 'rent') => {
+  const prices = listings.filter((p) => p.purpose === purpose && p.showPrice !== false && p.price > 0).map((p) => p.price);
+  return prices.length ? Math.min(...prices) : null;
+};
+const saleFrom = lowest('sale');
+const rentFrom = lowest('rent');
+const forSale = listings.filter((p) => p.purpose === 'sale').length;
+const forRent = listings.length - forSale;
+const nowText = listings.length
+  ? `We currently have ${plural(listings.length, 'listing')} in ${a.name}: ${byType.map((x) => plural(x.n, typeLabel[x.t].toLowerCase())).join(', ')}` +
+    ` (${[forSale && `${forSale} for sale`, forRent && `${forRent} for rent`].filter(Boolean).join(', ')}).` +
+    (saleFrom ? ` Sale prices on the website start from PKR ${formatPrice(saleFrom)}.` : '') +
+    (rentFrom ? ` Rents start from PKR ${formatPrice(rentFrom)} a month.` : '') +
+    ' Many deals are never listed online, so message us for anything you don’t see here.'
+  : `We have no listings in ${a.name} on the website right now. Many deals are never listed online — send us your requirement on WhatsApp and we will tell you what is available.`;
+const faqs = [{ q: `What property is available in ${a.name} right now?`, a: nowText }, ...info.faqs];
+
+const allGuides = await getCollection('guides');
+const guides = (info.guides ?? []).map((slug) => allGuides.find((g) => g.id === slug)).filter((g) => g !== undefined);
+const nearby = AREAS.filter((x) => x.slug !== a.slug && (x.city === a.city || x.city.includes(a.city.split(' /')[0]) || a.city.includes(x.city.split(' /')[0]))).slice(0, 5);
+
+const description = listings.length
+  ? `${listings.length} ${listings.length === 1 ? 'property' : 'properties'} available in ${place} — ${byType.map((x) => typeLabel[x.t].toLowerCase() + 's').join(', ')}. Photos, prices and local advice from Bangash Real Estate.`
+  : `Houses, plots and flats in ${place}: local advice, what to check before buying, and help finding the right property from Bangash Real Estate.`;
 ---
 
 <BaseLayout
-  title={`Property in ${place} — Houses, Plots & Flats`}
-  description={`Buy, sell or rent houses, plots & flats in ${place}. Verified listings, fair prices and construction services by Bangash Real Estate.`}
+  title={`Property in ${place}${place.length > 30 ? '' : ' — Houses, Plots & Flats'}`}
+  description={description}
   image={a.image}
 >
   <PageHero
@@ -64,6 +91,15 @@ const faqs = [
     <div class="container">
       <div class="section-head">
         <h2 data-reveal="up">Listings in <span class="gradient-text">{a.name}</span></h2>
+        {listings.length > 0 && (
+          <ul class="area-now" role="list" data-reveal="up">
+            {byType.map((x) => <li><strong>{x.n}</strong> {typeLabel[x.t]}{x.n === 1 ? '' : 's'}</li>)}
+            {forSale > 0 && <li><strong>{forSale}</strong> for sale</li>}
+            {forRent > 0 && <li><strong>{forRent}</strong> for rent</li>}
+            {saleFrom && <li>Sale from <strong>PKR {formatPrice(saleFrom)}</strong></li>}
+            {rentFrom && <li>Rent from <strong>PKR {formatPrice(rentFrom)}</strong>/month</li>}
+          </ul>
+        )}
       </div>
       {listings.length > 0 ? (
         <div class="grid grid-3">{listings.map((p, i) => <PropertyCard property={p} delay={(i % 3) * 0.08} />)}</div>
@@ -91,7 +127,34 @@ const faqs = [
     </div>
   </section>
 
-  <section class="section section--white">
+  {(info.checks.length > 0 || guides.length > 0) && (
+    <section class="section section--white">
+      <div class="container split split--top">
+        {info.checks.length > 0 && (
+          <div class="detail-card">
+            <h2>Before you buy or rent in {a.name}</h2>
+            <p class="muted" style="margin-bottom:14px">What we check with every client in {a.name}:</p>
+            <ul class="check-list" role="list" style="padding:0">{info.checks.map((c) => <li>{c}</li>)}</ul>
+          </div>
+        )}
+        <div class="detail-card">
+          <h2>Helpful guides</h2>
+          <ul class="related-guides" role="list">
+            {guides.map((g) => <li><a href={`/guides/${g.id}/`}><span>{g.data.title}</span><Icon name="arrow-right" /></a></li>)}
+            <li><a href="/tools/marla-calculator/"><span>Marla calculator — marla, kanal &amp; square feet</span><Icon name="arrow-right" /></a></li>
+          </ul>
+          {nearby.length > 0 && (
+            <>
+              <h3 style="margin-top:22px;font-size:1.05rem">Nearby areas we cover</h3>
+              <div class="service-card__tags" style="margin-top:10px">{nearby.map((x) => <a class="tag" href={`/areas/${x.slug}/`}>{x.name}</a>)}</div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section">
     <div class="container">
       <div class="section-head section-head--center"><h2 data-reveal="up">{a.name} <span class="gradient-text">FAQs</span></h2></div>
       <FAQ faqs={faqs} />

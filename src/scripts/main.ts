@@ -259,6 +259,7 @@ if (contactForm) {
       if (label) label.textContent = 'Sending…';
     }
     await saveLead('website');
+    track('generate_lead', { method: 'contact_form', interest: String(new FormData(contactForm).get('interest') ?? '') });
     HTMLFormElement.prototype.submit.call(contactForm);
   });
   // "Send via WhatsApp" — no email needed, only name + phone
@@ -268,6 +269,7 @@ if (contactForm) {
     const wa = contactForm.dataset.whatsapp!;
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(build())}`, '_blank', 'noopener');
     showToast(WA_TOAST);
+    track('generate_lead', { method: 'contact_form_whatsapp', interest: String(new FormData(contactForm).get('interest') ?? '') });
     void saveLead('whatsapp');
   });
 }
@@ -294,3 +296,64 @@ document.addEventListener('click', (e) => {
   const link = (e.target as Element).closest?.('a[href^="https://wa.me/"]');
   if (link) showToast(WA_TOAST);
 });
+
+/* ---------- Conversion tracking (Google Analytics 4 — only when a GA4 ID is set in site.ts) ---------- */
+type Gtag = (cmd: 'event', name: string, params?: Record<string, unknown>) => void;
+function track(name: string, params: Record<string, unknown> = {}) {
+  const gtag = (window as unknown as { gtag?: Gtag }).gtag;
+  gtag?.('event', name, { page_path: location.pathname, ...params });
+}
+document.addEventListener('click', (e) => {
+  const a = (e.target as Element).closest?.<HTMLAnchorElement>('a[href]');
+  if (!a) return;
+  const href = a.getAttribute('href') ?? '';
+  if (href.startsWith('https://wa.me/')) track('whatsapp_click', { link_text: a.textContent?.trim().slice(0, 60) });
+  else if (href.startsWith('tel:')) track('phone_click', { link_text: a.textContent?.trim().slice(0, 60) });
+  else if (href.startsWith('mailto:')) track('email_click');
+  else if (a.hostname && a.hostname !== location.hostname && /google\.|goo\.gl/.test(a.hostname)) track('google_maps_click');
+});
+
+/* ---------- Property photo viewer (tap a photo → full screen, swipe / arrow keys) ---------- */
+const viewer = $<HTMLDialogElement>('[data-lightbox-dialog]');
+if (viewer && typeof viewer.showModal === 'function') {
+  const photos: string[] = JSON.parse(viewer.dataset.photos ?? '[]');
+  // The <img> is added on first open, so the page never contains an image without a source
+  const img = document.createElement('img');
+  img.dataset.lightboxImg = '';
+  img.decoding = 'async';
+  const count = $('[data-lightbox-count]', viewer)!;
+  const title = document.querySelector('h1')?.textContent?.trim() ?? 'Property';
+  let index = 0;
+  const show = (i: number) => {
+    index = (i + photos.length) % photos.length;
+    img.src = photos[index];
+    img.alt = `${title} — photo ${index + 1} of ${photos.length}`;
+    if (!img.isConnected) $('[data-lightbox-stage]', viewer)!.append(img);
+    count.textContent = `${index + 1} / ${photos.length}`;
+    // Warm up the next photo so swiping feels instant
+    const next = new Image();
+    next.src = photos[(index + 1) % photos.length];
+  };
+  document.querySelectorAll<HTMLAnchorElement>('[data-lightbox] a[data-lightbox-index]').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      show(Number(a.dataset.lightboxIndex));
+      viewer.showModal();
+      track('view_photos', { photo: index + 1 });
+    }),
+  );
+  $('[data-lightbox-close]', viewer)?.addEventListener('click', () => viewer.close());
+  $('[data-lightbox-prev]', viewer)?.addEventListener('click', () => show(index - 1));
+  $('[data-lightbox-next]', viewer)?.addEventListener('click', () => show(index + 1));
+  viewer.addEventListener('click', (e) => { if (e.target === viewer) viewer.close(); });
+  viewer.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') show(index - 1);
+    if (e.key === 'ArrowRight') show(index + 1);
+  });
+  let startX = 0;
+  viewer.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+  viewer.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 45) show(index + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+}
