@@ -184,8 +184,11 @@ function Shell({ me }: { me: Admin }) {
       .then(({ count, error }) => setUnread(error ? 0 : count ?? 0));
   };
   const markSeen = () => {
-    seenAt.current = new Date().toISOString();
     setUnread(0);
+    // Use the server time of the newest item, not this device's clock:
+    // a phone or PC clock that runs a few minutes fast would otherwise hide new notifications
+    sb.from('activity').select('created_at').order('created_at', { ascending: false }).limit(1)
+      .then(({ data }) => { const latest = (data as { created_at: string }[] | null)?.[0]?.created_at; if (latest) seenAt.current = latest; }, () => {});
     sb.rpc('mark_activity_seen').then(() => {}, () => {}); // the request only runs once awaited
   };
   // Show the unread count in the browser tab and on the installed app icon
@@ -196,8 +199,16 @@ function Shell({ me }: { me: Admin }) {
   }, [unread]);
   useEffect(() => {
     refreshCounts();
-    const t = setInterval(refreshCounts, 60_000);
-    return () => clearInterval(t);
+    const t = setInterval(refreshCounts, 30_000);
+    // Check right away when the app or tab is opened again (phones pause timers in the background)
+    const onShow = () => { if (document.visibilityState === 'visible') refreshCounts(); };
+    document.addEventListener('visibilitychange', onShow);
+    window.addEventListener('focus', onShow);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener('visibilitychange', onShow);
+      window.removeEventListener('focus', onShow);
+    };
   }, []);
   useEffect(() => setMoreOpen(false), [route]);
 
