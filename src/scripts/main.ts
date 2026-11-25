@@ -2,15 +2,37 @@
    BANGASH REAL ESTATE — Interactions & animations (tiny, no libraries)
    ========================================================================== */
 
+import { prefetch } from 'astro:prefetch';
+
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => Array.from(root.querySelectorAll<T>(sel));
 
-/* ---------- Sticky header ---------- */
+/* ---------- Phones: start loading the next page as soon as a finger touches its link ----------
+   (~150 ms before the tap completes — with the page cached at the CDN it is often ready by then) */
+document.addEventListener(
+  'touchstart',
+  (e) => {
+    const a = (e.target as Element).closest?.<HTMLAnchorElement>('a[href]');
+    if (!a || a.origin !== location.origin || a.target === '_blank' || a.hasAttribute('download') || a.pathname.startsWith('/admin')) return;
+    if (a.pathname === location.pathname) return;
+    prefetch(a.href, { ignoreSlowConnection: true });
+  },
+  { passive: true },
+);
+
+/* ---------- Sticky header ----------
+   A tiny invisible marker sits at the very top of the page; once it has scrolled out of view the
+   header turns solid. No scroll listener and no layout reads (reading scrollY at start-up would
+   force the browser to lay out the whole page early). */
 const header = $('[data-header]');
-const onScroll = () => header?.classList.toggle('is-scrolled', window.scrollY > 12);
-onScroll();
-window.addEventListener('scroll', onScroll, { passive: true });
+if (header) {
+  const marker = document.createElement('div');
+  marker.setAttribute('aria-hidden', 'true');
+  marker.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:12px;pointer-events:none;visibility:hidden';
+  document.body.prepend(marker);
+  new IntersectionObserver(([entry]) => header.classList.toggle('is-scrolled', !entry.isIntersecting)).observe(marker);
+}
 
 /* ---------- Mobile drawer ---------- */
 const drawer = $('[data-drawer]');
@@ -26,37 +48,25 @@ openBtn?.addEventListener('click', () => setDrawer(true));
 $$('[data-menu-close]').forEach((el) => el.addEventListener('click', () => setDrawer(false)));
 document.addEventListener('keydown', (e) => e.key === 'Escape' && setDrawer(false));
 
-/* ---------- Reveal on scroll ---------- */
-const revealEls = $$('[data-reveal]');
+/* ---------- Reveal on scroll ----------
+   The top of each page animates with CSS alone (see global.css); everything further down is
+   revealed by an IntersectionObserver — it never reads the layout, so scrolling stays smooth. */
+const revealEls = $$('[data-reveal]').filter((el) => !el.closest('.hero, .page-hero'));
 if (reduceMotion || !('IntersectionObserver' in window)) {
   revealEls.forEach((el) => el.classList.add('is-visible'));
 } else {
-  const pending = new Set(revealEls);
   const show = (el: Element) => {
     el.classList.add('is-visible');
-    pending.delete(el as HTMLElement);
     io.unobserve(el);
   };
+  // The watched area reaches far ABOVE the screen: anything already scrolled past (a fast fling,
+  // an anchor jump, or a section that was only drawn after it passed) counts as seen and is shown.
+  // Below the screen it ends just above the bottom edge, so content still animates in as it arrives.
   const io = new IntersectionObserver(
     (entries) => entries.forEach((entry) => entry.isIntersecting && show(entry.target)),
-    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
+    { threshold: 0.1, rootMargin: '100000px 0px -6% 0px' },
   );
   revealEls.forEach((el) => io.observe(el));
-
-  // Fallback: on a fast fling or an anchor jump the observer can miss elements —
-  // reveal anything that has already passed the bottom edge of the screen.
-  let ticking = false;
-  const sweep = () => {
-    ticking = false;
-    const limit = window.innerHeight;
-    pending.forEach((el) => el.getBoundingClientRect().top < limit && show(el));
-    if (!pending.size) window.removeEventListener('scroll', onRevealScroll);
-  };
-  const onRevealScroll = () => {
-    if (!ticking) { ticking = true; requestAnimationFrame(sweep); }
-  };
-  window.addEventListener('scroll', onRevealScroll, { passive: true });
-  window.addEventListener('load', sweep);
 }
 
 /* ---------- Animated counters ---------- */
@@ -94,28 +104,45 @@ if (counters.length) {
 
 /* ---------- 3D tilt (desktop only) ---------- */
 if (!reduceMotion && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  // The box is measured once when the pointer enters (not on every move) and the style is
+  // written at most once per frame — no forced layouts while the mouse moves.
   $$('[data-tilt]').forEach((el) => {
     const max = Number(el.dataset.tilt) || 6;
+    let rect: DOMRect | null = null;
+    let frame = 0;
+    let px = 0, py = 0;
+    el.addEventListener('pointerenter', () => { rect = el.getBoundingClientRect(); });
     el.addEventListener('pointermove', (e) => {
-      const r = el.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5;
-      const y = (e.clientY - r.top) / r.height - 0.5;
-      el.style.transform = `perspective(1000px) rotateY(${x * max}deg) rotateX(${-y * max}deg)`;
+      px = e.clientX; py = e.clientY;
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const r = rect ?? (rect = el.getBoundingClientRect());
+        const x = (px - r.left) / r.width - 0.5;
+        const y = (py - r.top) / r.height - 0.5;
+        el.style.transform = `perspective(1000px) rotateY(${x * max}deg) rotateX(${-y * max}deg)`;
+      });
     });
-    el.addEventListener('pointerleave', () => (el.style.transform = ''));
+    el.addEventListener('pointerleave', () => { rect = null; cancelAnimationFrame(frame); frame = 0; el.style.transform = ''; });
   });
 
   /* Parallax on hero visual */
   const parallax = $$('[data-parallax]');
   if (parallax.length) {
+    let frame = 0;
+    let mx = 0, my = 0;
     window.addEventListener(
       'pointermove',
       (e) => {
-        const x = e.clientX / window.innerWidth - 0.5;
-        const y = e.clientY / window.innerHeight - 0.5;
-        parallax.forEach((el) => {
-          const depth = Number(el.dataset.parallax) || 10;
-          el.style.translate = `${x * depth}px ${y * depth}px`;
+        mx = e.clientX / window.innerWidth - 0.5;
+        my = e.clientY / window.innerHeight - 0.5;
+        if (frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          parallax.forEach((el) => {
+            const depth = Number(el.dataset.parallax) || 10;
+            el.style.translate = `${mx * depth}px ${my * depth}px`;
+          });
         });
       },
       { passive: true },

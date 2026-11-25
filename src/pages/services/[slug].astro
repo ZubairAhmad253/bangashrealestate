@@ -44,7 +44,7 @@ const schema = {
     <div class="container split">
       <div class="img-stack" data-reveal="right">
         <div class="img-stack__main" data-tilt="4">
-          <Image src={s.image} alt={s.h1} widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" loading="eager" />
+          <Image src={s.image} alt={s.h1} widths={[400, 600, 800, 1100]} sizes="(max-width: 1023px) 80vw, 520px" loading="eager" />
         </div>
       </div>
       <div>
@@ -83,7 +83,7 @@ const schema = {
         <div class="grid grid-3">
           {PROJECTS.slice(0, 3).map((p, i) => (
             <a href={`/projects/${p.slug}/`} class="area-tile" data-reveal="up" style={`--d:${i * 0.08}s`}>
-              <Img src={p.images[0]} alt={`${p.title} — ${categoryLabel[p.category]}`} widths={[400, 700]} sizes="(max-width: 700px) 92vw, 380px" />
+              <Img src={p.images[0]} alt={`${p.title} — ${categoryLabel[p.category]}`} widths={[360, 540, 720]} sizes="(max-width: 700px) calc(100vw - 32px), 380px" />
               <span class="area-tile__city">{categoryLabel[p.category]}</span>
               <h3>{p.title}</h3>
               <span class="area-tile__meta"><span>{p.location}</span><span class="area-tile__go"><Icon name="arrow-up-right" /></span></span>

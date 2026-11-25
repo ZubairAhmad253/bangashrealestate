@@ -22,11 +22,11 @@ import { propertiesInArea } from '../../data/properties';
     <div class="container area-grid">
       {AREAS.map((a, i) => (
         <a href={`/areas/${a.slug}/`} class="area-tile" data-reveal="up" style={`--d:${(i % 4) * 0.08}s`}>
-          <Image src={a.image} alt={`Houses and plots in ${a.name}, ${a.city}`} widths={[400, 700]} sizes="(max-width: 700px) 92vw, 320px" />
+          <Image src={a.image} alt={`Houses and plots in ${a.name}, ${a.city}`} widths={[360, 540, 720]} sizes="(max-width: 700px) calc(100vw - 32px), 320px" />
           <span class="area-tile__city">{a.city}</span>
           <h2 style="font-size:1.35rem;margin-top:4px">{a.name}</h2>
           <span class="area-tile__meta">
-            <span>{propertiesInArea(a.slug).length || 'New'} listings</span>
+            <span>{(() => { const n = propertiesInArea(a.slug).length; return n === 0 ? 'Ask for listings' : `${n} listing${n === 1 ? '' : 's'}`; })()}</span>
             <span class="area-tile__go"><Icon name="arrow-up-right" /></span>
           </span>
         </a>

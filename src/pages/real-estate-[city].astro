@@ -35,7 +35,7 @@ const other = CITIES.find((x) => x.slug !== c.slug)!;
     <div class="container split">
       <div class="img-stack" data-reveal="right">
         <div class="img-stack__main" data-tilt="4">
-          <Image src={c.image} alt={`Real estate in ${c.name} — houses and property by Bangash Real Estate`} widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" loading="eager" />
+          <Image src={c.image} alt={`Real estate in ${c.name} — houses and property by Bangash Real Estate`} widths={[400, 600, 800, 1100]} sizes="(max-width: 1023px) 80vw, 520px" loading="eager" />
         </div>
       </div>
       <div class="prose">
@@ -57,7 +57,7 @@ const other = CITIES.find((x) => x.slug !== c.slug)!;
       <div class="area-grid">
         {areas.map((a, i) => (
           <a href={`/areas/${a.slug}/`} class="area-tile" data-reveal="up" style={`--d:${(i % 4) * 0.08}s`}>
-            <Image src={a.image} alt={`Property in ${a.name}, ${c.name}`} widths={[400, 700]} sizes="(max-width: 700px) 92vw, 320px" />
+            <Image src={a.image} alt={`Property in ${a.name}, ${c.name}`} widths={[360, 540, 720]} sizes="(max-width: 700px) calc(100vw - 32px), 320px" />
             <span class="area-tile__city">{a.city}</span>
             <h3>{a.name}</h3>
             <span class="area-tile__meta"><span>View area</span><span class="area-tile__go"><Icon name="arrow-up-right" /></span></span>

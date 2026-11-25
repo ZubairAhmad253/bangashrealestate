@@ -23,7 +23,7 @@ import { SERVICES } from '../../data/services';
       {SERVICES.map((s, i) => (
         <a href={`/services/${s.slug}/`} class="property-card" data-reveal="up" style={`--d:${(i % 2) * 0.1}s`}>
           <div class="property-card__media" style="aspect-ratio:16/9">
-            <Image src={s.image} alt={s.h1} widths={[500, 800, 1100]} sizes="(max-width: 900px) 92vw, 600px" />
+            <Image src={s.image} alt={s.h1} widths={[400, 600, 800, 1100]} sizes="(max-width: 900px) calc(100vw - 32px), 600px" />
           </div>
           <div class="property-card__body" style="padding:24px 28px 28px">
             <span class="service-card__icon" style="margin-top:-56px;position:relative;z-index:1;background:var(--gradient-brand);color:#fff;box-shadow:var(--shadow-brand)"><Icon name={s.icon} /></span>

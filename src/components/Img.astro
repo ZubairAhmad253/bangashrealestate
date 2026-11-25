@@ -1,7 +1,10 @@
 ---
 /* One component for both local photos (ImageMetadata) and Supabase photos (URL string).
-   Remote photos are optimized at build time too (WebP, correct sizes). */
-import { Image } from 'astro:assets';
+   Remote photos are optimized at build time too (WebP, correct sizes).
+   The plain `src` fallback is made at the largest listed width — not at the original size
+   (phone photos are 12 megapixels; browsers use the srcset anyway, so a full-size copy would
+   only slow down every website build). */
+import { Image, inferRemoteSize } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
 interface Props {
@@ -13,7 +16,15 @@ interface Props {
   fetchpriority?: 'high' | 'low' | 'auto';
   class?: string;
 }
-const { src, ...rest } = Astro.props;
+const { src, widths, ...rest } = Astro.props;
+const largest = widths?.length ? Math.max(...widths) : undefined;
+
+// Original size → fallback size with the same shape (never larger than the original)
+const original = typeof src === 'string' ? await inferRemoteSize(src) : src;
+const width = largest ? Math.min(largest, original.width) : original.width;
+const height = Math.round((width * original.height) / original.width);
 ---
 
-{typeof src === 'string' ? <Image src={src} inferSize quality={72} {...rest} /> : <Image src={src} quality={74} {...rest} />}
+{typeof src === 'string'
+  ? <Image src={src} width={width} height={height} quality={72} widths={widths} {...rest} />
+  : <Image src={src} width={width} height={height} quality={74} widths={widths} {...rest} />}

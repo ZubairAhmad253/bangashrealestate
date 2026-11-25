@@ -37,6 +37,10 @@ export const HOME_FAQS = [
     a: 'Yes — bank loan facility is available on selected properties. Share your budget and we will guide you on eligible properties and the bank process.',
   },
   {
+    q: 'What documents should I check before buying a property?',
+    a: 'Check the ownership papers (registry, transfer letter or society allotment), confirm the seller’s identity, make sure there are no pending dues, and verify the society’s approval with the relevant authority. Our property documents checklist in the Guides section explains each step — and we check all of this with you before any token is paid.',
+  },
+  {
     q: 'Do you charge buyers a commission?',
     a: 'Our commission is standard and always discussed upfront — no hidden charges. Contact us for details on your specific deal.',
   },

@@ -1,10 +1,13 @@
 ---
 /* Video tour
-   • TikTok   → vertical TikTok player, lazy-loaded when scrolled into view
+   • TikTok   → the listing photo with a play button; TikTok's (heavy) player only loads when tapped
    • YouTube  → lightweight thumbnail; the player only loads when clicked (keeps pages fast)
    • Uploaded → native <video> player */
-interface Props { url: string; title: string }
-const { url, title } = Astro.props;
+import type { ImageMetadata } from 'astro';
+import Img from './Img.astro';
+
+interface Props { url: string; title: string; poster?: ImageMetadata | string }
+const { url, title, poster } = Astro.props;
 
 const tiktok = url.match(/tiktok\.com\/(?:@[\w.-]+\/video|player\/v1|embed(?:\/v2)?|video)\/(\d{8,25})/i)?.[1];
 const yt = tiktok ? undefined : url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/i)?.[1];
@@ -15,15 +18,16 @@ const tiktokHref = tiktokUser && !/^\d+$/.test(tiktokUser) ? `https://www.tiktok
 ---
 
 {tiktok ? (
-  <div class="video-embed video-embed--tiktok">
-    <iframe
-      src={`https://www.tiktok.com/player/v1/${tiktok}?music_info=0&description=0&rel=0`}
-      title={title}
-      loading="lazy"
-      allow="encrypted-media; fullscreen; picture-in-picture"
-      allowfullscreen
-    ></iframe>
-  </div>
+  <button type="button" class="video-embed video-embed--tiktok video-embed--facade" data-tt={tiktok} aria-label={`Play video: ${title}`}>
+    {poster && <Img src={poster} alt="" widths={[360, 540]} sizes="(max-width: 700px) 80vw, 340px" loading="lazy" />}
+    <span class="video-embed__play" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l10.98-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14z" /></svg>
+    </span>
+    <span class="video-embed__label">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" /></svg>
+      Play video tour
+    </span>
+  </button>
 ) : yt ? (
   <button type="button" class="video-embed video-embed--yt" data-yt={yt} aria-label={`Play video: ${title}`}>
     <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt={title} loading="lazy" width="480" height="360" />
@@ -38,6 +42,7 @@ const tiktokHref = tiktokUser && !/^\d+$/.test(tiktokUser) ? `https://www.tiktok
 )}
 
 <script>
+  // Players load only when the visitor asks for them — the page itself stays light and fast
   document.querySelectorAll<HTMLButtonElement>('[data-yt]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const iframe = document.createElement('iframe');
@@ -47,6 +52,19 @@ const tiktokHref = tiktokUser && !/^\d+$/.test(tiktokUser) ? `https://www.tiktok
       iframe.allowFullscreen = true;
       iframe.className = 'video-embed';
       btn.replaceWith(iframe);
+    }, { once: true });
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-tt]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const box = document.createElement('div');
+      box.className = 'video-embed video-embed--tiktok';
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.tiktok.com/player/v1/${btn.dataset.tt}?autoplay=1&music_info=0&description=0&rel=0`;
+      iframe.title = btn.getAttribute('aria-label') ?? 'Video';
+      iframe.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
+      iframe.allowFullscreen = true;
+      box.append(iframe);
+      btn.replaceWith(box);
     }, { once: true });
   });
 </script>

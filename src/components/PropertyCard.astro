@@ -29,8 +29,8 @@ const url = `/properties/${p.slug}/`;
     <Img
       src={p.image}
       alt={`${p.title} ${purposeLabel[p.purpose].toLowerCase()} in ${p.location}`}
-      widths={[400, 640, 900]}
-      sizes="(max-width: 700px) 92vw, (max-width: 1100px) 45vw, 380px"
+      widths={[360, 480, 640, 800]}
+      sizes="(max-width: 700px) calc(100vw - 52px), (max-width: 1100px) calc(50vw - 50px), 380px"
       loading={eager ? 'eager' : 'lazy'}
     />
     <div class="property-card__badges">

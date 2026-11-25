@@ -32,7 +32,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-PK', { day: 'numeric', month: 
       {guides.map((g, i) => (
         <a href={`/guides/${g.id}/`} class="property-card" data-reveal="up" style={`--d:${((i + 1) % 3) * 0.08}s`}>
           <div class="property-card__media" style="aspect-ratio:16/10">
-            <Image src={g.data.image} alt={g.data.imageAlt} widths={[400, 700]} sizes="(max-width: 700px) 92vw, 380px" />
+            <Image src={g.data.image} alt={g.data.imageAlt} widths={[360, 540, 720]} sizes="(max-width: 700px) calc(100vw - 32px), 380px" />
           </div>
           <div class="property-card__body">
             <div class="service-card__tags">{g.data.tags.map((t) => <span class="tag">{t}</span>)}</div>

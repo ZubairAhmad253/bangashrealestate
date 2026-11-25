@@ -60,7 +60,7 @@ const schema = {
 
     <div class="container" style="max-width:900px">
       <div class="gallery__item" style="aspect-ratio:16/8" data-reveal="zoom">
-        <Image src={d.image} alt={d.imageAlt} widths={[640, 960, 1400]} sizes="(max-width: 900px) 92vw, 860px" loading="eager" fetchpriority="high" />
+        <Image src={d.image} alt={d.imageAlt} widths={[400, 600, 800, 1100, 1400]} sizes="(max-width: 900px) calc(100vw - 32px), 860px" loading="eager" fetchpriority="high" />
       </div>
 
       {headings.filter((h) => h.depth === 2).length > 2 && (

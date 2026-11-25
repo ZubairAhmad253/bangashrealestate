@@ -22,6 +22,8 @@ const featured = featuredProperties().slice(0, 6);
 const newest = PROPERTIES[0];
 const newestArea = newest ? getArea(newest.area)?.name ?? newest.location : '';
 const homeAreas = [...AREAS].sort((a, b) => a.priority - b.priority).slice(0, 5);
+// Honest label: the real number of listings, or an invitation when there are none online yet
+const listingLabel = (n: number) => (n === 0 ? 'Ask for listings' : `${n} listing${n === 1 ? '' : 's'}`);
 const [construction, ...sellServices] = SERVICES;
 
 // Hero headline — each word animates in separately
@@ -141,7 +143,7 @@ const headline: { text: string; gradient?: boolean }[] = [
       <div class="bento">
         <a href={`/services/${construction.slug}/`} class="service-card service-card--feature" data-reveal="zoom">
           <div class="service-card__bg">
-            <Image src={construction.image} alt="House construction in progress by Bangash Builders in Rawalpindi" widths={[600, 900, 1200]} sizes="(max-width: 900px) 92vw, 800px" />
+            <Image src={construction.image} alt="House construction in progress by Bangash Builders in Rawalpindi" widths={[400, 600, 800, 1200]} sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) calc(100vw - 32px), 620px" />
           </div>
           <span class="service-card__icon"><Icon name={construction.icon} /></span>
           <div class="service-card__tags">{construction.tags.map((t) => <span class="tag">{t}</span>)}</div>
@@ -177,6 +179,29 @@ const headline: { text: string; gradient?: boolean }[] = [
     </div>
   </section>
 
+  <!-- ================= PROPERTY OWNERS ================= -->
+  <section class="section" style="padding-bottom:0">
+    <div class="container">
+      <div class="owner-band" data-reveal="up">
+        <div>
+          <p class="eyebrow"><span class="eyebrow__dot"><Icon name="key" /></span>For owners</p>
+          <h2>Selling or renting out? <span class="gradient-text">We'll find the right buyer.</span></h2>
+          <p>List your house, flat or plot with Bangash Real Estate. We advise a fair price, show it to genuine buyers and tenants, and take care of the paperwork — so you don't have to.</p>
+          <div class="owner-band__cta">
+            <a href={whatsappLink(MESSAGES.listProperty)} class="btn btn-whatsapp" target="_blank" rel="noopener"><Icon name="whatsapp" /> List my property</a>
+            <a href={`tel:${SITE.phoneLink}`} class="btn btn-outline"><Icon name="phone" /> Call {SITE.phone}</a>
+          </div>
+        </div>
+        <ol class="owner-steps">
+          <li><div><strong>Send us the details</strong><span>Size, location and a few photos on WhatsApp — it takes two minutes.</span></div></li>
+          <li><div><strong>Get a fair price</strong><span>We check the documents and advise a realistic asking price or rent.</span></div></li>
+          <li><div><strong>Meet serious buyers</strong><span>Your property goes on our website and social media and is shown to genuine buyers and tenants.</span></div></li>
+          <li><div><strong>Paperwork handled</strong><span>Token, agreement and transfer — handled end-to-end.</span></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
   <!-- ================= STATS ================= -->
   <section class="section" style="padding-block: clamp(48px, 6vw, 80px)">
     <div class="container">
@@ -207,11 +232,11 @@ const headline: { text: string; gradient?: boolean }[] = [
       <div class="area-grid area-grid--home">
         {homeAreas.map((a, i) => (
           <a href={`/areas/${a.slug}/`} class="area-tile" data-reveal="up" style={`--d:${(i % 4) * 0.08}s`}>
-            <Image src={a.image} alt={`Property in ${a.name}, ${a.city}`} widths={[400, 700, 1000]} sizes={i === 0 ? '(max-width: 1024px) 92vw, 620px' : '(max-width: 1024px) 46vw, 300px'} />
+            <Image src={a.image} alt={`Property in ${a.name}, ${a.city}`} widths={[360, 520, 720, 1000]} sizes={i === 0 ? '(max-width: 699px) 80vw, (max-width: 1024px) 92vw, 620px' : '(max-width: 699px) 80vw, (max-width: 1024px) 46vw, 300px'} />
             <span class="area-tile__city">{a.city}</span>
             <h3>{a.name}</h3>
             <span class="area-tile__meta">
-              <span>{propertiesInArea(a.slug).length || 'New'} listings</span>
+              <span>{listingLabel(propertiesInArea(a.slug).length)}</span>
               <span class="area-tile__go"><Icon name="arrow-up-right" /></span>
             </span>
           </a>
@@ -225,7 +250,7 @@ const headline: { text: string; gradient?: boolean }[] = [
     <div class="container split">
       <div class="img-stack" data-reveal="right">
         <div class="img-stack__main" data-tilt="4">
-          <Image src={construction3} alt="Construction team building a house in Rawalpindi" widths={[500, 800, 1100]} sizes="(max-width: 1024px) 85vw, 520px" />
+          <Image src={construction3} alt="Construction team building a house in Rawalpindi" widths={[400, 600, 800, 1100]} sizes="(max-width: 1023px) 80vw, 520px" />
         </div>
         <div class="img-stack__sub">
           <Image src={construction1} alt="Architect reviewing house plans for a construction project" widths={[300, 500]} sizes="280px" />

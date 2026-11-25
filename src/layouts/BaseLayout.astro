@@ -1,6 +1,9 @@
 ---
 import '@fontsource-variable/plus-jakarta-sans';
 import '@fontsource-variable/outfit';
+// The two fonts used on the first screen are requested straight away (no layout jump when they arrive)
+import headingFont from '@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2?url';
+import bodyFont from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url';
 import '../styles/global.css';
 import SEO, { type SEOProps } from '../components/SEO.astro';
 import Header from '../components/Header.astro';
@@ -31,6 +34,8 @@ const analytics = Boolean(process.env.VERCEL);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content={themeColor} />
     <meta name="format-detection" content="telephone=no" />
+    <link rel="preload" href={headingFont} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={bodyFont} as="font" type="font/woff2" crossorigin />
     <link rel="icon" href={favicon.src} type="image/png" sizes="64x64" />
     <link rel="apple-touch-icon" href={touchIcon.src} />
     <link rel="sitemap" href="/sitemap-index.xml" />

@@ -7,10 +7,10 @@
 
 /* ---------- Native smooth page transitions (zero JavaScript) ---------- */
 @view-transition { navigation: auto; }
-::view-transition-old(root) { animation: vt-out 0.25s var(--ease-out) both; }
-::view-transition-new(root) { animation: vt-in 0.4s var(--ease-out) both; }
-@keyframes vt-out { to { opacity: 0; transform: translateY(-8px); } }
-@keyframes vt-in { from { opacity: 0; transform: translateY(12px); } }
+::view-transition-old(root) { animation: vt-out 0.2s cubic-bezier(0.4, 0, 1, 1) both; }
+::view-transition-new(root) { animation: vt-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
 
 /* ---------- Reset ---------- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -604,23 +604,38 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
   @keyframes progress { to { transform: scaleX(1); } }
 }
 
-/* ---------- Reveal-on-scroll animations ----------
-   Elements are only hidden while JavaScript runs (.js class),
-   so Google and no-JS visitors always see all content. */
-.js [data-reveal] { opacity: 0; transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out), filter 0.9s var(--ease-out); transition-delay: var(--d, 0s); }
-.js [data-reveal="up"] { transform: translateY(40px); }
-.js [data-reveal="down"] { transform: translateY(-30px); }
-.js [data-reveal="left"] { transform: translateX(-50px); }
-.js [data-reveal="right"] { transform: translateX(50px); }
-.js [data-reveal="zoom"] { transform: scale(0.92); }
-.js [data-reveal="blur"] { filter: blur(12px); transform: translateY(20px); }
-@media (max-width: 768px) { .js [data-reveal="left"], .js [data-reveal="right"] { transform: translateY(30px); } }
-.js [data-reveal].is-visible { opacity: 1; transform: none; filter: none; }
+/* ---------- Entrance & reveal animations ----------
+   • Top of the page (hero, page header, property gallery): plays on the very first paint with
+     pure CSS — it never waits for JavaScript, so the first screen appears at once.
+   • Further down: revealed as it scrolls into view (main.ts adds .is-visible). Content is only
+     hidden while JavaScript runs (.js), so Google and no-JS visitors always see everything.
+   Only opacity and transform are animated — the GPU does the work, nothing re-lays out. */
+:root { --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes enter-up { from { opacity: 0; transform: translateY(18px); } }
+@keyframes enter-down { from { opacity: 0; transform: translateY(-12px); } }
+@keyframes enter-zoom { from { opacity: 0; transform: scale(0.97); } }
+.hero [data-reveal], .page-hero [data-reveal], [data-enter] {
+  animation: enter-up 0.65s var(--ease-reveal) both;
+  animation-delay: min(var(--d, 0s), 0.22s);
+}
+.hero [data-reveal="zoom"], .page-hero [data-reveal="zoom"], [data-enter="zoom"] { animation-name: enter-zoom; animation-duration: 0.8s; }
+.hero [data-reveal="down"], .page-hero [data-reveal="down"], [data-enter="down"] { animation-name: enter-down; }
 
-/* Hero headline word animation */
-.js .hero h1 .word { display: inline-block; opacity: 0; transform: translateY(0.6em) rotate(4deg); animation: word-in 0.9s var(--ease-out) forwards; animation-delay: calc(var(--i) * 0.08s + 0.15s); }
+.js [data-reveal] { opacity: 0; transition: opacity 0.7s var(--ease-reveal), transform 0.7s var(--ease-reveal); transition-delay: var(--d, 0s); }
+.js [data-reveal="up"], .js [data-reveal="blur"] { transform: translateY(26px); }
+.js [data-reveal="down"] { transform: translateY(-18px); }
+.js [data-reveal="left"] { transform: translateX(-32px); }
+.js [data-reveal="right"] { transform: translateX(32px); }
+.js [data-reveal="zoom"] { transform: scale(0.96); }
+@media (max-width: 768px) { .js [data-reveal="left"], .js [data-reveal="right"] { transform: translateY(22px); } }
+/* The top of the page is animated by the CSS above — never hidden while waiting for scrolling */
+.js .hero [data-reveal], .js .page-hero [data-reveal] { opacity: 1; transform: none; transition: none; }
+.js [data-reveal].is-visible { opacity: 1; transform: none; }
+
+/* Hero headline: words rise in one after another (CSS only, starts with the first paint) */
+.js .hero h1 .word { display: inline-block; opacity: 0; transform: translateY(0.5em); animation: word-in 0.75s var(--ease-reveal) forwards; animation-delay: calc(var(--i) * 0.06s + 0.05s); }
 @keyframes word-in { to { opacity: 1; transform: none; } }
-.js .hero h1 .word.gradient-text { animation: word-in 0.9s var(--ease-out) forwards, gradient-pan 6s ease-in-out 1s infinite alternate; animation-delay: calc(var(--i) * 0.08s + 0.15s), 1s; }
+.js .hero h1 .word.gradient-text { animation: word-in 0.75s var(--ease-reveal) forwards, gradient-pan 6s ease-in-out 1s infinite alternate; animation-delay: calc(var(--i) * 0.06s + 0.05s), 1s; }
 
 /* Tilt */
 [data-tilt] { transform-style: preserve-3d; transition: transform 0.4s var(--ease-out); }
@@ -628,7 +643,7 @@ a.contact-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
-  .js [data-reveal], .js .hero h1 .word { opacity: 1 !important; transform: none !important; filter: none !important; }
+  .js [data-reveal], .js .hero h1 .word, [data-enter] { opacity: 1 !important; transform: none !important; filter: none !important; animation: none !important; }
   .marquee__track { animation: none; }
 }
 
@@ -849,3 +864,99 @@ a.tag:hover { background: var(--brand-primary); color: #fff; }
   .blob, .cta__orb, .hero__ring, .float-card, .img-stack__badge, .hero__img-main img, .gradient-text { animation: none; }
   .js .hero h1 .word.gradient-text { animation: word-in 0.9s var(--ease-out) forwards; animation-delay: calc(var(--i) * 0.08s + 0.15s); }
 }
+
+/* ==========================================================================
+   SPEED, SMOOTHNESS & MOBILE LAYOUT
+   ========================================================================== */
+
+/* Sections further down a page are only laid out and painted when the visitor gets near them.
+   `auto` remembers each section's real height once shown, so nothing jumps. */
+main > .section, .site-footer { content-visibility: auto; contain-intrinsic-size: auto 820px; }
+.site-footer { contain-intrinsic-size: auto 760px; }
+
+/* Page changes: header and WhatsApp button stay perfectly still, the page underneath cross-fades */
+.site-header { view-transition-name: site-header; }
+.wa-float { view-transition-name: wa-float; }
+::view-transition-old(site-header), ::view-transition-old(wa-float) { display: none; }
+::view-transition-new(site-header), ::view-transition-new(wa-float) { animation: none; }
+
+/* Link cards next to the "Real estate in Rawalpindi & Islamabad" text: the icon keeps its size */
+.seo-links .feature__icon { flex: none; }
+
+/* Touch: instant feedback, no double-tap delay */
+a, button, .btn, summary, select { touch-action: manipulation; }
+.btn:active { transform: scale(0.97); transition-duration: 0.08s; }
+@media (hover: none) {
+  .service-card:hover, .feature:hover, .area-tile:hover img, .seo-links a:hover { transform: none; }
+  .property-card:hover { transform: none; }
+}
+
+/* ---------- Phones: compact rows instead of tall cards ---------- */
+@media (max-width: 639px) {
+  .bento .service-card:not(.service-card--feature) {
+    display: grid; grid-template-columns: 50px 1fr; column-gap: 16px; row-gap: 4px; align-items: start; padding: 20px;
+  }
+  .bento .service-card:not(.service-card--feature) .service-card__icon { grid-row: span 3; width: 50px; height: 50px; border-radius: 14px; }
+  .bento .service-card:not(.service-card--feature) .service-card__icon svg { width: 24px; height: 24px; }
+  .bento .service-card:not(.service-card--feature) h3 { font-size: 1.12rem; }
+  .bento .service-card:not(.service-card--feature) p { font-size: var(--fs-sm); }
+  .bento .service-card:not(.service-card--feature) .link-arrow { margin-top: 6px; }
+  .service-card--feature { min-height: 360px; }
+
+  .feature { display: grid; grid-template-columns: 46px 1fr; column-gap: 14px; align-items: start; padding: 18px; }
+  .feature__icon { grid-row: span 2; margin: 0; width: 46px; height: 46px; border-radius: 13px; }
+  .feature__icon svg { width: 22px; height: 22px; }
+  .feature p { margin-top: 4px; }
+}
+
+/* ---------- Phones: popular areas become a swipeable row ---------- */
+@media (max-width: 699px) {
+  .area-grid--home {
+    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%;
+    gap: 12px; margin-inline: -16px; padding: 4px 16px 10px;
+    overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 16px;
+    scrollbar-width: none;
+  }
+  .area-grid--home::-webkit-scrollbar { display: none; }
+  .area-grid--home .area-tile { min-height: 250px; scroll-snap-align: start; }
+}
+
+/* ---------- Property page on phones ---------- */
+.gallery__count { display: none; }
+@media (max-width: 767px) {
+  .gallery__count { position: absolute; inset: auto 12px 12px auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border-radius: var(--radius-full); background: rgb(13 13 13 / 0.78); color: #fff; font-size: 0.82rem; font-weight: 700; backdrop-filter: blur(6px); }
+  .gallery__count svg { width: 15px; height: 15px; }
+  .gallery__more { display: none; }
+  .key-facts { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .key-fact { display: grid; grid-template-columns: 22px 1fr; column-gap: 10px; align-items: center; padding: 12px 14px; }
+  .key-fact svg { grid-row: span 2; }
+  .key-fact span { margin-top: 0; font-size: 0.68rem; }
+  .key-fact strong { font-size: 1rem; line-height: 1.3; }
+  .key-facts .key-fact:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+
+/* ---------- Owners: sell or rent out with us ---------- */
+.owner-band { display: grid; gap: clamp(24px, 4vw, 48px); align-items: center; padding: clamp(28px, 4vw, 52px); border-radius: var(--radius-xl); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); }
+@media (min-width: 900px) { .owner-band { grid-template-columns: 1fr 1.1fr; } }
+.owner-band h2 { font-size: var(--fs-3xl); margin-top: 14px; }
+.owner-band > div > p { margin-top: 12px; color: var(--text-muted); font-size: var(--fs-lg); }
+.owner-steps { display: grid; gap: 12px; padding: 0; list-style: none; counter-reset: owner; }
+.owner-steps li { counter-increment: owner; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; padding: 16px 18px; border-radius: var(--radius); background: var(--gradient-soft); }
+.owner-steps li::before { content: counter(owner); display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-dark); color: var(--brand-accent-light, #f3d27b); font-family: var(--font-heading); font-weight: 800; }
+.owner-steps strong { display: block; font-family: var(--font-heading); }
+.owner-steps span { display: block; margin-top: 2px; color: var(--text-muted); font-size: var(--fs-sm); }
+.owner-band__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+
+/* TikTok video: the listing photo with a play button until tapped */
+.video-embed--facade { padding: 0; cursor: pointer; color: #fff; isolation: isolate; }
+.video-embed--facade img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease-out); }
+.video-embed--facade::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgb(0 0 0 / 0.15) 30%, rgb(0 0 0 / 0.7) 100%); }
+.video-embed--facade:not(:has(img)) { background: radial-gradient(circle at 30% 25%, #25f4ee44, transparent 55%), radial-gradient(circle at 70% 75%, #fe2c5544, transparent 55%), #111; }
+.video-embed--facade:hover img { transform: scale(1.04); }
+.video-embed--facade:hover .video-embed__play { transform: translate(-50%, -50%) scale(1.1); }
+.video-embed__label { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-full); background: rgb(0 0 0 / 0.55); font-size: 0.85rem; font-weight: 700; white-space: nowrap; backdrop-filter: blur(6px); }
+/* Phones: tiles in the swipeable area row are shown at once — swiping must feel instant */
+@media (max-width: 699px) { .js .area-grid--home [data-reveal] { opacity: 1; transform: none; transition: none; } }
+
+/* Comfortable tap size for "More in …" links next to section titles */
+.section-head > .link-arrow { min-height: 44px; display: inline-flex; align-items: center; }
