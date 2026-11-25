@@ -138,7 +138,7 @@ export function Notifications({ ctx }: { ctx: Ctx }) {
             lastDay = day;
             const { verb, tone, icon } = describe(a);
             const mine = a.actor_id === ctx.me.user_id;
-            const unread = !mine && a.created_at > seenBefore;
+            const unread = a.created_at > seenBefore;
             const href = linkFor(a);
             const info = extra(a);
             const isLead = a.entity === 'lead' && a.action === 'created';

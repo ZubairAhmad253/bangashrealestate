@@ -31,7 +31,7 @@ function useRoute() {
 export interface Ctx {
   me: Admin;
   newLeads: number;
-  /** Unread notifications (changes made by other people since the bell was last opened) */
+  /** Unread notifications (every change, including your own, since the bell was last opened) */
   unread: number;
   /** When this admin last opened the notifications */
   seenAt: string;
@@ -180,7 +180,6 @@ function Shell({ me }: { me: Admin }) {
     sb.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'new').then(({ count }) => setNewLeads(count ?? 0));
     sb.from('activity').select('id', { count: 'exact', head: true })
       .gt('created_at', seenAt.current)
-      .or(`actor_id.is.null,actor_id.neq.${me.user_id}`)
       .then(({ count, error }) => setUnread(error ? 0 : count ?? 0));
   };
   const markSeen = () => {
@@ -210,7 +209,12 @@ function Shell({ me }: { me: Admin }) {
       window.removeEventListener('focus', onShow);
     };
   }, []);
-  useEffect(() => setMoreOpen(false), [route]);
+  useEffect(() => {
+    setMoreOpen(false);
+    // After saving and moving to another page, the bell picks up the change straight away
+    // (skipped on the notifications page, which marks everything as read itself)
+    if (!route.startsWith('notifications')) refreshCounts();
+  }, [route]);
 
   const [section, id] = route.split('/');
   const ctx: Ctx = { me, newLeads, unread, seenAt: seenAt.current, markSeen, refreshCounts };
