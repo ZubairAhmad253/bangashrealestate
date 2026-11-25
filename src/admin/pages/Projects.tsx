@@ -3,32 +3,31 @@ import { sb, slugify, shortId, removeImages, isStoredMedia, type ProjectRow } fr
 import { Icon, Field, Segmented, Toggle, PhotoUploader, VideoManager, Empty, Skeleton, PageHead, toast, confirmDialog } from '../ui';
 import { go, type Ctx } from '../App';
 import { SITE_URL } from '../meta';
+import { useProjects, useThumbs, cachedProject } from '../queries';
+import { afterWrite, age, invalidate, mutate } from '../store';
 
 const CATEGORY: Record<ProjectRow['category'], string> = { house: 'House', flats: 'Flats / Apartments', renovation: 'Renovation', commercial: 'Commercial' };
 const SAVED_MSG = 'Saved ✓ The website will update in 1–2 minutes.';
 
 export function ProjectsList({ ctx }: { ctx: Ctx }) {
   const isSuper = ctx.me.role === 'super_admin';
-  const [rows, setRows] = useState<ProjectRow[] | null>(null);
-  const load = () =>
-    sb.from('projects').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
-      if (error) toast.err(error);
-      setRows((data as ProjectRow[]) ?? []);
-    });
-  useEffect(() => { void load(); }, []);
+  const query = useProjects();
+  const rows = query.data ?? (query.error ? [] : null);
+  const thumb = useThumbs();
 
   const update = async (p: ProjectRow, patch: Partial<ProjectRow>) => {
-    setRows((r) => r?.map((x) => (x.id === p.id ? { ...x, ...patch } : x)) ?? r);
+    query.mutate((r) => r?.map((x) => (x.id === p.id ? { ...x, ...patch } : x)) ?? []);
     const { error } = await sb.from('projects').update(patch).eq('id', p.id);
-    if (error) { toast.err(error); void load(); } else toast.ok(SAVED_MSG);
+    if (error) { toast.err(error); void query.reload().catch(() => {}); } else { toast.ok(SAVED_MSG); afterWrite(); }
   };
   const remove = async (p: ProjectRow) => {
     if (!(await confirmDialog(`Delete "${p.title}"?`, 'The project and all its photos will be removed permanently.'))) return;
     const { error } = await sb.from('projects').delete().eq('id', p.id);
     if (error) return toast.err(error);
     await removeImages(p.images).catch(() => {});
-    setRows((r) => r?.filter((x) => x.id !== p.id) ?? r);
+    query.mutate((r) => r?.filter((x) => x.id !== p.id) ?? []);
     toast.ok('Project deleted.');
+    afterWrite();
   };
 
   return (
@@ -42,10 +41,10 @@ export function ProjectsList({ ctx }: { ctx: Ctx }) {
         </Empty>
       ) : (
         <div class="a-items">
-          {rows.map((p) => (
+          {rows.map((p, i) => (
             <article class="a-item" key={p.id}>
               <a href={`#/projects/${p.id}`} class="a-item__thumb">
-                {p.images[0] ? <img src={p.images[0]} alt="" loading="lazy" /> : <span><Icon name="image" size={28} /></span>}
+                {p.images[0] ? <img src={thumb(p.images[0])} alt="" width={480} height={360} loading={i < 4 ? 'eager' : 'lazy'} decoding="async" /> : <span><Icon name="image" size={28} /></span>}
                 <span class={`a-pill ${p.published ? 'a-pill--live' : 'a-pill--muted'}`}>{p.published ? 'Live' : 'Hidden'}</span>
               </a>
               <div class="a-item__body">
@@ -76,10 +75,14 @@ interface FormState {
 }
 const EMPTY: FormState = { title: '', category: 'house', status: 'completed', location: '', size: '', year: String(new Date().getFullYear()), description: '', images: [], videos: [], featured: false, published: true };
 
+const toForm = (p: ProjectRow): FormState => ({ title: p.title, category: p.category, status: p.status, location: p.location, size: p.size, year: p.year ? String(p.year) : '', description: p.description, images: p.images, videos: p.videos ?? [], featured: p.featured, published: p.published });
+
 export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
   const isNew = id === 'new';
-  const [row, setRow] = useState<ProjectRow | null>(null);
-  const [f, setF] = useState<FormState | null>(isNew ? EMPTY : null);
+  // Opens instantly from the cached list; loads from the server only if it is not there or is old
+  const [cached] = useState(() => (isNew ? undefined : cachedProject(id)));
+  const [row, setRow] = useState<ProjectRow | null>(cached ?? null);
+  const [f, setF] = useState<FormState | null>(isNew ? EMPTY : cached ? toForm(cached) : null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const dirty = useRef(false);
@@ -87,12 +90,12 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
   const folder = useRef(`projects/${isNew ? `new-${Date.now()}-${shortId()}` : id}`);
 
   useEffect(() => {
-    if (isNew) return;
+    if (isNew || (cached && age('projects') < 60_000)) return;
     sb.from('projects').select('*').eq('id', id).single().then(({ data, error }) => {
-      if (error || !data) { toast.err(error ?? 'Project not found'); go('projects'); return; }
+      if (error || !data) { if (!cached) { toast.err(error ?? 'Project not found'); go('projects'); } return; }
       const p = data as ProjectRow;
       setRow(p);
-      setF({ title: p.title, category: p.category, status: p.status, location: p.location, size: p.size, year: p.year ? String(p.year) : '', description: p.description, images: p.images, videos: p.videos ?? [], featured: p.featured, published: p.published });
+      if (!dirty.current) setF(toForm(p));
     });
   }, [id]);
 
@@ -118,7 +121,13 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
       : await sb.from('projects').update(data).eq('id', id);
     setSaving(false);
     if (res.error) return toast.err(res.error);
-    if (row) await removeImages([...row.images.filter((u) => !f.images.includes(u)), ...(row.videos ?? []).filter((u) => !f.videos.includes(u) && isStoredMedia(u))]).catch(() => {});
+    if (isNew) invalidate('projects');
+    else mutate<ProjectRow[]>('projects', (list) => list?.map((x) => (x.id === id ? { ...x, ...data } : x)) ?? []);
+    afterWrite();
+    if (row) {
+      const gone = [...row.images.filter((u) => !f.images.includes(u)), ...(row.videos ?? []).filter((u) => !f.videos.includes(u) && isStoredMedia(u))];
+      if (gone.length) removeImages(gone).catch(() => {});
+    }
     dirty.current = false;
     toast.ok(SAVED_MSG);
     go('projects');

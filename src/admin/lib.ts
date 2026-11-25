@@ -1,10 +1,40 @@
 /* Admin panel — Supabase client, types and helpers */
-import { createClient } from '@supabase/supabase-js';
+import { AuthClient } from '@supabase/auth-js';
+import { PostgrestClient } from '@supabase/postgrest-js';
+import { StorageClient } from '@supabase/storage-js';
 import { SUPABASE } from '../config/site';
 
-export const sb = createClient(SUPABASE.url, SUPABASE.publishableKey, {
-  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'bangash-admin' },
+/* A lean Supabase client: sign-in, database and file storage only.
+   (The full supabase-js package also ships realtime + edge functions, which the admin
+   never uses — leaving them out makes the app about a third smaller and faster to start.)
+   It is wired exactly like supabase-js: every request carries the project key and,
+   once signed in, the user's access token. */
+const KEY = SUPABASE.publishableKey;
+const auth = new AuthClient({
+  url: `${SUPABASE.url}/auth/v1`,
+  headers: { Authorization: `Bearer ${KEY}`, apikey: KEY },
+  storageKey: 'bangash-admin', // same key as before, so existing sign-ins keep working
+  persistSession: true,
+  autoRefreshToken: true,
+  detectSessionInUrl: false,
 });
+const authedFetch: typeof fetch = async (input, init) => {
+  const headers = new Headers(init?.headers);
+  if (!headers.has('apikey')) headers.set('apikey', KEY);
+  if (!headers.has('Authorization')) {
+    const { data } = await auth.getSession();
+    headers.set('Authorization', `Bearer ${data.session?.access_token ?? KEY}`);
+  }
+  return fetch(input, { ...init, headers });
+};
+const rest = new PostgrestClient(`${SUPABASE.url}/rest/v1`, { fetch: authedFetch });
+
+export const sb = {
+  auth,
+  from: (table: string) => rest.from(table),
+  rpc: (fn: string, args: Record<string, unknown> = {}) => rest.rpc(fn, args),
+  storage: new StorageClient(`${SUPABASE.url}/storage/v1`, {}, authedFetch),
+};
 
 /* ---------------- Types ---------------- */
 export type Role = 'super_admin' | 'editor';
@@ -152,7 +182,9 @@ export function errorText(e: unknown): string {
 /* ---------------- Photos: compress + upload ---------------- */
 const MAX_SIDE = 1920;
 
-/** Resizes photos in the browser (max 1920px, WebP) — faster uploads, less storage. */
+/** Resizes photos in the browser (max 1920px) — faster uploads, faster pages, less storage.
+    WebP where the browser can make it; iPhone Safari cannot (it silently returns a much bigger PNG),
+    so it falls back to JPEG there. A 12-megapixel phone photo (~3 MB) becomes ~300–500 KB. */
 export async function compressImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file).catch(() => null);
   if (!bitmap) return file;
@@ -164,7 +196,9 @@ export async function compressImage(file: File): Promise<Blob> {
   canvas.height = h;
   canvas.getContext('2d')!.drawImage(bitmap, 0, 0, w, h);
   bitmap.close?.();
-  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/webp', 0.82));
+  const encode = (type: string, quality: number) => new Promise<Blob | null>((res) => canvas.toBlob(res, type, quality));
+  let blob = await encode('image/webp', 0.82);
+  if (!blob || blob.type !== 'image/webp') blob = await encode('image/jpeg', 0.84);
   return blob && blob.size < file.size ? blob : file;
 }
 

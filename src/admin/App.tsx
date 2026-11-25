@@ -2,9 +2,11 @@
    BANGASH ADMIN PANEL — main app (login, roles, navigation, routing)
    ========================================================================== */
 import { useEffect, useRef, useState } from 'preact/hooks';
-import type { Session } from '@supabase/supabase-js';
+import type { Session } from '@supabase/auth-js';
 import { sb, errorText, type Admin } from './lib';
-import { Icon, Toasts, ConfirmHost, Loading } from './ui';
+import { Icon, Toasts, ConfirmHost, Loading, toast } from './ui';
+import { clearAll, mutate, peek, prefetch, setAfterWrite, setErrorHandler, useQuery } from './store';
+import { fetchers, prefetchAll } from './queries';
 import { Dashboard } from './pages/Dashboard';
 import { PropertiesList, PropertyForm } from './pages/Properties';
 import { Leads } from './pages/Leads';
@@ -15,13 +17,41 @@ import { Account } from './pages/Account';
 import { Notifications } from './pages/Notifications';
 import logoUrl from '../assets/brand/logo-mark.png';
 
-/* ---------------- Hash router ---------------- */
+/* ---------------- Hash router with smooth screen changes ---------------- */
 const readRoute = () => location.hash.replace(/^#\/?/, '') || 'dashboard';
 export const go = (path: string) => { location.hash = `#/${path}`; };
+
+type ViewTransition = { finished: Promise<void>; ready: Promise<void> };
+type VTDocument = Document & { startViewTransition?: (update: () => Promise<void>) => ViewTransition };
+const depth = (r: string) => r.split('/').filter(Boolean).length;
+
 function useRoute() {
-  const [route, setRoute] = useState(readRoute());
+  const [route, setRoute] = useState(readRoute);
   useEffect(() => {
-    const on = () => { setRoute(readRoute()); window.scrollTo(0, 0); };
+    let current = readRoute();
+    const on = () => {
+      const next = readRoute();
+      if (next === current) return;
+      // Tab → tab: cross-fade. Into a form: slide in. Back to a list: slide back.
+      const dir = depth(next) > depth(current) ? 'forward' : depth(next) < depth(current) ? 'back' : 'tab';
+      current = next;
+      const show = () => {
+        setRoute(next);
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+      };
+      const doc = document as VTDocument;
+      if (!doc.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches || document.visibilityState !== 'visible') {
+        show();
+        return;
+      }
+      const root = document.documentElement;
+      root.dataset.nav = dir;
+      // The browser keeps a picture of the old screen, the new one renders (Preact renders in a
+      // microtask), then the GPU blends old → new — no blank frame and no layout jump in between.
+      const vt = doc.startViewTransition(() => new Promise<void>((resolve) => { show(); setTimeout(resolve, 0); }));
+      vt.ready.catch(() => {});
+      vt.finished.catch(() => {}).finally(() => { if (root.dataset.nav === dir) delete root.dataset.nav; });
+    };
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
@@ -36,30 +66,45 @@ export interface Ctx {
   /** When this admin last opened the notifications */
   seenAt: string;
   markSeen: () => void;
-  refreshCounts: () => void;
+  /** Re-count new leads + notifications (`force` skips the 15-second limit) */
+  refreshCounts: (force?: boolean) => void;
 }
+
+/** The user saved on this phone (read instantly, before the sign-in check finishes) */
+const storedUserId = (() => {
+  try { return (JSON.parse(localStorage.getItem('bangash-admin') ?? 'null')?.user?.id as string | undefined) ?? undefined; } catch { return undefined; }
+})();
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
-  const [me, setMe] = useState<Admin | null | undefined>(undefined);
 
   useEffect(() => {
-    sb.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = sb.auth.onAuthStateChange((_e, s) => setSession(s));
+    setErrorHandler((e) => toast.err(e));
+    // Signed in on this phone: ask for the first screen's data together with the profile
+    // (one round trip to the server instead of two, one after the other)
+    if (storedUserId && readRoute() === 'dashboard') {
+      void prefetch('properties', fetchers.properties, 15_000);
+      void prefetch('projects', fetchers.projects, 15_000);
+      if (!peek('leads')) void prefetch('leads:recent', fetchers.recentLeads, 15_000);
+    }
+    const { data } = sb.auth.onAuthStateChange((event, s) => {
+      // Signed out (or the saved sign-in has expired): forget everything kept on this phone
+      if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !s && storedUserId)) clearAll();
+      setSession(s);
+    });
     return () => data.subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (!session) { setMe(session === null ? null : undefined); return; }
-    setMe(undefined);
-    sb.from('admins').select('*').eq('user_id', session.user.id).maybeSingle().then(({ data }) => setMe((data as Admin) ?? null));
-  }, [session?.user.id]);
+  // While the sign-in is being checked, the app already opens for the user saved on this phone
+  const uid = session === undefined ? storedUserId : session?.user.id;
+  const me = useQuery<Admin | null>(`me:${uid ?? ''}`, () => fetchers.me(uid!), 60_000, Boolean(uid) && session !== null);
 
   let body;
-  if (session === undefined || (session && me === undefined)) body = <div class="a-center"><Loading /></div>;
-  else if (!session) body = <Login />;
-  else if (!me) body = <NoAccess email={session.user.email ?? ''} />;
-  else body = <Shell me={me} />;
+  if (session === null) body = <Login />;
+  else if (!uid || (me.data === undefined && !me.error)) body = <div class="a-center"><Loading /></div>;
+  else if (me.data === undefined) body = <Offline retry={() => void me.reload().catch(() => {})} />;
+  else if (me.data === null) body = <NoAccess email={session?.user.email ?? ''} />;
+  else body = <Shell me={me.data} />;
 
   return (
     <>
@@ -148,6 +193,19 @@ function NoAccess({ email }: { email: string }) {
   );
 }
 
+function Offline({ retry }: { retry: () => void }) {
+  return (
+    <div class="a-login a-login--single">
+      <div class="a-login__card">
+        <img src={logoUrl.src} alt="" class="a-login__logo" width={64} height={64} />
+        <h1>No connection</h1>
+        <p class="a-muted">The admin panel could not reach the server. Please check your internet connection.</p>
+        <button class="a-btn a-btn--gold a-btn--block" onClick={retry}>Try again</button>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Notification bell ---------------- */
 function Bell({ unread, active }: { unread: number; active: boolean }) {
   return (
@@ -156,6 +214,18 @@ function Bell({ unread, active }: { unread: number; active: boolean }) {
       {unread > 0 && <b class="a-badge">{unread > 99 ? '99+' : unread}</b>}
     </a>
   );
+}
+
+/* ---------------- Offline-ready app files ---------------- */
+function registerServiceWorker() {
+  // Not in development (it would keep serving old files) or in automated browser tests
+  if (import.meta.env.DEV || !('serviceWorker' in navigator) || navigator.webdriver) return;
+  navigator.serviceWorker.register('/admin/sw.js', { scope: '/admin/' }).then(async () => {
+    const reg = await navigator.serviceWorker.ready;
+    // Files this page already loaded (before the worker existed) are saved too
+    const urls = performance.getEntriesByType('resource').map((e) => e.name).filter((u) => u.startsWith(`${location.origin}/_astro/`));
+    reg.active?.postMessage({ type: 'precache', urls });
+  }).catch(() => {});
 }
 
 /* ---------------- Layout + navigation ---------------- */
@@ -170,20 +240,33 @@ const NAV = [
   { path: 'account', label: 'My Account', icon: 'user', group: 'account' },
 ];
 
+type Counts = { newLeads: number; unread: number };
+
 function Shell({ me }: { me: Admin }) {
   const route = useRoute();
-  const [newLeads, setNewLeads] = useState(0);
-  const [unread, setUnread] = useState(0);
+  const saved = peek<Counts>('counts');
+  const [newLeads, setNewLeads] = useState(saved?.newLeads ?? 0);
+  const [unread, setUnread] = useState(saved?.unread ?? 0);
   const [moreOpen, setMoreOpen] = useState(false);
   const seenAt = useRef(me.activity_seen_at ?? new Date().toISOString());
-  const refreshCounts = () => {
-    sb.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'new').then(({ count }) => setNewLeads(count ?? 0));
-    sb.from('activity').select('id', { count: 'exact', head: true })
-      .gt('created_at', seenAt.current)
-      .then(({ count, error }) => setUnread(error ? 0 : count ?? 0));
+  const lastCount = useRef(0);
+
+  const refreshCounts = (force = false) => {
+    if (!force && Date.now() - lastCount.current < 15_000) return;
+    lastCount.current = Date.now();
+    Promise.all([
+      sb.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'new'),
+      sb.from('activity').select('id', { count: 'exact', head: true }).gt('created_at', seenAt.current),
+    ]).then(([l, a]) => {
+      const next = { newLeads: l.error ? newLeads : l.count ?? 0, unread: a.error ? 0 : a.count ?? 0 };
+      setNewLeads(next.newLeads);
+      setUnread(next.unread);
+      mutate<Counts>('counts', next);
+    }, () => {});
   };
   const markSeen = () => {
     setUnread(0);
+    mutate<Counts>('counts', (c) => ({ newLeads: c?.newLeads ?? newLeads, unread: 0 }));
     // Use the server time of the newest item, not this device's clock:
     // a phone or PC clock that runs a few minutes fast would otherwise hide new notifications
     sb.from('activity').select('created_at').order('created_at', { ascending: false }).limit(1)
@@ -197,23 +280,37 @@ function Shell({ me }: { me: Admin }) {
     (unread ? nav.setAppBadge?.(unread) : nav.clearAppBadge?.())?.catch(() => {});
   }, [unread]);
   useEffect(() => {
-    refreshCounts();
-    const t = setInterval(refreshCounts, 30_000);
+    // After any save, the bell picks up the change
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    setAfterWrite(() => { clearTimeout(pending); pending = setTimeout(() => refreshCounts(true), 700); });
+    refreshCounts(true);
+    // The first screen loads its own data first; the other tabs are fetched a moment later, and the
+    // offline app files are saved later still — so nothing competes with what is on screen now
+    const later = (fn: () => void, ms: number) => setTimeout(() => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 3000 }) : fn()), ms);
+    const t1 = later(prefetchAll, 1200);
+    const t2 = later(registerServiceWorker, 4000);
+    const t = setInterval(() => refreshCounts(true), 30_000);
     // Check right away when the app or tab is opened again (phones pause timers in the background)
     const onShow = () => { if (document.visibilityState === 'visible') refreshCounts(); };
     document.addEventListener('visibilitychange', onShow);
     window.addEventListener('focus', onShow);
     return () => {
       clearInterval(t);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(pending);
+      setAfterWrite(() => {});
       document.removeEventListener('visibilitychange', onShow);
       window.removeEventListener('focus', onShow);
     };
   }, []);
   useEffect(() => {
     setMoreOpen(false);
-    // After saving and moving to another page, the bell picks up the change straight away
+    // Counts are refreshed after the screen change has finished, never during it
     // (skipped on the notifications page, which marks everything as read itself)
-    if (!route.startsWith('notifications')) refreshCounts();
+    if (route.startsWith('notifications')) return;
+    const t = setTimeout(() => refreshCounts(), 900);
+    return () => clearTimeout(t);
   }, [route]);
 
   const [section, id] = route.split('/');
@@ -223,9 +320,9 @@ function Shell({ me }: { me: Admin }) {
 
   let page;
   switch (section) {
-    case 'properties': page = id ? <PropertyForm id={id} ctx={ctx} /> : <PropertiesList ctx={ctx} />; break;
+    case 'properties': page = id ? <PropertyForm key={id} id={id} ctx={ctx} /> : <PropertiesList ctx={ctx} />; break;
     case 'leads': page = <Leads ctx={ctx} />; break;
-    case 'projects': page = id ? <ProjectForm id={id} ctx={ctx} /> : <ProjectsList ctx={ctx} />; break;
+    case 'projects': page = id ? <ProjectForm key={id} id={id} ctx={ctx} /> : <ProjectsList ctx={ctx} />; break;
     case 'reviews': page = <Reviews ctx={ctx} />; break;
     case 'notifications': page = <Notifications ctx={ctx} />; break;
     case 'settings': page = isSuper ? <Settings ctx={ctx} /> : <Dashboard ctx={ctx} />; break;
@@ -233,8 +330,9 @@ function Shell({ me }: { me: Admin }) {
     default: page = <Dashboard ctx={ctx} />;
   }
 
+  const isActive = (path: string) => section === path || (section === '' && path === 'dashboard');
   const link = (n: (typeof NAV)[number]) => (
-    <a href={`#/${n.path}`} class={`a-nav__link${section === n.path || (section === '' && n.path === 'dashboard') ? ' is-active' : ''}`}>
+    <a href={`#/${n.path}`} class={`a-nav__link${isActive(n.path) ? ' is-active' : ''}`} aria-current={isActive(n.path) ? 'page' : undefined}>
       <Icon name={n.icon} size={20} />
       <span>{n.label}</span>
       {n.path === 'leads' && newLeads > 0 && <b class="a-badge">{newLeads}</b>}
@@ -242,6 +340,9 @@ function Shell({ me }: { me: Admin }) {
     </a>
   );
   const displayName = me.name || me.email.split('@')[0];
+  // The golden pill under the active tab slides between tabs (the 5th place is "More")
+  const tabs = nav.slice(0, 4);
+  const tabIndex = moreOpen ? 4 : (() => { const i = tabs.findIndex((n) => isActive(n.path)); return i === -1 ? 4 : i; })();
 
   return (
     <div class="a-shell">
@@ -279,9 +380,10 @@ function Shell({ me }: { me: Admin }) {
 
       <main class="a-main">{page}</main>
 
-      <nav class="a-tabbar" aria-label="Main">
-        {nav.slice(0, 4).map(link)}
-        <button class={`a-nav__link${moreOpen ? ' is-active' : ''}`} onClick={() => setMoreOpen(!moreOpen)}>
+      <nav class="a-tabbar" aria-label="Main" style={{ '--tab': tabIndex }}>
+        <span class="a-tabbar__pill" aria-hidden="true" />
+        {tabs.map(link)}
+        <button class={`a-nav__link${moreOpen || tabIndex === 4 ? ' is-active' : ''}`} onClick={() => setMoreOpen(!moreOpen)} aria-expanded={moreOpen}>
           <Icon name="menu" size={20} /><span>More</span>
         </button>
       </nav>

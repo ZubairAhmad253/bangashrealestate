@@ -1,10 +1,10 @@
 /* Notifications — everything that was added, changed or removed, newest first */
 import { useEffect, useState } from 'preact/hooks';
-import { sb, timeAgo, formatPrice, type ActivityRow, type ActivityEntity } from '../lib';
-import { Icon, PageHead, Skeleton, Empty } from '../ui';
+import { timeAgo, formatPrice, type ActivityRow, type ActivityEntity } from '../lib';
+import { Icon, PageHead, Skeleton, Empty, useProgressive } from '../ui';
+import { useQuery } from '../store';
+import { ACTIVITY_PAGE as PAGE, activityKey, fetchActivity } from '../queries';
 import type { Ctx } from '../App';
-
-const PAGE = 40;
 
 const FILTERS: { value: '' | ActivityEntity | 'team'; label: string }[] = [
   { value: '', label: 'All' },
@@ -89,26 +89,26 @@ function dayLabel(iso: string): string {
 }
 
 export function Notifications({ ctx }: { ctx: Ctx }) {
-  const [rows, setRows] = useState<ActivityRow[] | null>(null);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]['value']>('');
-  const [more, setMore] = useState(false);
-  const [missing, setMissing] = useState(false);
+  // Shows the last loaded list at once and refreshes it (the newest changes arrive within a moment)
+  const query = useQuery<ActivityRow[]>(activityKey(filter), () => fetchActivity(filter), 3_000);
+  const missing = Boolean(query.error) && !query.data;
+  const rows = query.data ?? (query.error ? [] : null);
+  const [older, setOlder] = useState<'idle' | 'loading' | 'done'>('idle');
+  const more = older !== 'done' && (rows?.length ?? 0) >= PAGE && (rows?.length ?? 0) % PAGE === 0;
   // Remember what was unread when the page opened, then mark everything as read
   const [seenBefore] = useState(ctx.seenAt);
   useEffect(() => { ctx.markSeen(); }, []);
+  useEffect(() => { setOlder('idle'); }, [filter]);
 
-  const load = async (offset = 0) => {
-    let q = sb.from('activity').select('*').order('created_at', { ascending: false }).range(offset, offset + PAGE - 1);
-    if (filter === 'team') q = q.in('entity', ['settings', 'admin']);
-    else if (filter) q = q.eq('entity', filter);
-    const { data, error } = await q;
-    if (error) { setMissing(true); setRows([]); return; }
-    const list = (data as ActivityRow[]) ?? [];
-    setRows((prev) => (offset ? [...(prev ?? []), ...list] : list));
-    setMore(list.length === PAGE);
+  const load = async (offset: number) => {
+    setOlder('loading');
+    const list = await fetchActivity(filter, offset).catch(() => [] as ActivityRow[]);
+    query.mutate((prev) => [...(prev ?? []), ...list]);
+    setOlder(list.length === PAGE ? 'idle' : 'done');
   };
-  useEffect(() => { setRows(null); void load(); }, [filter]);
 
+  const visible = useProgressive(rows ?? [], 15);
   let lastDay = '';
   return (
     <div class="a-page">
@@ -132,7 +132,7 @@ export function Notifications({ ctx }: { ctx: Ctx }) {
         <Empty icon="bell" title="No activity yet" text="When someone adds or changes a listing, or a visitor sends an enquiry, it shows up here." />
       ) : (
         <section class="a-card a-feed">
-          {rows.map((a) => {
+          {visible.map((a) => {
             const day = dayLabel(a.created_at);
             const head = day !== lastDay ? <h2 class="a-feed__day">{day}</h2> : null;
             lastDay = day;

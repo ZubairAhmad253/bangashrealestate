@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
-import { sb } from '../lib';
+import { sb, type Admin } from '../lib';
 import { Icon, Field, PageHead, toast } from '../ui';
+import { mutate } from '../store';
 import type { Ctx } from '../App';
 import { InstallCard } from '../Install';
 
@@ -12,7 +13,9 @@ export function Account({ ctx }: { ctx: Ctx }) {
   const saveName = async () => {
     const { error } = await sb.rpc('set_my_name', { new_name: name });
     if (error) return toast.err(error);
-    toast.ok('Name saved — refresh the page to see it everywhere.');
+    // Updates the name everywhere in the app straight away
+    mutate<Admin | null>(`me:${ctx.me.user_id}`, (me) => (me ? { ...me, name: name.trim() || null } : me ?? null));
+    toast.ok('Name saved ✓');
   };
   const changePw = async (e: Event) => {
     e.preventDefault();

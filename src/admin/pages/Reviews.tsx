@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { sb, type TestimonialRow } from '../lib';
 import { Icon, Field, Toggle, Empty, Skeleton, PageHead, toast, confirmDialog } from '../ui';
+import { useTestimonials } from '../queries';
+import { afterWrite } from '../store';
 import type { Ctx } from '../App';
 
 const SAVED_MSG = 'Saved ✓ The website will update in 1–2 minutes.';
@@ -9,16 +11,11 @@ const NEW: Draft = { name: '', place: '', text: '', rating: 5, published: true }
 
 export function Reviews({ ctx }: { ctx: Ctx }) {
   const isSuper = ctx.me.role === 'super_admin';
-  const [rows, setRows] = useState<TestimonialRow[] | null>(null);
+  const query = useTestimonials();
+  const rows = query.data ?? (query.error ? [] : null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const load = () =>
-    sb.from('testimonials').select('*').order('sort_order').order('created_at', { ascending: false }).then(({ data, error }) => {
-      if (error) toast.err(error);
-      setRows((data as TestimonialRow[]) ?? []);
-    });
-  useEffect(() => { void load(); }, []);
+  const refresh = () => void query.reload().catch(() => {});
 
   const save = async () => {
     if (!draft) return;
@@ -30,23 +27,26 @@ export function Reviews({ ctx }: { ctx: Ctx }) {
       : await sb.from('testimonials').insert({ ...data, sort_order: (rows?.length ?? 0) + 1 });
     setSaving(false);
     if (res.error) return toast.err(res.error);
+    if (draft.id) query.mutate((r) => r?.map((x) => (x.id === draft.id ? { ...x, ...data } : x)) ?? []);
     setDraft(null);
     toast.ok(SAVED_MSG);
-    void load();
+    afterWrite();
+    refresh();
   };
   const remove = async (r: TestimonialRow) => {
     if (!(await confirmDialog(`Delete the review from ${r.name}?`))) return;
     const { error } = await sb.from('testimonials').delete().eq('id', r.id);
     if (error) return toast.err(error);
+    query.mutate((list) => list?.filter((x) => x.id !== r.id) ?? []);
     toast.ok('Review deleted.');
-    void load();
+    afterWrite();
   };
   const move = async (i: number, d: number) => {
     if (!rows) return;
     const next = [...rows];
     const [x] = next.splice(i, 1);
     next.splice(i + d, 0, x);
-    setRows(next);
+    query.mutate(next.map((r, idx) => ({ ...r, sort_order: idx + 1 })));
     const results = await Promise.all(next.map((r, idx) => sb.from('testimonials').update({ sort_order: idx + 1 }).eq('id', r.id)));
     if (results.some((r) => r.error)) toast.err('Could not save the new order.');
   };

@@ -1,31 +1,21 @@
-import { useEffect, useState } from 'preact/hooks';
-import { sb, timeAgo, waDigits, type LeadRow } from '../lib';
+import { timeAgo, waDigits, type LeadRow } from '../lib';
 import { Icon } from '../ui';
 import { InstallCard } from '../Install';
+import { fetchers, useProjects, useProperties } from '../queries';
+import { peek, useQuery } from '../store';
 import type { Ctx } from '../App';
 
-interface Counts { available: number; sold: number; hidden: number; projects: number; reviews: number }
-
 export function Dashboard({ ctx }: { ctx: Ctx }) {
-  const [counts, setCounts] = useState<Counts | null>(null);
-  const [leads, setLeads] = useState<LeadRow[]>([]);
-
-  useEffect(() => {
-    const count = async (table: string, col?: string, vals?: string[]) => {
-      let q = sb.from(table).select('id', { count: 'exact', head: true });
-      if (col && vals) q = q.in(col, vals);
-      const { count } = await q;
-      return count ?? 0;
-    };
-    Promise.all([
-      count('properties', 'status', ['available']),
-      count('properties', 'status', ['sold', 'rented']),
-      count('properties', 'status', ['hidden']),
-      count('projects'),
-      count('testimonials'),
-    ]).then(([available, sold, hidden, projects, reviews]) => setCounts({ available, sold, hidden, projects, reviews }));
-    sb.from('leads').select('*').neq('status', 'spam').order('created_at', { ascending: false }).limit(5).then(({ data }) => setLeads((data as LeadRow[]) ?? []));
-  }, []);
+  // Same cached lists the other tabs use — the dashboard opens instantly and costs no extra requests
+  const properties = useProperties().data;
+  const projects = useProjects().data;
+  // Latest enquiries: from the full list when it is already loaded, otherwise a tiny 5-row request
+  const haveAll = Boolean(peek('leads'));
+  const all = useQuery<LeadRow[]>('leads', fetchers.leads, 60_000, haveAll);
+  const recent = useQuery<LeadRow[]>('leads:recent', fetchers.recentLeads, 15_000, !haveAll);
+  const by = (...s: string[]) => properties?.filter((p) => s.includes(p.status)).length;
+  const counts = properties && { available: by('available')!, sold: by('sold', 'rented')!, hidden: by('hidden')! };
+  const leads = (haveAll ? all.data : recent.data)?.filter((l) => l.status !== 'spam').slice(0, 5);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -52,7 +42,7 @@ export function Dashboard({ ctx }: { ctx: Ctx }) {
         <a href="#/properties" class="a-stat"><span class="a-stat__icon"><Icon name="home" /></span><span>Live listings</span><strong>{counts?.available ?? '–'}</strong></a>
         <a href="#/properties" class="a-stat"><span class="a-stat__icon"><Icon name="check" /></span><span>Sold / rented</span><strong>{counts?.sold ?? '–'}</strong></a>
         <a href="#/leads" class="a-stat a-stat--hl"><span class="a-stat__icon"><Icon name="leads" /></span><span>New leads</span><strong>{ctx.newLeads}</strong></a>
-        <a href="#/projects" class="a-stat"><span class="a-stat__icon"><Icon name="hammer" /></span><span>Projects</span><strong>{counts?.projects ?? '–'}</strong></a>
+        <a href="#/projects" class="a-stat"><span class="a-stat__icon"><Icon name="hammer" /></span><span>Projects</span><strong>{projects?.length ?? '–'}</strong></a>
       </div>
 
       <div class="a-quick">
@@ -84,7 +74,9 @@ export function Dashboard({ ctx }: { ctx: Ctx }) {
             <h2>Latest enquiries</h2>
             <a href="#/leads" class="a-link">View all →</a>
           </div>
-          {leads.length === 0 ? (
+          {leads === undefined ? (
+            <div class="a-skeleton a-skeleton--list" aria-busy="true" aria-label="Loading"><i /><i /><i /></div>
+          ) : leads.length === 0 ? (
             <p class="a-muted">No enquiries yet. Every enquiry from the website contact form will appear here.</p>
           ) : (
             <ul class="a-list">

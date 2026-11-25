@@ -1,7 +1,33 @@
 /* Admin panel — small reusable UI components */
-import type { ComponentChildren } from 'preact';
+import { Component, h, type ComponentChildren, type FunctionComponent } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+
+/** A list row that redraws only when its own data changes.
+    (Callback props are ignored on purpose — they always do the same thing.) */
+export function memoRow<P extends object>(Row: FunctionComponent<P>, watch: (keyof P)[]) {
+  return class MemoRow extends Component<P> {
+    shouldComponentUpdate(next: P) {
+      return watch.some((k) => next[k] !== this.props[k]);
+    }
+    render() {
+      return h(Row as FunctionComponent<object>, this.props as object);
+    }
+  };
+}
+
+/** Long lists: the first rows appear at once, the rest right after the screen change has finished */
+export function useProgressive<T>(list: T[], first = 20): T[] {
+  const [all, setAll] = useState(false);
+  const long = list.length > first;
+  useEffect(() => {
+    if (all || !long) return;
+    const t = setTimeout(() => setAll(true), 380);
+    return () => clearTimeout(t);
+  }, [long]);
+  return all || !long ? list : list.slice(0, first);
+}
 import { uploadImage, uploadVideo, youtubeId, tiktokId, isTikTok, normalizeTikTok, errorText, MAX_VIDEO_MB } from './lib';
+import { useThumbs } from './queries';
 
 /* ---------------- Icons ---------------- */
 const PATHS: Record<string, string> = {
@@ -198,6 +224,7 @@ export function PhotoUploader({ images, onChange, folder, onUploaded }: { images
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<{ done: number; total: number } | null>(null);
   const [drag, setDrag] = useState(false);
+  const thumb = useThumbs();
   const latest = useRef(images);
   latest.current = images;
 
@@ -238,7 +265,7 @@ export function PhotoUploader({ images, onChange, folder, onUploaded }: { images
       <div class="a-photos__grid">
         {images.map((url, i) => (
           <figure class="a-photo" key={url}>
-            <img src={url} alt="" loading="lazy" />
+            <img src={thumb(url)} alt="" width={480} height={360} loading={i < 6 ? 'eager' : 'lazy'} decoding="async" />
             {i === 0 && <span class="a-photo__cover">Cover photo</span>}
             <div class="a-photo__bar">
               <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move left"><Icon name="left" size={16} /></button>

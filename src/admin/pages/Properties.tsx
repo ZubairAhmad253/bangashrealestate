@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { sb, formatPrice, slugify, shortId, removeImages, isStoredMedia, type PropertyRow } from '../lib';
-import { Icon, Field, Segmented, Toggle, Stepper, Chips, PhotoUploader, VideoManager, Empty, PageHead, Skeleton, toast, confirmDialog } from '../ui';
+import { Icon, Field, Segmented, Toggle, Stepper, Chips, PhotoUploader, VideoManager, Empty, PageHead, Skeleton, toast, confirmDialog, memoRow, useProgressive } from '../ui';
 import { go, type Ctx } from '../App';
-import { AREA_OPTIONS, areaName, SITE_URL } from '../meta';
-import { SAMPLE_SLUGS } from '../importSamples';
+import { AREA_OPTIONS, areaName, SITE_URL, DEMO_SLUGS } from '../meta';
+import { useProperties, useThumbs, cachedProperty } from '../queries';
+import { afterWrite, age, invalidate, mutate } from '../store';
 
 const STATUS: Record<PropertyRow['status'], { label: string; cls: string }> = {
   available: { label: 'Live', cls: 'a-pill--live' },
@@ -21,42 +22,40 @@ type StatusFilter = 'all' | 'available' | 'hidden' | 'done';
 
 export function PropertiesList({ ctx }: { ctx: Ctx }) {
   const isSuper = ctx.me.role === 'super_admin';
-  const [rows, setRows] = useState<PropertyRow[] | null>(null);
+  const query = useProperties();
+  const rows = query.data ?? (query.error ? [] : null);
+  const thumb = useThumbs();
   const [q, setQ] = useState('');
   const [type, setType] = useState<TypeFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('all');
 
-  const load = () =>
-    sb.from('properties').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
-      if (error) toast.err(error);
-      setRows((data as PropertyRow[]) ?? []);
-    });
-  useEffect(() => { void load(); }, []);
-
   const update = async (p: PropertyRow, patch: Partial<PropertyRow>, msg = SAVED_MSG) => {
-    setRows((r) => r?.map((x) => (x.id === p.id ? { ...x, ...patch } : x)) ?? r);
+    query.mutate((r) => r?.map((x) => (x.id === p.id ? { ...x, ...patch } : x)) ?? []);
     const { error } = await sb.from('properties').update(patch).eq('id', p.id);
-    if (error) { toast.err(error); void load(); } else toast.ok(msg);
+    if (error) { toast.err(error); void query.reload().catch(() => {}); } else { toast.ok(msg); afterWrite(); }
   };
   const remove = async (p: PropertyRow) => {
     if (!(await confirmDialog(`Delete "${p.title}"?`, 'The property and all its photos will be removed permanently. If it has only been sold, setting the status to "Sold" is better.'))) return;
     const { error } = await sb.from('properties').delete().eq('id', p.id);
     if (error) return toast.err(error);
     await removeImages(p.images).catch(() => {});
-    setRows((r) => r?.filter((x) => x.id !== p.id) ?? r);
+    query.mutate((r) => r?.filter((x) => x.id !== p.id) ?? []);
     toast.ok('Property deleted.');
+    afterWrite();
   };
   // Demo listings (copied from the original sample data) must not stay on the live website
-  const demos = (rows ?? []).filter((r) => SAMPLE_SLUGS.includes(r.slug) && r.status !== 'hidden');
+  const demos = (rows ?? []).filter((r) => DEMO_SLUGS.includes(r.slug) && r.status !== 'hidden');
   const [hidingDemos, setHidingDemos] = useState(false);
   const hideDemos = async () => {
     if (!(await confirmDialog('Hide demo listings?', `${demos.length} demo listing${demos.length > 1 ? 's' : ''} with stock photos will be hidden from the website. Nothing is deleted — you can show them again at any time.`, 'Hide demo listings', false))) return;
     setHidingDemos(true);
-    const { error } = await sb.from('properties').update({ status: 'hidden' }).in('id', demos.map((d) => d.id));
+    const ids = demos.map((d) => d.id);
+    const { error } = await sb.from('properties').update({ status: 'hidden' }).in('id', ids);
     setHidingDemos(false);
     if (error) return toast.err(error);
+    query.mutate((r) => r?.map((x) => (ids.includes(x.id) ? { ...x, status: 'hidden' as const } : x)) ?? []);
     toast.ok(SAVED_MSG);
-    void load();
+    afterWrite();
   };
 
   const counts = useMemo(() => {
@@ -75,6 +74,8 @@ export function PropertiesList({ ctx }: { ctx: Ctx }) {
       return !term || `${p.title} ${p.location} ${areaName(p.area)}`.toLowerCase().includes(term);
     });
   }, [rows, q, type, status]);
+  // The listings that fit on the screen appear at once, the rest right after the screen change
+  const visible = useProgressive(shown, 6);
 
   return (
     <div class="a-page">
@@ -127,49 +128,55 @@ export function PropertiesList({ ctx }: { ctx: Ctx }) {
         ) : <Empty icon="search" title="Nothing found" text="Try a different search or filter." />
       ) : (
         <div class="a-items">
-          {shown.map((p, i) => (
-            <article class="a-item" key={p.id} style={{ '--i': Math.min(i, 12) }}>
-              <a href={`#/properties/${p.id}`} class="a-item__thumb">
-                {p.images[0] ? <img src={p.images[0]} alt="" loading="lazy" /> : <span><Icon name="image" size={28} /></span>}
-                <span class={`a-pill ${STATUS[p.status].cls}`}>{STATUS[p.status].label}</span>
-                {(p.images.length > 1 || (p.videos?.length ?? 0) > 0) && (
-                  <span class="a-item__count"><Icon name="image" size={12} /> {p.images.length}{(p.videos?.length ?? 0) > 0 && <> · <Icon name="play" size={11} /> {p.videos.length}</>}</span>
-                )}
-              </a>
-              <div class="a-item__body">
-                <div class="a-item__meta">
-                  <span class="a-chiplet">{TYPE_LABEL[p.type]}</span>
-                  <span class={`a-chiplet ${p.purpose === 'sale' ? 'a-chiplet--sale' : 'a-chiplet--rent'}`}>{p.purpose === 'sale' ? 'For Sale' : 'For Rent'}</span>
-                  <span class="a-muted a-small">{p.size}</span>
-                </div>
-                <a href={`#/properties/${p.id}`} class="a-item__title">{p.title}</a>
-                <p class="a-muted a-small"><Icon name="pin" size={14} /> {p.location}{p.area && !p.location.toLowerCase().includes(areaName(p.area).toLowerCase()) ? `, ${areaName(p.area)}` : ''}</p>
-                {p.show_price === false
-                  ? <p class="a-item__price a-item__price--hidden"><Icon name="eye-off" size={15} /> Price on request</p>
-                  : <p class="a-item__price">PKR {formatPrice(p.price)}{p.purpose === 'rent' && <small> /month</small>}</p>}
-                <div class="a-item__actions">
-                  <button class={`a-tag${p.featured ? ' is-on' : ''}`} onClick={() => update(p, { featured: !p.featured })} title="Show on the home page"><Icon name="star" size={14} /> Featured</button>
-                  <button class={`a-tag a-tag--hot${p.hot ? ' is-on' : ''}`} onClick={() => update(p, { hot: !p.hot })}><Icon name="fire" size={14} /> Hot</button>
-                  <select class="a-select-sm" value={p.status} onChange={(e) => update(p, { status: e.currentTarget.value as PropertyRow['status'] })} aria-label="Status">
-                    <option value="available">● Live</option>
-                    <option value="hidden">○ Hidden</option>
-                    <option value="sold">✓ Sold</option>
-                    <option value="rented">✓ Rented</option>
-                  </select>
-                </div>
-              </div>
-              <div class="a-item__side">
-                <a href={`#/properties/${p.id}`} class="a-btn a-btn--soft a-btn--sm"><Icon name="edit" size={16} /> Edit</a>
-                {p.status !== 'hidden' && <a href={`${SITE_URL}/properties/${p.slug}/`} target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm"><Icon name="external" size={16} /> View</a>}
-                {isSuper && <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" onClick={() => remove(p)}><Icon name="trash" size={16} /> Delete</button>}
-              </div>
-            </article>
+          {visible.map((p, i) => (
+            <PropertyItem key={p.id} p={p} thumb={p.images[0] ? thumb(p.images[0]) : ''} eager={i < 4} isSuper={isSuper} onUpdate={update} onRemove={remove} />
           ))}
         </div>
       )}
     </div>
   );
 }
+
+/* One listing in the list — redraws only when this listing (or its photo) changes */
+interface ItemProps { p: PropertyRow; thumb: string; eager: boolean; isSuper: boolean; onUpdate: (p: PropertyRow, patch: Partial<PropertyRow>) => void; onRemove: (p: PropertyRow) => void }
+const PropertyItem = memoRow<ItemProps>(({ p, thumb, eager, isSuper, onUpdate, onRemove }) => (
+    <article class="a-item">
+      <a href={`#/properties/${p.id}`} class="a-item__thumb">
+        {p.images[0] ? <img src={thumb} alt="" width={480} height={360} loading={eager ? 'eager' : 'lazy'} decoding="async" /> : <span><Icon name="image" size={28} /></span>}
+        <span class={`a-pill ${STATUS[p.status].cls}`}>{STATUS[p.status].label}</span>
+        {(p.images.length > 1 || (p.videos?.length ?? 0) > 0) && (
+          <span class="a-item__count"><Icon name="image" size={12} /> {p.images.length}{(p.videos?.length ?? 0) > 0 && <> · <Icon name="play" size={11} /> {p.videos.length}</>}</span>
+        )}
+      </a>
+      <div class="a-item__body">
+        <div class="a-item__meta">
+          <span class="a-chiplet">{TYPE_LABEL[p.type]}</span>
+          <span class={`a-chiplet ${p.purpose === 'sale' ? 'a-chiplet--sale' : 'a-chiplet--rent'}`}>{p.purpose === 'sale' ? 'For Sale' : 'For Rent'}</span>
+          <span class="a-muted a-small">{p.size}</span>
+        </div>
+        <a href={`#/properties/${p.id}`} class="a-item__title">{p.title}</a>
+        <p class="a-muted a-small"><Icon name="pin" size={14} /> {p.location}{p.area && !p.location.toLowerCase().includes(areaName(p.area).toLowerCase()) ? `, ${areaName(p.area)}` : ''}</p>
+        {p.show_price === false
+          ? <p class="a-item__price a-item__price--hidden"><Icon name="eye-off" size={15} /> Price on request</p>
+          : <p class="a-item__price">PKR {formatPrice(p.price)}{p.purpose === 'rent' && <small> /month</small>}</p>}
+        <div class="a-item__actions">
+          <button class={`a-tag${p.featured ? ' is-on' : ''}`} onClick={() => onUpdate(p, { featured: !p.featured })} title="Show on the home page"><Icon name="star" size={14} /> Featured</button>
+          <button class={`a-tag a-tag--hot${p.hot ? ' is-on' : ''}`} onClick={() => onUpdate(p, { hot: !p.hot })}><Icon name="fire" size={14} /> Hot</button>
+          <select class="a-select-sm" value={p.status} onChange={(e) => onUpdate(p, { status: e.currentTarget.value as PropertyRow['status'] })} aria-label="Status">
+            <option value="available">● Live</option>
+            <option value="hidden">○ Hidden</option>
+            <option value="sold">✓ Sold</option>
+            <option value="rented">✓ Rented</option>
+          </select>
+        </div>
+      </div>
+      <div class="a-item__side">
+        <a href={`#/properties/${p.id}`} class="a-btn a-btn--soft a-btn--sm"><Icon name="edit" size={16} /> Edit</a>
+        {p.status !== 'hidden' && <a href={`${SITE_URL}/properties/${p.slug}/`} target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm"><Icon name="external" size={16} /> View</a>}
+        {isSuper && <button class="a-btn a-btn--ghost a-btn--sm a-btn--danger-text" onClick={() => onRemove(p)}><Icon name="trash" size={16} /> Delete</button>}
+      </div>
+    </article>
+), ['p', 'thumb', 'eager', 'isSuper']);
 
 /* ==================== FORM ==================== */
 type Unit = 'crore' | 'lakh' | 'thousand' | 'rupees';
@@ -207,10 +214,23 @@ const EMPTY: FormState = {
 type FormTab = 'details' | 'photos' | 'videos';
 const TAB_OF: Record<string, FormTab> = { images: 'photos' };
 
+const toForm = (p: PropertyRow): FormState => {
+  const pr = splitPrice(Number(p.price));
+  const sz = splitSize(p.size);
+  return {
+    title: p.title, purpose: p.purpose, type: p.type, priceAmount: pr.amount, priceUnit: pr.unit, showPrice: p.show_price ?? true,
+    area: p.area, location: p.location, sizeAmount: sz.amount, sizeUnit: sz.unit, beds: p.beds, baths: p.baths,
+    description: p.description, features: p.features ?? [], images: p.images ?? [], videos: p.videos ?? [],
+    featured: p.featured, hot: p.hot, status: p.status,
+  };
+};
+
 export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
   const isNew = id === 'new';
-  const [row, setRow] = useState<PropertyRow | null>(null);
-  const [f, setF] = useState<FormState | null>(isNew ? EMPTY : null);
+  // Opens instantly from the cached list; loads from the server only if it is not there or is old
+  const [cached] = useState(() => (isNew ? undefined : cachedProperty(id)));
+  const [row, setRow] = useState<PropertyRow | null>(cached ?? null);
+  const [f, setF] = useState<FormState | null>(isNew ? EMPTY : cached ? toForm(cached) : null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState<FormTab>('details');
@@ -219,19 +239,12 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
   const folder = useRef(`properties/${isNew ? `new-${Date.now()}-${shortId()}` : id}`);
 
   useEffect(() => {
-    if (isNew) return;
+    if (isNew || (cached && age('properties') < 60_000)) return;
     sb.from('properties').select('*').eq('id', id).single().then(({ data, error }) => {
-      if (error || !data) { toast.err(error ?? 'Property not found'); go('properties'); return; }
+      if (error || !data) { if (!cached) { toast.err(error ?? 'Property not found'); go('properties'); } return; }
       const p = data as PropertyRow;
-      const pr = splitPrice(Number(p.price));
-      const sz = splitSize(p.size);
       setRow(p);
-      setF({
-        title: p.title, purpose: p.purpose, type: p.type, priceAmount: pr.amount, priceUnit: pr.unit, showPrice: p.show_price ?? true,
-        area: p.area, location: p.location, sizeAmount: sz.amount, sizeUnit: sz.unit, beds: p.beds, baths: p.baths,
-        description: p.description, features: p.features ?? [], images: p.images ?? [], videos: p.videos ?? [],
-        featured: p.featured, hot: p.hot, status: p.status,
-      });
+      if (!dirty.current) setF(toForm(p)); // never overwrite what the user is already typing
     });
   }, [id]);
 
@@ -282,10 +295,14 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
       : await sb.from('properties').update(data).eq('id', id);
     setSaving(false);
     if (res.error) return toast.err(res.error);
-    // Also delete removed photos / uploaded videos from storage
+    // The list shows the change at once (a new listing appears after a quick refresh)
+    if (isNew) invalidate('properties');
+    else mutate<PropertyRow[]>('properties', (list) => list?.map((x) => (x.id === id ? { ...x, ...data, updated_at: new Date().toISOString() } : x)) ?? []);
+    afterWrite();
+    // Also delete removed photos / uploaded videos from storage (in the background)
     if (row) {
       const gone = [...row.images.filter((u) => !f.images.includes(u)), ...(row.videos ?? []).filter((u) => !f.videos.includes(u) && isStoredMedia(u))];
-      await removeImages(gone).catch(() => {});
+      if (gone.length) removeImages(gone).catch(() => {});
     }
     dirty.current = false;
     toast.ok(SAVED_MSG);

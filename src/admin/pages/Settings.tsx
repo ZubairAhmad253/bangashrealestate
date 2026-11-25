@@ -1,36 +1,48 @@
 import { useEffect, useState } from 'preact/hooks';
 import { sb, requestRebuild, type Admin, type SettingsRow } from '../lib';
 import { Icon, Field, Skeleton, PageHead, Segmented, toast, confirmDialog } from '../ui';
+import { useQuery, afterWrite } from '../store';
 import type { Ctx } from '../App';
 import { SITE } from '../../config/site';
 
 type Stat = { value: number; suffix: string; label: string };
+interface SettingsData { settings: SettingsRow; hook: string; admins: Admin[] }
+
+async function fetchSettings(): Promise<SettingsData> {
+  const [s, h, a] = await Promise.all([
+    sb.from('settings').select('*').eq('id', 1).single(),
+    sb.from('private_settings').select('deploy_hook_url').eq('id', 1).single(),
+    sb.from('admins').select('*').order('created_at'),
+  ]);
+  if (s.error) throw s.error;
+  const d = (s.data ?? {}) as SettingsRow;
+  return {
+    settings: {
+      phone: d.phone ?? SITE.phone,
+      whatsapp: d.whatsapp ?? SITE.whatsapp,
+      email: d.email ?? SITE.email,
+      hours: d.hours ?? SITE.hours,
+      google_rating: d.google_rating ?? SITE.googleRating,
+      stats: d.stats?.length === 4 ? d.stats : SITE.stats.map((x) => ({ ...x })),
+    },
+    hook: (h.data as { deploy_hook_url: string | null } | null)?.deploy_hook_url ?? '',
+    admins: (a.data as Admin[]) ?? [],
+  };
+}
 
 export function Settings({ ctx }: { ctx: Ctx }) {
-  const [s, setS] = useState<SettingsRow | null>(null);
-  const [hook, setHook] = useState('');
-  const [admins, setAdmins] = useState<Admin[]>([]);
+  const query = useQuery('settings', fetchSettings, 10_000);
+  // Editable copies — filled once from the loaded data
+  const [s, setS] = useState<SettingsRow | null>(query.data?.settings ?? null);
+  const [hook, setHook] = useState(query.data?.hook ?? '');
+  const admins = query.data?.admins ?? [];
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ email: '', user_id: '', role: 'editor' as Admin['role'] });
-
-  const loadAdmins = () => sb.from('admins').select('*').order('created_at').then(({ data }) => setAdmins((data as Admin[]) ?? []));
   useEffect(() => {
-    sb.from('settings').select('*').eq('id', 1).single().then(({ data, error }) => {
-      if (error) toast.err(error);
-      const d = (data ?? {}) as SettingsRow;
-      setS({
-        phone: d.phone ?? SITE.phone,
-        whatsapp: d.whatsapp ?? SITE.whatsapp,
-        email: d.email ?? SITE.email,
-        hours: d.hours ?? SITE.hours,
-        google_rating: d.google_rating ?? SITE.googleRating,
-        stats: d.stats?.length === 4 ? d.stats : SITE.stats.map((x) => ({ ...x })),
-      });
-    });
-    sb.from('private_settings').select('deploy_hook_url').eq('id', 1).single().then(({ data }) => setHook(data?.deploy_hook_url ?? ''));
-    void loadAdmins();
-  }, []);
+    if (!s && query.data) { setS(query.data.settings); setHook(query.data.hook); }
+  }, [query.data]);
+  const loadAdmins = () => sb.from('admins').select('*').order('created_at').then(({ data }) => query.mutate((prev) => ({ ...(prev as SettingsData), admins: (data as Admin[]) ?? [] })));
 
   if (!s) return <div class="a-page"><Skeleton rows={3} /></div>;
   const stats = s.stats as Stat[];
@@ -48,7 +60,9 @@ export function Settings({ ctx }: { ctx: Ctx }) {
     }).eq('id', 1);
     setSaving(false);
     if (r1.error || r2.error) return toast.err(r1.error ?? r2.error);
+    query.mutate((prev) => ({ ...(prev as SettingsData), settings: s, hook: hook.trim() }));
     toast.ok('Settings saved ✓ The website will update in 1–2 minutes.');
+    afterWrite();
   };
 
   const publish = async () => {
