@@ -431,7 +431,7 @@ html { -webkit-tap-highlight-color: transparent; }
 .a-lead__who strong { display: block; font-family: var(--a-serif); font-size: 18px; }
 .a-lead__who small { display: block; }
 .a-lead__actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 16px 16px 66px; }
-@media (max-width: 520px) { .a-lead__actions { padding-left: 16px; } }
+@media (max-width: 520px) { .a-lead__actions { padding-left: 16px; } .a-lead__actions .a-btn { flex: 1 1 auto; } }
 .a-lead__body { display: grid; gap: 12px; padding: 16px; border-top: 1px solid var(--a-line); background: var(--a-soft); animation: a-fade 0.25s; }
 .a-dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 14px; }
 .a-dl dt { color: var(--a-soft-text); font-weight: 700; }
@@ -816,3 +816,144 @@ html { -webkit-tap-highlight-color: transparent; }
 .a-reply__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .a-reply__head small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.4; }
 .a-reply__text { margin: 0; padding: 12px 14px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1px var(--a-line); font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ==========================================================================
+   EVERY SCREEN SIZE (checked from 360 px phones up to wide desktops)
+   Nothing may push the page sideways, and choice buttons never wrap
+   into a ragged shape.
+   ========================================================================== */
+
+/* Grid columns may shrink below their content, so one wide child can never widen the whole page */
+.a-page, .a-stack, .a-form-grid, .a-photos, .a-videos, .a-videos__add, .a-items, .a-leads, .a-reviews, .a-replies, .a-stats-edit { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 700px) { .a-form-grid, .a-videos__add { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 800px) { .a-reviews { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .a-replies { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 960px) { .a-shell { grid-template-columns: 264px minmax(0, 1fr); } }
+.a-field, .a-card, .a-item__body { min-width: 0; }
+.a-combo { grid-template-columns: minmax(0, 1fr) minmax(104px, 140px); }
+.a-row > input { flex: 1 1 auto; min-width: 0; }
+.a-row > .a-btn, .a-reply__head > .a-btn { flex: none; }
+@media (max-width: 419px) { .a-card { padding: 18px 16px; } }
+
+/* Choice buttons in forms: 2–3 options share one row in equal parts; 4 options become a
+   neat 2 × 2 grid when the space is narrow (decided by the space the control really has) */
+.a-segbox { container-type: inline-size; min-width: 0; }
+.a-seg { display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 4px; width: 100%; padding: 4px; }
+.a-seg button { justify-content: center; min-width: 0; padding: 8px 10px; white-space: nowrap; }
+.a-seg button span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+@container (max-width: 519px) {
+  .a-seg[data-n="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); border-radius: 20px; }
+  .a-seg[data-n="4"] button { border-radius: 15px; }
+}
+
+/* Status filter on the properties list: a compact dropdown next to the search box */
+.a-filter { flex: none; width: auto !important; font-weight: 700; color: var(--a-text); }
+@media (max-width: 599px) {
+  .a-toolbar { flex-wrap: nowrap; gap: 8px; }
+  .a-search { flex: 1 1 0; min-width: 0; }
+  .a-filter { max-width: 48%; padding-left: 12px !important; padding-right: 34px !important; background-position: right 10px center !important; }
+}
+
+/* Filter tabs above lists. Phones: one line of chips running edge to edge that slides sideways
+   (the soft fade at the edge shows there is more) */
+.a-tabs--filter { position: relative; }
+.a-tabs--filter button { flex: none; }
+@media (max-width: 599px) {
+  .a-tabs--filter {
+    width: auto; max-width: none; margin-inline: -16px; padding: 4px 16px 10px; gap: 8px;
+    border-radius: 0; background: none; box-shadow: none;
+    scroll-padding-inline: 16px; overscroll-behavior-x: contain;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 24px), transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 24px), transparent);
+  }
+  .a-tabs--filter button { gap: 7px; padding: 9px 15px; background: rgb(255 255 255 / 0.92); box-shadow: 0 1px 2px rgb(40 30 10 / 0.06), 0 6px 16px -10px rgb(40 30 10 / 0.35); }
+  .a-tabs--filter button svg { display: none; }
+  .a-tabs--filter button.is-on { background: var(--a-gold-grad); color: #2a1a00; box-shadow: var(--a-glow); }
+  .a-tabs--filter button.is-on b { background: rgb(255 255 255 / 0.6); color: #2a1a00; }
+}
+
+/* Details · Photos · Videos tabs in the forms: three equal parts on phones */
+@media (max-width: 599px) {
+  .a-tabs--form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 4px; }
+  .a-tabs--form button { justify-content: center; gap: 6px; min-width: 0; padding: 9px 6px; }
+  .a-tabs--form .a-dot { position: absolute; top: 5px; right: 7px; }
+}
+@media (max-width: 419px) { .a-tabs--form button svg { display: none; } }
+
+/* Photo tiles: the buttons shrink with the tile instead of stretching the grid */
+.a-photos__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 600px) { .a-photos__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .a-photos__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.a-photo__bar button { min-width: 0; padding: 0; }
+@media (max-width: 419px) {
+  .a-photo__bar { gap: 4px; padding: 5px; }
+  .a-photo__bar button { height: 32px; border-radius: 9px; }
+}
+.a-videos__list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
+
+/* Floating save bar: on phones the "Add photos" reminder gets its own slim row */
+@media (max-width: 599px) {
+  .a-savebar { flex-wrap: wrap; gap: 8px; padding: 10px; border-radius: 22px; }
+  .a-savebar .a-btn--ghost { flex: none; }
+  .a-savebar .a-btn--lg { flex: 1 1 0; min-width: 0; max-width: none; padding-inline: 18px; }
+  .a-savebar__hint { flex: 1 1 100%; min-height: 40px; margin: 0; }
+}
+
+/* Property / project cards. Phones: photo + text on top, then the switches and the buttons
+   each get the full width of the card. Wider screens: photo · text · buttons in a row. */
+.a-item { grid-template-columns: 116px minmax(0, 1fr); grid-template-areas: "thumb body" "actions actions" "side side"; column-gap: 14px; row-gap: 12px; }
+.a-item__thumb { grid-area: thumb; }
+.a-item__body { grid-area: body; }
+.a-item__actions { grid-area: actions; margin-top: 0; align-items: center; }
+.a-item__side { grid-area: side; }
+@media (max-width: 699px) {
+  .a-item__title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; font-size: 17px; }
+  .a-item__body > p.a-small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .a-item__side { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; padding-top: 12px; border-top: 1px dashed var(--a-line); }
+  .a-item__side .a-btn { min-width: 0; padding-inline: 10px; }
+}
+@media (min-width: 700px) {
+  .a-item { grid-template-columns: 190px minmax(0, 1fr) auto; grid-template-areas: "thumb body side" "thumb actions side"; row-gap: 10px; }
+  .a-item__body { align-self: end; }
+  .a-item__actions { align-self: start; }
+  .a-item__thumb, .a-item__side { align-self: center; }
+}
+
+/* Home page stats (Settings). Phones: each stat is a small card — its label on top,
+   the number and its sign below. Wider screens: one row each. */
+.a-stats-edit { gap: 10px; }
+.a-stats-edit__row { grid-template-columns: 110px 64px minmax(0, 1fr); align-items: center; }
+.a-stats-edit__num { display: none; }
+@media (max-width: 559px) {
+  .a-stats-edit__row { grid-template-columns: 28px minmax(0, 1fr) 72px; grid-template-areas: "n label label" ". value suffix"; gap: 8px; padding: 10px; border-radius: 18px; background: rgb(255 255 255 / 0.65); box-shadow: inset 0 0 0 1px var(--a-line); }
+  .a-stats-edit__num { display: grid; grid-area: n; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--a-gold-grad); color: #2a1a00; font-size: 12.5px; font-weight: 800; }
+  .a-stats-edit__label { grid-area: label; }
+  .a-stats-edit__value { grid-area: value; }
+  .a-stats-edit__suffix { grid-area: suffix; text-align: center; }
+}
+
+/* Team cards on phones: the email sits right under the name */
+.a-table__mail { display: none; }
+@media (max-width: 719px) {
+  .a-table td.a-table__email { display: none; }
+  .a-table__name > span:last-child { min-width: 0; }
+  .a-table__mail { display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: var(--a-muted); }
+}
+
+/* "New version ready" bar (shown only while a form is open; otherwise the app updates by itself) */
+.a-update {
+  position: fixed; z-index: 75; left: 12px; right: 12px; top: calc(68px + env(safe-area-inset-top));
+  display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 12px; border-radius: 18px;
+  background: #2b2111; color: #fff; box-shadow: 0 20px 44px -18px rgb(20 14 4 / 0.7);
+  animation: a-update-in 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.1) both;
+}
+.a-update__icon { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 50%; background: rgb(255 214 110 / 0.16); color: #ffd66e; }
+.a-update__text { flex: 1; min-width: 0; display: grid; line-height: 1.3; }
+.a-update__text strong { font-size: 14.5px; }
+.a-update__text small { font-size: 12.5px; color: rgb(255 255 255 / 0.72); }
+.a-update .a-btn { flex: none; }
+.a-update__close { width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 50%; color: rgb(255 255 255 / 0.7); }
+.a-update__close:hover { background: rgb(255 255 255 / 0.1); color: #fff; }
+@media (min-width: 960px) { .a-update { left: auto; right: 24px; top: auto; bottom: 24px; width: 420px; } }
+@keyframes a-update-in { from { opacity: 0; transform: translateY(-12px) scale(0.98); } }
+@media (min-width: 960px) { @keyframes a-update-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } } }

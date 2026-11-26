@@ -146,12 +146,38 @@ export function Field({ label, hint, error, children, full }: { label: string; h
   );
 }
 
-export function Segmented<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string; icon?: string }[]; onChange: (v: T) => void }) {
+/** Choice buttons for forms. Always one tidy shape: 2–3 options share one row in equal parts;
+    4 options form a neat 2 × 2 grid when the space is narrow. They never wrap into a ragged blob. */
+export function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: { value: T; label: string; icon?: string }[]; onChange: (v: T) => void; label?: string }) {
   return (
-    <div class="a-seg" role="radiogroup">
+    <div class="a-segbox">
+      <div class="a-seg" role="radiogroup" aria-label={label} data-n={options.length} style={{ '--n': options.length }}>
+        {options.map((o) => (
+          <button type="button" role="radio" aria-checked={value === o.value} class={value === o.value ? 'is-on' : ''} onClick={() => onChange(o.value)}>
+            {o.icon && <Icon name={o.icon} size={16} />}<span>{o.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Filter tabs above a list (with counts). On phones they become one line of chips that
+    slides sideways; the chosen chip always glides into view. */
+export function FilterTabs<T extends string>({ value, options, onChange, label }: { value: T; options: { value: T; label: string; icon?: string; count?: number }[]; onChange: (v: T) => void; label: string }) {
+  const strip = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = strip.current;
+    const on = el?.querySelector<HTMLElement>('.is-on');
+    if (!el || !on || el.scrollWidth <= el.clientWidth + 1) return;
+    const left = Math.max(0, on.offsetLeft - (el.clientWidth - on.offsetWidth) / 2);
+    el.scrollTo({ left, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }, [value]);
+  return (
+    <div class="a-tabs a-tabs--filter" role="tablist" aria-label={label} ref={strip}>
       {options.map((o) => (
-        <button type="button" role="radio" aria-checked={value === o.value} class={value === o.value ? 'is-on' : ''} onClick={() => onChange(o.value)}>
-          {o.icon && <Icon name={o.icon} size={16} />} {o.label}
+        <button type="button" role="tab" aria-selected={value === o.value} class={value === o.value ? 'is-on' : ''} onClick={() => onChange(o.value)}>
+          {o.icon && <Icon name={o.icon} size={16} />}<span>{o.label}</span>{o.count !== undefined && <b>{o.count}</b>}
         </button>
       ))}
     </div>

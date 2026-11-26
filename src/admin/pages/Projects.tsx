@@ -51,10 +51,10 @@ export function ProjectsList({ ctx }: { ctx: Ctx }) {
                 <a href={`#/projects/${p.id}`} class="a-item__title">{p.title}</a>
                 <p class="a-muted a-small">{CATEGORY[p.category]} · {p.status === 'completed' ? 'Completed' : 'In progress'}{p.location ? ` · ${p.location}` : ''}{p.year ? ` · ${p.year}` : ''}</p>
                 <p class="a-muted a-small">{p.images.length} photos</p>
-                <div class="a-item__actions">
-                  <button class={`a-tag${p.featured ? ' is-on' : ''}`} onClick={() => update(p, { featured: !p.featured })}><Icon name="star" size={14} /> Featured</button>
-                  <button class={`a-tag${p.published ? ' is-on' : ''}`} onClick={() => update(p, { published: !p.published })}>{p.published ? '● Live' : '○ Hidden'}</button>
-                </div>
+              </div>
+              <div class="a-item__actions">
+                <button class={`a-tag${p.featured ? ' is-on' : ''}`} onClick={() => update(p, { featured: !p.featured })}><Icon name="star" size={14} /> Featured</button>
+                <button class={`a-tag${p.published ? ' is-on' : ''}`} onClick={() => update(p, { published: !p.published })}>{p.published ? '● Live' : '○ Hidden'}</button>
               </div>
               <div class="a-item__side">
                 <a href={`#/projects/${p.id}`} class="a-btn a-btn--soft a-btn--sm"><Icon name="edit" size={16} /> Edit</a>
@@ -158,10 +158,10 @@ export function ProjectForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
             <input value={f.title} maxLength={140} onInput={(e) => set('title', e.currentTarget.value)} placeholder="10 Marla Modern House" />
           </Field>
           <Field label="Type of work">
-            <Segmented value={f.category} onChange={(v) => set('category', v)} options={[{ value: 'house', label: 'House' }, { value: 'flats', label: 'Flats' }, { value: 'renovation', label: 'Renovation' }, { value: 'commercial', label: 'Commercial' }]} />
+            <Segmented label="Type of work" value={f.category} onChange={(v) => set('category', v)} options={[{ value: 'house', label: 'House' }, { value: 'flats', label: 'Flats' }, { value: 'renovation', label: 'Renovation' }, { value: 'commercial', label: 'Commercial' }]} />
           </Field>
           <Field label="Status">
-            <Segmented value={f.status} onChange={(v) => set('status', v)} options={[{ value: 'completed', label: 'Completed' }, { value: 'in_progress', label: 'In progress' }]} />
+            <Segmented label="Status" value={f.status} onChange={(v) => set('status', v)} options={[{ value: 'completed', label: 'Completed' }, { value: 'in_progress', label: 'In progress' }]} />
           </Field>
           <Field label="Location" hint="e.g. Airport Housing Society, Rawalpindi">
             <input value={f.location} maxLength={140} onInput={(e) => set('location', e.currentTarget.value)} />

@@ -15,6 +15,7 @@ import { Reviews } from './pages/Reviews';
 import { Settings } from './pages/Settings';
 import { Account } from './pages/Account';
 import { Notifications } from './pages/Notifications';
+import { UpdateBar, watchForUpdates } from './update';
 import logoUrl from '../assets/brand/logo-mark.png';
 
 /* ---------------- Hash router with smooth screen changes ---------------- */
@@ -92,7 +93,12 @@ export default function App() {
       if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !s && storedUserId)) clearAll();
       setSession(s);
     });
-    return () => data.subscription.unsubscribe();
+    // The installed app always runs the newest published version
+    const stopUpdates = watchForUpdates();
+    return () => {
+      data.subscription.unsubscribe();
+      stopUpdates();
+    };
   }, []);
 
   // While the sign-in is being checked, the app already opens for the user saved on this phone
@@ -111,6 +117,7 @@ export default function App() {
       {body}
       <Toasts />
       <ConfirmHost />
+      <UpdateBar />
     </>
   );
 }

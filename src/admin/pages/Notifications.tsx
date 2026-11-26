@@ -1,7 +1,7 @@
 /* Notifications — everything that was added, changed or removed, newest first */
 import { useEffect, useState } from 'preact/hooks';
 import { timeAgo, formatPrice, type ActivityRow, type ActivityEntity } from '../lib';
-import { Icon, PageHead, Skeleton, Empty, useProgressive } from '../ui';
+import { Icon, PageHead, Skeleton, Empty, FilterTabs, useProgressive } from '../ui';
 import { useQuery } from '../store';
 import { ACTIVITY_PAGE as PAGE, activityKey, fetchActivity } from '../queries';
 import type { Ctx } from '../App';
@@ -114,11 +114,7 @@ export function Notifications({ ctx }: { ctx: Ctx }) {
     <div class="a-page">
       <PageHead title="Notifications" icon="bell" sub="Everything added, changed or removed — by you, your team and website visitors" />
 
-      <div class="a-tabs" role="tablist" aria-label="Filter notifications">
-        {FILTERS.map((f) => (
-          <button role="tab" aria-selected={filter === f.value} class={filter === f.value ? 'is-on' : ''} onClick={() => setFilter(f.value)}>{f.label}</button>
-        ))}
-      </div>
+      <FilterTabs label="Filter notifications" value={filter} onChange={setFilter} options={FILTERS} />
 
       {missing && (
         <p class="a-alert a-alert--warn">

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { sb, formatPrice, slugify, shortId, removeImages, isStoredMedia, type PropertyRow } from '../lib';
-import { Icon, Field, Segmented, Toggle, Stepper, Chips, PhotoUploader, VideoManager, Empty, PageHead, Skeleton, toast, confirmDialog, memoRow, useProgressive } from '../ui';
+import { Icon, Field, Segmented, FilterTabs, Toggle, Stepper, Chips, PhotoUploader, VideoManager, Empty, PageHead, Skeleton, toast, confirmDialog, memoRow, useProgressive } from '../ui';
 import { go, type Ctx } from '../App';
 import { AREA_OPTIONS, areaName, SITE_URL, DEMO_SLUGS } from '../meta';
 import { useProperties, useThumbs, cachedProperty } from '../queries';
@@ -94,30 +94,24 @@ export function PropertiesList({ ctx }: { ctx: Ctx }) {
         </section>
       )}
 
-      <div class="a-tabs" role="tablist" aria-label="Property type">
-        {([
-          ['all', 'All', 'layers'],
-          ['house', 'Houses', 'home'],
-          ['flat', 'Flats', 'building'],
-          ['plot', 'Plots', 'map'],
-        ] as const).map(([v, label, icon]) => (
-          <button role="tab" aria-selected={type === v} class={type === v ? 'is-on' : ''} onClick={() => setType(v)}>
-            <Icon name={icon} size={16} /> {label} <b>{counts[v]}</b>
-          </button>
-        ))}
-      </div>
+      <FilterTabs label="Property type" value={type} onChange={setType} options={[
+        { value: 'all', label: 'All', icon: 'layers', count: counts.all },
+        { value: 'house', label: 'Houses', icon: 'home', count: counts.house },
+        { value: 'flat', label: 'Flats', icon: 'building', count: counts.flat },
+        { value: 'plot', label: 'Plots', icon: 'map', count: counts.plot },
+      ]} />
 
       <div class="a-toolbar">
         <div class="a-search">
           <Icon name="search" />
-          <input type="search" placeholder="Search by title, area or sector…" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
+          <input type="search" placeholder="Search properties…" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
         </div>
-        <Segmented value={status} onChange={setStatus} options={[
-          { value: 'all', label: 'Any status' },
-          { value: 'available', label: 'Live' },
-          { value: 'hidden', label: 'Hidden' },
-          { value: 'done', label: 'Sold / Rented' },
-        ]} />
+        <select class="a-filter" value={status} onChange={(e) => setStatus(e.currentTarget.value as typeof status)} aria-label="Filter by status">
+          <option value="all">Any status</option>
+          <option value="available">Live</option>
+          <option value="hidden">Hidden</option>
+          <option value="done">Sold / Rented</option>
+        </select>
       </div>
 
       {rows === null ? <Skeleton rows={4} /> : shown.length === 0 ? (
@@ -159,16 +153,16 @@ const PropertyItem = memoRow<ItemProps>(({ p, thumb, eager, isSuper, onUpdate, o
         {p.show_price === false
           ? <p class="a-item__price a-item__price--hidden"><Icon name="eye-off" size={15} /> Price on request</p>
           : <p class="a-item__price">PKR {formatPrice(p.price)}{p.purpose === 'rent' && <small> /month</small>}</p>}
-        <div class="a-item__actions">
-          <button class={`a-tag${p.featured ? ' is-on' : ''}`} onClick={() => onUpdate(p, { featured: !p.featured })} title="Show on the home page"><Icon name="star" size={14} /> Featured</button>
-          <button class={`a-tag a-tag--hot${p.hot ? ' is-on' : ''}`} onClick={() => onUpdate(p, { hot: !p.hot })}><Icon name="fire" size={14} /> Hot</button>
-          <select class="a-select-sm" value={p.status} onChange={(e) => onUpdate(p, { status: e.currentTarget.value as PropertyRow['status'] })} aria-label="Status">
-            <option value="available">● Live</option>
-            <option value="hidden">○ Hidden</option>
-            <option value="sold">✓ Sold</option>
-            <option value="rented">✓ Rented</option>
-          </select>
-        </div>
+      </div>
+      <div class="a-item__actions">
+        <button class={`a-tag${p.featured ? ' is-on' : ''}`} onClick={() => onUpdate(p, { featured: !p.featured })} title="Show on the home page"><Icon name="star" size={14} /> Featured</button>
+        <button class={`a-tag a-tag--hot${p.hot ? ' is-on' : ''}`} onClick={() => onUpdate(p, { hot: !p.hot })}><Icon name="fire" size={14} /> Hot</button>
+        <select class="a-select-sm" value={p.status} onChange={(e) => onUpdate(p, { status: e.currentTarget.value as PropertyRow['status'] })} aria-label="Status">
+          <option value="available">● Live</option>
+          <option value="hidden">○ Hidden</option>
+          <option value="sold">✓ Sold</option>
+          <option value="rented">✓ Rented</option>
+        </select>
       </div>
       <div class="a-item__side">
         <a href={`#/properties/${p.id}`} class="a-btn a-btn--soft a-btn--sm"><Icon name="edit" size={16} /> Edit</a>
@@ -363,10 +357,10 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
                 <input value={f.title} maxLength={140} onInput={(e) => set('title', e.currentTarget.value)} placeholder="10 Marla Brand New House" />
               </Field>
               <Field label="For sale or rent?">
-                <Segmented value={f.purpose} onChange={(v) => set('purpose', v)} options={[{ value: 'sale', label: 'For Sale' }, { value: 'rent', label: 'For Rent' }]} />
+                <Segmented label="For sale or rent" value={f.purpose} onChange={(v) => set('purpose', v)} options={[{ value: 'sale', label: 'For Sale' }, { value: 'rent', label: 'For Rent' }]} />
               </Field>
               <Field label="Type">
-                <Segmented value={f.type} onChange={(v) => set('type', v)} options={[{ value: 'house', label: 'House' }, { value: 'flat', label: 'Flat' }, { value: 'plot', label: 'Plot' }]} />
+                <Segmented label="Type" value={f.type} onChange={(v) => set('type', v)} options={[{ value: 'house', label: 'House' }, { value: 'flat', label: 'Flat' }, { value: 'plot', label: 'Plot' }]} />
               </Field>
             </div>
           </section>
@@ -438,7 +432,7 @@ export function PropertyForm({ id, ctx: _ctx }: { id: string; ctx: Ctx }) {
           <section class="a-card">
             <h2 class="a-card__title"><span>5</span> Visibility</h2>
             <Field label="Status">
-              <Segmented value={f.status} onChange={(v) => set('status', v)} options={[
+              <Segmented label="Status" value={f.status} onChange={(v) => set('status', v)} options={[
                 { value: 'available', label: 'Live' },
                 { value: 'hidden', label: 'Hidden (draft)' },
                 { value: 'sold', label: 'Sold' },

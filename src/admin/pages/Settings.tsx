@@ -8,6 +8,11 @@ import { SITE } from '../../config/site';
 type Stat = { value: number; suffix: string; label: string };
 const ROLE_LABEL: Record<Admin['role'], string> = { super_admin: 'Super Admin', editor: 'Editor' };
 const addedOn = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+/** An email that may break onto a second line only right before the "@" — never mid-word */
+const mailParts = (email: string) => {
+  const at = email.indexOf('@');
+  return at > 0 ? <>{email.slice(0, at)}<wbr />{email.slice(at)}</> : email;
+};
 interface SettingsData { settings: SettingsRow; hook: string; admins: Admin[] }
 
 async function fetchSettings(): Promise<SettingsData> {
@@ -131,9 +136,10 @@ export function Settings({ ctx }: { ctx: Ctx }) {
         <div class="a-stats-edit">
           {stats.map((st, i) => (
             <div class="a-stats-edit__row">
-              <input type="number" inputMode="numeric" value={st.value} onInput={(e) => setStat(i, { value: Number(e.currentTarget.value) })} aria-label="Number" />
-              <input value={st.suffix} maxLength={3} onInput={(e) => setStat(i, { suffix: e.currentTarget.value })} aria-label="Suffix" />
-              <input value={st.label} maxLength={40} onInput={(e) => setStat(i, { label: e.currentTarget.value })} aria-label="Label" />
+              <span class="a-stats-edit__num" aria-hidden="true">{i + 1}</span>
+              <input class="a-stats-edit__value" type="number" inputMode="numeric" value={st.value} onInput={(e) => setStat(i, { value: Number(e.currentTarget.value) })} aria-label={`Stat ${i + 1}: number`} />
+              <input class="a-stats-edit__suffix" value={st.suffix} maxLength={3} onInput={(e) => setStat(i, { suffix: e.currentTarget.value })} aria-label={`Stat ${i + 1}: sign after the number`} placeholder="+" />
+              <input class="a-stats-edit__label" value={st.label} maxLength={40} onInput={(e) => setStat(i, { label: e.currentTarget.value })} aria-label={`Stat ${i + 1}: label`} placeholder="Years of Experience" />
             </div>
           ))}
         </div>
@@ -179,9 +185,10 @@ export function Settings({ ctx }: { ctx: Ctx }) {
                       <span>
                         {name ? <strong>{name}</strong> : <strong class="a-muted">No name yet</strong>}
                         {isMe && <em class="a-you">You</em>}
+                        <small class="a-table__mail">{mailParts(a.email)}</small>
                       </span>
                     </td>
-                    <td data-label="Email" class="a-table__email">{a.email}</td>
+                    <td data-label="Email" class="a-table__email">{mailParts(a.email)}</td>
                     <td data-label="Role">
                       {isMe ? (
                         <span class="a-pill a-pill--role">{ROLE_LABEL[a.role]}</span>

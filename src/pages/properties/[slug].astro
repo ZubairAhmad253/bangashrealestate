@@ -1,5 +1,6 @@
 ---
-import { getImage, inferRemoteSize } from 'astro:assets';
+import { getImage } from 'astro:assets';
+import { photoSize } from '../../lib/photo-size';
 import Img from '../../components/Img.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
@@ -31,7 +32,7 @@ const photos = [p.image, ...(p.gallery ?? [])];
 // width and height are both worked out from the original's shape
 const full = await Promise.all(
   photos.map(async (src) => {
-    const original = typeof src === 'string' ? await inferRemoteSize(src) : src;
+    const original = typeof src === 'string' ? await photoSize(src) : src;
     const width = Math.min(1600, original.width);
     const height = Math.round((width * original.height) / original.width);
     return getImage({ src, width, height, format: 'webp', quality: 74 });

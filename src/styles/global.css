@@ -960,3 +960,9 @@ a, button, .btn, summary, select { touch-action: manipulation; }
 
 /* Comfortable tap size for "More in …" links next to section titles */
 .section-head > .link-arrow { min-height: 44px; display: inline-flex; align-items: center; }
+
+/* Small phones: a button with a long label (e.g. "Ask about DHA Islamabad–Rawalpindi") moves its
+   text onto a second line instead of cutting it off */
+@media (max-width: 480px) {
+  .btn { white-space: normal; text-align: center; line-height: 1.3; }
+}

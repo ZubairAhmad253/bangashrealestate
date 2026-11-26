@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'preact/hooks';
 import { sb, timeAgo, waDigits, type LeadRow } from '../lib';
-import { Icon, Segmented, Empty, Skeleton, PageHead, toast, confirmDialog, memoRow, useProgressive } from '../ui';
+import { Icon, FilterTabs, Empty, Skeleton, PageHead, toast, confirmDialog, memoRow, useProgressive } from '../ui';
 import { useLeads } from '../queries';
 import type { Ctx } from '../App';
 
@@ -54,15 +54,13 @@ export function Leads({ ctx }: { ctx: Ctx }) {
         <button class={`a-btn a-btn--ghost${refreshing ? ' is-busy' : ''}`} onClick={refresh} disabled={refreshing}><Icon name="refresh" /> {refreshing ? 'Refreshing…' : 'Refresh'}</button>
       </PageHead>
 
-      <div class="a-toolbar">
-        <Segmented value={tab} onChange={setTab} options={[
-          { value: 'new', label: `New (${counts.new})` },
-          { value: 'contacted', label: `Contacted (${counts.contacted})` },
-          { value: 'closed', label: `Closed (${counts.closed})` },
-          { value: 'all', label: 'All' },
-          { value: 'spam', label: 'Spam' },
-        ]} />
-      </div>
+      <FilterTabs label="Filter enquiries" value={tab} onChange={setTab} options={[
+        { value: 'new', label: 'New', count: counts.new },
+        { value: 'contacted', label: 'Contacted', count: counts.contacted },
+        { value: 'closed', label: 'Closed', count: counts.closed },
+        { value: 'all', label: 'All', count: counts.all },
+        { value: 'spam', label: 'Spam', count: counts.spam },
+      ]} />
 
       {rows === null ? <Skeleton rows={3} /> : shown.length === 0 ? (
         <Empty icon="leads" title={tab === 'new' ? 'No new enquiries 🎉' : 'Nothing in this list'} text="Every enquiry from the website contact form appears here." />
