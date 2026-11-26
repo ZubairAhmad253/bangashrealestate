@@ -3,6 +3,7 @@ import { sb, requestRebuild, type Admin, type SettingsRow } from '../lib';
 import { Icon, Field, Skeleton, PageHead, toast, confirmDialog } from '../ui';
 import { useQuery, afterWrite } from '../store';
 import type { Ctx } from '../App';
+import { LighterPhotos } from '../LighterPhotos';
 import { SITE } from '../../config/site';
 
 type Stat = { value: number; suffix: string; label: string };
@@ -157,6 +158,8 @@ export function Settings({ ctx }: { ctx: Ctx }) {
       <div class="a-savebar">
         <button class="a-btn a-btn--gold a-btn--lg" onClick={save} disabled={saving}>{saving ? 'Saving…' : <><Icon name="check" /> Save settings</>}</button>
       </div>
+
+      <LighterPhotos />
 
       <section class="a-card">
         <div class="a-card__head">
